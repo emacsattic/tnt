@@ -300,6 +300,14 @@ forwarding on and off with \"C-x t M\".")
   (tnt-set-online-state t)
 )
 
+(defun tnt-send-away-msg (user)
+  "Send the current away message to USER."
+  (if (not (string= user tnt-last-away-sent))
+      (let ((buffer (tnt-im-buffer user)))
+        (setq tnt-last-away-sent user)
+        (toc-send-im user tnt-away-msg t)
+        (tnt-append-message-and-adjust-window
+         buffer tnt-away-msg tnt-current-user "Auto-response"))))
 
 ;;;----------------------------------------------------------------------------
 ;;; telling the TOC server we've gone idle
@@ -325,8 +333,6 @@ forwarding on and off with \"C-x t M\".")
         (setq tnt-currently-idle nil)
         (toc-set-idle 0)
         )))
-
-
 
 
 ;;;----------------------------------------------------------------------------
@@ -376,7 +382,6 @@ forwarding on and off with \"C-x t M\".")
   (interactive)
   (if (null tnt-current-user)
       (error "Already offline")
-    ;; gse addition: turn off "away" setting
     (toc-close)
     (tnt-shutdown)
     (message "Signed off")))
@@ -388,14 +393,12 @@ forwarding on and off with \"C-x t M\".")
   (if (null tnt-username-alist)
       (message "No username list defined.")
     (progn
-      (setq tnt-username-alist
-            (tnt-rotate-left tnt-username-alist))
+      (setq tnt-username-alist (tnt-rotate-left tnt-username-alist))
       (if tnt-default-username
           (setq tnt-default-username (caar tnt-username-alist)))
       (if tnt-default-password
           (setq tnt-default-password (cdar tnt-username-alist)))
-      (message "Next login will be as user %s"
-               (caar tnt-username-alist)))
+      (message "Next login will be as user %s" (caar tnt-username-alist)))
     ))
 
 
@@ -427,7 +430,7 @@ Special commands:
   (setq major-mode 'tnt-im-mode)
   (setq local-abbrev-table text-mode-abbrev-table)
   (set-syntax-table text-mode-syntax-table)
-  (auto-fill-mode)
+  (auto-fill-mode 1)
   (run-hooks 'tnt-im-mode-hook))
 
 
@@ -436,17 +439,18 @@ Special commands:
   (interactive "p")
   (let* ((completion-ignore-case t)
          (input (or (and (stringp user) user)
-                    (completing-read "Send IM to: " (tnt-online-buddies-collection)))))
+                    (completing-read "Send IM to: "
+                                     (tnt-online-buddies-collection)))))
     (switch-to-buffer (tnt-im-buffer input))))
 
 
 (defun tnt-im-buffer-name (user)
-  ;; Returns the name of the IM buffer for USER.
+  "Returns the name of the IM buffer for USER."
   (format "*im-%s*" (toc-normalize user)))
 
 
 (defun tnt-im-buffer (user)
-  ;; Returns the IM buffer for USER.
+  "Returns the IM buffer for USER."
   (let ((buffer-name (tnt-im-buffer-name user)))
     (or (get-buffer buffer-name)
         (let ((buffer (get-buffer-create buffer-name)))
@@ -467,16 +471,14 @@ Special commands:
   "Sends text at end of buffer as an IM."
   (interactive)
   (let* ((message (tnt-get-input-message)))
-    (if (string= message "") (message "Please enter a message to send")
+    (if (string= message "")
+        (message "Please enter a message to send")
       (tnt-append-message message tnt-current-user))
     (if tnt-away (message "Reminder: You are still set as away"))
     (if tnt-recenter-windows (recenter -1))
     (if (string= message "") () (toc-send-im tnt-im-user message))))
 
 
-;;;---------------------------------------------------------------------------
-;;;  Show help
-;;;---------------------------------------------------------------------------
 
 (defun tnt-show-help ()
   "Displays help for TNT."
@@ -511,7 +513,7 @@ Special commands:
 | tnt-toggle-email  |   C-x t M   | Toggles forwarding incoming IMs to email  |
 +-------------------+-------------+-------------------------------------------+
 "))
-          (funcall (tnt-switch-to-buffer-function) buffer)))))
+          (tnt-switch-to-buffer buffer)))))
 
 
 
@@ -551,7 +553,7 @@ Special commands:
   (setq major-mode 'tnt-chat-mode)
   (setq local-abbrev-table text-mode-abbrev-table)
   (set-syntax-table text-mode-syntax-table)
-  (auto-fill-mode)
+  (auto-fill-mode 1)
   (run-hooks 'tnt-chat-mode-hook))
 
 
@@ -566,7 +568,7 @@ Special commands:
                                             (format "%s Chat%03d"
                                                     tnt-current-user
                                                     (random 1000))))))
-      (toc-chat-join 4 input)
+      (toc-chat-join input)
       (switch-to-buffer (tnt-chat-buffer input)))))
 
 (defun tnt-leave-chat (room)
@@ -630,8 +632,9 @@ Special commands:
         (message (tnt-get-input-message)))
     (if (= (length message) 0)
         (setq message (read-from-minibuffer "Message: ")))
-    (tnt-append-message message tnt-current-user
-                        (format "whispers to %s" (tnt-buddy-official-name user)))
+    (tnt-append-message
+     message tnt-current-user
+     (format "whispers to %s" (tnt-buddy-official-name user)))
     (if tnt-recenter-windows (recenter -1))
     (toc-chat-whisper tnt-chat-roomid user message)))
 
@@ -644,8 +647,8 @@ Special commands:
   (interactive "p")
   (let* ((completion-ignore-case t)
          (user-list (or (and (listp users) users)
-                       (tnt-completing-read-list "Users to invite: "
-                                                 (tnt-online-buddies-collection)))))
+                       (tnt-completing-read-list
+                        "Users to invite: " (tnt-online-buddies-collection)))))
     (if user-list
         (let ((msg (tnt-get-input-message)))
           (if (= (length msg) 0)
@@ -693,7 +696,7 @@ Special commands:
 
 
 (defun tnt-append-message (message &optional user modified)
-  ;; Prepends USER (MODIFIED) to MESSAGE and appends the result to the buffer.
+  "Prepends USER (MODIFIED) to MESSAGE and appends the result to the buffer."
   (save-excursion
     (let ((old-point (marker-position tnt-message-marker)))
       (goto-char tnt-message-marker)
@@ -720,8 +723,6 @@ Special commands:
 
 (defun tnt-get-input-message ()
   (let ((message (buffer-substring tnt-message-marker (point-max))))
-    ;; gse: This used to be kill-region, but that hosed the kill ring.
-    ;;      Which was very annoying.
     (delete-region tnt-message-marker (point-max))
     (goto-char (point-max))
     (if tnt-recenter-windows (recenter -1))
@@ -773,14 +774,14 @@ Special commands:
   "Shows the buddy list in the selected window."
   (interactive)
   (tnt-build-buddy-buffer)
-  (funcall (tnt-switch-to-buffer-function) (tnt-buddy-buffer)))
+  (tnt-switch-to-buffer (tnt-buddy-buffer)))
 
-(defun tnt-switch-to-buffer-function ()
+(defun tnt-switch-to-buffer (buffer)
  (if (and tnt-use-split-buddy
           (not (string-equal (buffer-name) "*scratch*"))
           (not (string-equal (buffer-name) "*buddies*")))
-     'switch-to-buffer-other-window
-   'switch-to-buffer))
+     (switch-to-buffer-other-window buffer)
+   (switch-to-buffer buffer)))
 
 (defun tnt-buddy-buffer ()
   (let ((buffer-name "*buddies*"))
@@ -945,8 +946,7 @@ Special commands:
 
 
 (defun tnt-buddy-official-name (buddy)
-  ;; Return official screen name of buddy if known, otherwise
-  ;; just return buddy.
+  "Return official screen name of BUDDY if known, otherwise return BUDDY."
   (or (tnt-buddy-status buddy) buddy))
 
 (defun tnt-online-buddies-collection ()
@@ -1193,14 +1193,6 @@ Special commands:
   (or (memq 'tnt-mode-string global-mode-string)
       (setq global-mode-string (append global-mode-string '(tnt-mode-string))))
   (force-mode-line-update))
-
-(defun tnt-send-away-msg (user)
-  (if (not (string= user tnt-last-away-sent))
-      (let ((buffer (tnt-im-buffer user)))
-        (setq tnt-last-away-sent user)
-        (toc-send-im user tnt-away-msg t)
-        (tnt-append-message-and-adjust-window
-         buffer tnt-away-msg tnt-current-user "Auto-response"))))
 
 ;;;----------------------------------------------------------------------------
 ;;; Handlers for TOC events

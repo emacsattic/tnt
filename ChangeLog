@@ -1,5 +1,12 @@
 2000-04-11  John Jannotti  <jj@lcs.mit.edu>
 
+	* tnt.el (tnt-im-mode, tnt-chat-mode): Be explicit about turning
+ 	on autofill
+	(tnt-switch-to-buffer): Just make this switch buffers instead of
+	returning a function to call to switch buffers.
+
+	* toc.el (toc-chat-join): Force exchange to be 4 as per PROTOCOL.
+
 	* tnt.el (tnt-open): Use add-hook instead of setq.
 	(tnt-handle-sign-on): Just use toc-keepalive, get rid of
  	tnt-keepalive.

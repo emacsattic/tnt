@@ -121,8 +121,8 @@
       (tocstr-send (format "toc_add_deny %s"
                            (substring (format "%S" users) 1 -1)))))
 
-(defun toc-chat-join (exchange room)
-  (tocstr-send (format "toc_chat_join %d %s" exchange (toc-encode room))))
+(defun toc-chat-join (room)
+  (tocstr-send (format "toc_chat_join 4 %s" (toc-encode room))))
 
 (defun toc-chat-send (roomid message)
   (tocstr-send (format "toc_chat_send %s %s" roomid (toc-encode message))))
