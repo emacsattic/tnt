@@ -272,7 +272,7 @@ PAUSE
 
 Typical Signon Process
 ======================
-Except for the section marked optional this is an sequential process.
+Except for the section marked optional this is a sequential process.
 Each line MUST occur before the following line.
 
 * Client connects to TOC
