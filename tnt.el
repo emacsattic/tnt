@@ -1916,53 +1916,50 @@ Special commands:
 ;;; ***************************************************************************
 (defun tnt-buddy-list-menu ()
   (if tnt-current-user
-      (cond ((= tnt-current-menu 0)
-             (if tnt-event-ring
-                 (insert "\n\n"
-                         "[a]ccept message     "
-                         "[r]eject message     "
-                         "                     "
-                         "next men[u]"
-                         "\n")
-               (setq tnt-current-menu (1+ tnt-current-menu))
-               (tnt-buddy-list-menu)))
-            ((= tnt-current-menu 1)
-             (insert "\n\n"
-                     "[p]rev buddy         "
-                     "[n]ext buddy         "
-                     "[RET] IM buddy       "
-                     "next men[u]"
-                     "\n"
-                     "[M-p]rev group       "
-                     "[M-n]ext group       "
-                     "[q]uit tnt           "))
-            ((= tnt-current-menu 2)
-             (insert "\n\n"
-                     "[j]oin chat room     "
-                     (if tnt-away "unset [A]way status  "
-                       "set [A]way status    ")
-                     "edit [B]uddy list    "
-                     "next men[u]"
-                     "\n"
-                     "                     "
-                     "[P]ounce on buddy    "
-                     (if tnt-show-inactive-buddies-now "hide" "show")
-                     " [O]ffline buddies"
-                     "\n"))
-            ((= tnt-current-menu 3)
-             (insert "\n\n"
-                     (if tnt-muted "un[m]ute tnt sounds  "
-                       "[m]ute tnt sounds    ")
-                     (if tnt-email-to-pipe-to
-                         (if tnt-pipe-to-email-now
-                             "turn off e[M]ail     "
-                           "turn on e[M]ail      ")
-                       "                     ")
-                     "                     "
-                     "next men[u]"
-                     "\n"
-                     ))
-            (t (insert "\n")))
+      (progn
+        (insert "\n\n--------------------------------------------------------------------------\n")
+        (cond ((and (= tnt-current-menu 0) tnt-event-ring)
+               (insert "[a]ccept message     "
+                       "[r]eject message     "
+                       "                     "
+                       "next men[u]"
+                       "\n"))
+              ((or (= tnt-current-menu 1)
+                   (and (= tnt-current-menu 0) (null tnt-event-ring)))
+               (setq tnt-current-menu 1)
+               (insert "[p]rev buddy         "
+                       "[n]ext buddy         "
+                       "[RET] IM buddy       "
+                       "next men[u]"
+                       "\n"
+                       "[M-p]rev group       "
+                       "[M-n]ext group       "
+                       "[q]uit tnt           "))
+              ((= tnt-current-menu 2)
+               (insert "[j]oin chat room     "
+                       (if tnt-away "unset [A]way status  "
+                         "set [A]way status    ")
+                       "edit [B]uddy list    "
+                       "next men[u]"
+                       "\n"
+                       "                     "
+                       "[P]ounce on buddy    "
+                       (if tnt-show-inactive-buddies-now "hide" "show")
+                       " [O]ffline       "
+                       "\n"))
+              ((= tnt-current-menu 3)
+               (insert (if tnt-muted "un[m]ute tnt sounds  "
+                         "[m]ute tnt sounds    ")
+                       (if tnt-email-to-pipe-to
+                           (if tnt-pipe-to-email-now
+                               "turn off e[M]ail     "
+                             "turn on e[M]ail      ")
+                         "                     ")
+                       "                     "
+                       "next men[u]"
+                       "\n"
+                       ))
+              (t (insert "\n"))))
     (insert "\n"
             "tnt currently offline"
             "\n\n"
@@ -1991,15 +1988,13 @@ Special commands:
          (first (propertize (or fullname unick) 'mouse-face 'highlight))
          )
 
-    (when (or status just-onoff event tnt-show-inactive-buddies-now)
+    (when (or status just-onoff pounced event tnt-show-inactive-buddies-now)
       ;;       (put-text-property 0 (length first)
       ;;                          'mouse-face 'highlight first)
       (concat first
               (when fullname
                 (concat " [" unick "]"))
-              (cond (pounced
-                     (format " (pounce)"))
-                    ((not status)
+              (cond ((not status)
                      (format " (offline)"))
                     ((and away idle)
                      (format " (away - %s)" idle))
@@ -2009,6 +2004,7 @@ Special commands:
                      (format " (idle - %s)" idle))
                     (t ""))
               just-onoff
+              (when pounced " (pounce)")
               (when event " (MESSAGE WAITING)")
               ))))
 
@@ -2035,15 +2031,26 @@ Special commands:
 (defun tnt-im-buddy ()
   "Initiates an IM conversation with the selected buddy."
   (interactive)
-  (let ((nick (tnt-get-buddy-at-point)))
+  (let* ((nick (tnt-get-buddy-at-point))
+         (nnick (toc-normalize nick)))
     (cond
      ((tnt-buddy-status nick) (tnt-im nick))
      ((assoc (tnt-im-buffer-name nick) tnt-event-ring) (tnt-im nick))
-     (tnt-show-inactive-buddies
+     ((assoc nnick tnt-pounce-alist)
+      (and (y-or-n-p (format "%s is offline; delete pounce? " nick))
+           (tnt-pounce-delete nnick)))
+     (t
       (and (y-or-n-p (format "%s is offline; pounce instead? " nick))
-           (tnt-pounce-add (toc-normalize nick))))
-     (t (error "Not online: %s" nick))
+           (tnt-pounce-add nnick)))
      )))
+
+;;; ***************************************************************************
+(defun tnt-buddy-list-menu-line ()
+  (save-excursion
+    (save-match-data
+      (goto-char 0)
+      (re-search-forward "^-+$" nil t)
+      (match-beginning 0))))
 
 ;;; ***************************************************************************
 (defun tnt-get-buddy-at-point ()
@@ -2051,15 +2058,21 @@ Special commands:
   (save-excursion
     (save-match-data
       (beginning-of-line)
-      (if (null (re-search-forward "^ +\\([^[(\n]*\\)" nil t))
+      (if (or (null (re-search-forward "^ +\\([^[(\n]*\\)" nil t))
+              (> (match-beginning 1) (tnt-buddy-list-menu-line)))
           (error "Position cursor on a buddy name")
-        (let* ((nick-or-name (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
-               (nick-or-name (substring nick-or-name 0 (or (string-match "\\s-+$" nick-or-name)
-                                                           (length nick-or-name))))
-               (element (rassoc (list nick-or-name) tnt-buddy-fullname-alist)))
+        (let* ((nick-or-name
+                (buffer-substring-no-properties (match-beginning 1)
+                                                (match-end 1)))
+               (nick-or-name (substring nick-or-name 0
+                                        (or (string-match "\\s-+$"
+                                                          nick-or-name)
+                                            (length nick-or-name))))
+               (element (rassoc (list nick-or-name)
+                                tnt-buddy-fullname-alist)))
           (when element
             (setq nick-or-name (or (car-safe element) nick-or-name)))
-
+          
           nick-or-name))
       )))
 
@@ -2086,9 +2099,11 @@ Special commands:
   "Moves the cursor to the next buddy."
   (interactive)
   (save-match-data
-    (beginning-of-line)
-    (if (null (re-search-forward "\n " nil t))
-        (error "No next buddy"))
+    (save-excursion
+      (beginning-of-line)
+      (if (or (null (re-search-forward "\n " nil t))
+              (> (match-beginning 0) (tnt-buddy-list-menu-line)))
+          (error "No next buddy")))
     (goto-char (match-beginning 0))
     (forward-char)
     ))
