@@ -32,7 +32,9 @@
 ;;;;
 ;;;; ----------------------------------------------------------------------
 ;;;; INSTALLATION
-;;;;   There is a separate "INSTALL" document.  Read that.
+;;;;   There is a separate "INSTALL" document.  But here's the short version:
+;;;;     (setq load-path (cons "/full/path/to/tnt" load-path))
+;;;;     (load "tnt")
 ;;;;
 ;;;; LATEST VERSION
 ;;;;   The TNT project is hosted at SourceForge:
@@ -48,7 +50,7 @@
 (require 'cl)
 
 
-(defconst tnt-version "TNT 2.5 beta")
+(defconst tnt-version "TNT 2.5")
 
 ;;; **************************************************************************
 ;;; ***** Configuration variables / Compatability
@@ -543,9 +545,9 @@ where 'xxx' is the actual name of the archive file (one per user).
 
 Defaults to Monthly."
   :type '(choice
-		  (const :tag "Daily" daily)
-		  (const :tag "Monthly" monthly)
-		  (const :tag "Yearly" yearly)
+          (const :tag "Daily" daily)
+          (const :tag "Monthly" monthly)
+          (const :tag "Yearly" yearly)
           (const :tag "Single file" nil))
   :group 'tnt)
 
@@ -1889,7 +1891,7 @@ Special commands:
           (latest-archive-datestamp (assoc (buffer-name) tnt-archive-datestamp-alist)))
       (goto-char tnt-message-marker)
 
-	  ;; datestamp -- print if the date-stamp has changed OR if we
+      ;; datestamp -- print if the date-stamp has changed OR if we
       ;; want the datestamp in the header and we're archiving and it's
       ;; not in the alist
       (when (or (and tnt-last-datestamp
@@ -1898,19 +1900,19 @@ Special commands:
                      tnt-archive-conversations
                      (or (not latest-archive-datestamp)
                          (not (string= (cdr latest-archive-datestamp) today-datestamp)))))
-		(setq tnt-last-datestamp today-datestamp)
-		(insert-before-markers tnt-separator "[--- " today-datestamp " ---]" tnt-separator)
+        (setq tnt-last-datestamp today-datestamp)
+        (insert-before-markers tnt-separator "[--- " today-datestamp " ---]" tnt-separator)
 
         (if latest-archive-datestamp
             (setcdr latest-archive-datestamp today-datestamp)
           (setq tnt-archive-datestamp-alist
                 (cons (cons (buffer-name) today-datestamp) tnt-archive-datestamp-alist))))
 
-	  ;; optional timestamp
+      ;; optional timestamp
       (when tnt-use-timestamps
           (insert-before-markers (format-time-string tnt-timestamp-format)))
 
-	  ;; user
+      ;; user
       (if (not user)
           (insert-before-markers "[" (tnt-replace-me-statement message) "]")
 
@@ -1925,11 +1927,11 @@ Special commands:
             (add-text-properties start (point) '(face tnt-other-name-face)))
           (insert-before-markers " " (tnt-replace-me-statement message))))
 
-	  ;; formatting
+      ;; formatting
       (insert-before-markers tnt-separator)
 
-	  (unless no-reformat
-		(fill-region old-point (point)))
+      (unless no-reformat
+        (fill-region old-point (point)))
 
       ;; Make inserted text read-only.  I'm not really sure why we
       ;; need the inhibit-read-only code; IM buffers should never be
@@ -1954,7 +1956,7 @@ Special commands:
       ;; save to archive file
       (when tnt-archive-conversations
         (let* ((dir (tnt-archive-directory))
-			   (full-path (format "%s/%s" dir tnt-archive-filename)))
+               (full-path (format "%s/%s" dir tnt-archive-filename)))
           (when (and dir tnt-archive-filename tnt-archive-conversations)
             (make-directory dir t)
             (append-to-file old-point (point) full-path)
@@ -1965,25 +1967,25 @@ Special commands:
                        (> tnt-archive-max-single-file-size 0))
               (save-excursion
                 ;; open archive file
-				(with-temp-buffer
-				  (insert-file-contents full-path t)
+                (with-temp-buffer
+                  (insert-file-contents full-path t)
 
-				  ;; determine size
-				  (when (> (point-max) tnt-archive-max-single-file-size)
-					;; go to N bytes from end
-					(goto-char (- (point-max) tnt-archive-max-single-file-size))
+                  ;; determine size
+                  (when (> (point-max) tnt-archive-max-single-file-size)
+                    ;; go to N bytes from end
+                    (goto-char (- (point-max) tnt-archive-max-single-file-size))
 
-					;; goto beg of line
-					(backward-paragraph)
+                    ;; goto beg of line
+                    (backward-paragraph)
 
-					;; delete from there back
-					(delete-region (point-min) (point))
+                    ;; delete from there back
+                    (delete-region (point-min) (point))
 
-					;; save
-					(save-buffer)
-					(message "")
-					)))
-			  ))))
+                    ;; save
+                    (save-buffer)
+                    (message "")
+                    )))
+              ))))
       ))
   ;; Torches the entire undo history -- but we really don't want the
   ;; user to be able to undo TNT inserts.  The right fix is probably
@@ -2027,58 +2029,58 @@ Special commands:
   ""
   (interactive)
   (let (filename)
-	;; no user name given
-	(if (not user)
-		(cond
-		 ;; IM or Chat mode?
-		 ((or (eq major-mode 'tnt-im-mode)
-			  (eq major-mode 'tnt-chat-mode))
-		  (setq filename tnt-archive-filename))
+    ;; no user name given
+    (if (not user)
+        (cond
+         ;; IM or Chat mode?
+         ((or (eq major-mode 'tnt-im-mode)
+              (eq major-mode 'tnt-chat-mode))
+          (setq filename tnt-archive-filename))
 
-		 ;; Buddy list mode?
-		 ((eq major-mode 'tnt-buddy-list-mode)
-		  (let* ((buddy-at-point (tnt-get-buddy-at-point))
-				 (type (car buddy-at-point))
-				 (nick (cdr buddy-at-point)))
-			(setq filename
-				  (if (string= type "chat")
-					  (tnt-chat-archive-filename nick)
-					(tnt-im-archive-filename nick)))))
+         ;; Buddy list mode?
+         ((eq major-mode 'tnt-buddy-list-mode)
+          (let* ((buddy-at-point (tnt-get-buddy-at-point))
+                 (type (car buddy-at-point))
+                 (nick (cdr buddy-at-point)))
+            (setq filename
+                  (if (string= type "chat")
+                      (tnt-chat-archive-filename nick)
+                    (tnt-im-archive-filename nick)))))
 
-		 ;; prompt for buddy or chat room
-		 (t (let ((buddies-and-chats (nconc (mapcar 'list (tnt-extract-normalized-buddies tnt-buddy-blist))
-											(mapcar 'list (mapcar 'cdr tnt-chat-alist))
-											(mapcar 'cdr tnt-buddy-fullname-alist))))
-			  (setq user (completing-read "Name of archive to view: " buddies-and-chats nil nil))
-			  ;; was it a user, chat room or fullname?
-			  (let (elem)
-				(setq elem (member user (mapcar 'cdr tnt-chat-alist)))
-				(if elem
-					(setq filename (tnt-chat-archive-filename user))
-				  (setq elem (rassoc (list user) tnt-buddy-fullname-alist))
-				  (if elem
-					  (setq filename (tnt-im-archive-filename (car elem)))
-					(setq filename (tnt-im-archive-filename user)))))
-			  )))
+         ;; prompt for buddy or chat room
+         (t (let ((buddies-and-chats (nconc (mapcar 'list (tnt-extract-normalized-buddies tnt-buddy-blist))
+                                            (mapcar 'list (mapcar 'cdr tnt-chat-alist))
+                                            (mapcar 'cdr tnt-buddy-fullname-alist))))
+              (setq user (completing-read "Name of archive to view: " buddies-and-chats nil nil))
+              ;; was it a user, chat room or fullname?
+              (let (elem)
+                (setq elem (member user (mapcar 'cdr tnt-chat-alist)))
+                (if elem
+                    (setq filename (tnt-chat-archive-filename user))
+                  (setq elem (rassoc (list user) tnt-buddy-fullname-alist))
+                  (if elem
+                      (setq filename (tnt-im-archive-filename (car elem)))
+                    (setq filename (tnt-im-archive-filename user)))))
+              )))
 
-	  ;; user was known
-	  (let (elem)
-		(setq elem (assoc-ignore-case user tnt-chat-alist))
-		(if elem
-			(setq filename (tnt-chat-archive-filename (cdr elem)))
-		  (setq filename (tnt-im-archive-filename user)))))
+      ;; user was known
+      (let (elem)
+        (setq elem (assoc-ignore-case user tnt-chat-alist))
+        (if elem
+            (setq filename (tnt-chat-archive-filename (cdr elem)))
+          (setq filename (tnt-im-archive-filename user)))))
 
-	  ;; check for fname and open if possible
-	  (unless filename
-		(error "Unknown filename"))
+      ;; check for fname and open if possible
+      (unless filename
+        (error "Unknown filename"))
 
-	  (let* ((dir (tnt-archive-directory))
-			 (full-path (format "%s/%s" dir filename)))
-		(when (and dir full-path)
-		  (unless (file-exists-p full-path)
-			(error (concat "No current archive file found [" filename "]")))
-		  (view-file-other-window full-path)))
-	  ))
+      (let* ((dir (tnt-archive-directory))
+             (full-path (format "%s/%s" dir filename)))
+        (when (and dir full-path)
+          (unless (file-exists-p full-path)
+            (error (concat "No current archive file found [" filename "]")))
+          (view-file-other-window full-path)))
+      ))
 
 ;;; ***************************************************************************
 (defun tnt-archive-delete-buddy-archive-file ()
@@ -2091,7 +2093,7 @@ Special commands:
          (type (car buddy-at-point))
          (nick (cdr buddy-at-point))
          (dir (tnt-archive-directory))
-		 (full-path (format "%s/%s" dir
+         (full-path (format "%s/%s" dir
                             (if (string= type "chat")
                                 (tnt-chat-archive-filename nick)
                               (tnt-im-archive-filename nick)))))
@@ -2695,7 +2697,7 @@ messages or pounces."
   (interactive)
 
   (let ((nick (tnt-get-buddy-at-point)))
-	(toc-get-info (cdr nick))))
+    (toc-get-info (cdr nick))))
 
 ;;; ***************************************************************************
 (defun tnt-toggle-inactive-buddies ()

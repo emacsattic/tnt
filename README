@@ -20,8 +20,10 @@ project members there.  Information is available from:
 
     http://tnt.sourceforge.net/
 
-From there, you can download the latest release.  Also, there are
-message boards where you can post questions, report bugs, and so on.
+From there, you can download the latest release.  If you have
+questions or comments, your best bet is to ask questions on the
+mailing list (the forums are pretty slow):
+  tnt-devel@lists.sourceforge.net
 
 If you're interested in helping improve TNT, you should join the
 mailing list for developers of TNT.  To subscribe, go to:
