@@ -1,3 +1,10 @@
+2000-05-03  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-strip-a-href): if the link url appears again as the
+	link text, we don't need to see it twice.  in particular, this
+	happens if the person at the other end typed in a url or email
+	address and their client made it a link for them.
+
 2000-05-01  John Jannotti  <jj@lcs.mit.edu>
 
 	* toc.el (toc-permit-mode): Added (keeps track of server side mode)

@@ -1564,26 +1564,41 @@ of the list, delimited by commas."
 ;;;----------------------------------------------------------------------------
 
 (defun tnt-strip-a-href (str)
-  ;; replaces the substring
+  ;; Replaces the substring
   ;; <a href="http://www.derf.net/">derf!
   ;; with
   ;; ( http://www.derf.net/ ) derf!
   ;; which will not get stripped out by tnt-strip-html
   (let ((start-index 0)
-        end-index
+        end-index the-url the-url-no-scheme
         (segs nil))
     (while (setq end-index (string-match "<a href=\"" str start-index))
+      ;; skip past "<a href=\""
       (setq segs (cons (substring str start-index end-index) segs))
       (setq start-index (match-end 0))
       (setq end-index (string-match "\"" str start-index))
+      ;; get stuff up to "\""
       (if (null end-index) nil
-        (setq segs (cons "( " segs))
-        (setq segs (cons (substring str start-index end-index) segs))
-        (setq segs (cons " ) " segs))
-        (setq start-index (match-end 0)))
+        (setq the-url (substring str start-index end-index))
+        (setq start-index (match-end 0))
+        (let ((first-seven (substring the-url 0 7)))
+          (if (or (string= "http://" first-seven)
+                  (string= "mailto:" first-seven))
+              (setq the-url-no-scheme (substring the-url 7))))
+        )
+      ;; skip past ">"
       (setq end-index (string-match ">" str start-index))
       (if (null end-index) nil
-        (setq start-index (match-end 0))))
+        (setq start-index (match-end 0)))
+      ;; if the link url is the same as the link text,
+      ;; we don't need to see it twice
+      (if (or (and the-url
+                   (string-match the-url str start-index))
+              (and the-url-no-scheme
+                   (string-match the-url-no-scheme str start-index)))
+          nil
+        (setq segs (cons (format "( %s ) " the-url) segs)))
+      )
     (setq segs (cons (substring str start-index) segs))
     (apply 'concat (nreverse segs))))
 
