@@ -2472,11 +2472,16 @@ Sorts/groups buddies according to tnt-sort-buddies, tnt-group-*-buddies."
 ;;; ***************************************************************************
 
 (defun tnt-strip-offline-nicks (nick-list)
+  "Strips nicks that are offline, except for those that have pending
+messages or pounces."
   (let ((result nil))
     (while nick-list
       (let* ((nick (car nick-list))
              (nick-props (cdr nick)))
-        (when (plist-get nick-props 'online)
+        (when (or
+               (plist-get nick-props 'online)
+               (plist-get nick-props 'event)
+               (plist-get nick-props 'pounced))
           (setq result (append result (list nick)))))
       (setq nick-list (cdr nick-list)))
     result))
@@ -2723,8 +2728,8 @@ No sort -> Buddy name -> Fullname"
   (save-excursion
     (save-match-data
       (beginning-of-line)
-      (if (or (null (or (re-search-forward "\\[\\([^]]+\\)\\]" (line-end-position) t)
-                        (re-search-forward "^ +\\([^(]+\\)" (line-end-position) t)))
+      (if (or (null (or (re-search-forward "\\[\\([^]]+\\)\\]" (point-at-eol) t)
+                        (re-search-forward "^ +\\([^(]+\\)" (point-at-eol) t)))
               (> (match-beginning 1) (tnt-buddy-list-menu-line)))
           (error "Position cursor on a buddy name")
         (let* ((match-b (match-beginning 1))

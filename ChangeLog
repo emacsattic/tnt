@@ -1,3 +1,10 @@
+2003-11-02  Scott Evans  <gse@antisleep.com>
+
+	* tnt.el (tnt-get-buddy-at-point): Use point-at-eol instead of
+	line-end-position.
+	(tnt-strip-offline-nicks): Don't strip buddies with pending
+	messages or pounces.
+
 2003-10-29  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
 	* tnt.el (tnt-show-buddies): call (font-lock-mode 1).  not sure if
