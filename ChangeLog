@@ -1,3 +1,8 @@
+2003-10-25  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
+	* tnt.el (tnt-kill): Store the tnt-current-user, *then* check it
+	for null after attempting to sign off.
+
 2003-10-25  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el (tnt-fullname-for-nick): Move out of tnt-buddy-list-filter.

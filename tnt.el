@@ -1386,18 +1386,19 @@ unless PREFIX arg is given."
   "Ends the current TNT session and signs off from the host."
   (interactive)
 
-  (toc-close)
-  (tnt-shutdown)
+  (let ((user tnt-current-user))
+    
+    (toc-close)
+    (tnt-shutdown)
 
-  (when (null tnt-current-user)
-    (error "Already offline"))
+    (when (null user) (error "Already offline"))
 
-  (message "Signed off")
-  (tnt-beep tnt-beep-on-signoff)
-
-  (when tnt-kill-window-on-shutdown
-    (kill-buffer tnt-buddy-list-buffer-name))
-  )
+    (message "Signed off")
+    (tnt-beep tnt-beep-on-signoff)
+    
+    (when tnt-kill-window-on-shutdown
+      (kill-buffer tnt-buddy-list-buffer-name))
+    ))
 
 ;;; ***************************************************************************
 (defun tnt-switch-user ()
