@@ -1,3 +1,8 @@
+April 1, 2000 - Jim Whitehead
+-----------------------------
+ - Small change in tnt-get-away-msg to fix a possible error with trying
+   to send a nil away message.  
+
 April 1, 2000 - Neil "Fred" Picciotto
 -------------------------------------
  - removed tnt-default-username-list variable, replaced it with

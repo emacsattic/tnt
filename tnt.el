@@ -212,7 +212,6 @@
 (defun tnt-get-away-msg ()
   "Gets the away msg"
   (interactive)
-  (setq tnt-away t)
   (setq tnt-away-msg (read-from-minibuffer "Away Message: "
                                            (cons
                                             (if tnt-away-msg-history
@@ -222,6 +221,7 @@
                                            nil nil 'tnt-away-msg-history))
   (message "You are away: %s" tnt-away-msg)
   (message "Set as away: %s" tnt-away-msg)
+  (setq tnt-away t)
   (toc-set-away tnt-away-msg)
   (tnt-set-online-state t)
 )
