@@ -61,7 +61,7 @@ immediately _after_ the above two lines.
 (setq tnt-use-timestamps t)
  	This will add a timestamp for each message you receive or send.
 	This is useful for logging, and for people who are on very often.
-    It's also convenient if you leave yourself logged in while away
+        It's also convenient if you leave yourself logged in while away
 	from your computer, so then when you come back, you can see how
 	long ago it was that your friend said "hi" while you were gone.
 
@@ -99,4 +99,7 @@ immediately _after_ the above two lines.
    will save you having to exit and relaunch emacs millions of times
    to get just the right color scheme.
 
+(setq tnt-email-binary "/bin/mail")
+   This variable is set by default to /bin/mail, but sysadmins can change
+   it without worrying about changing the elisp code.
 

@@ -1,3 +1,12 @@
+March 30, 2000 - Jim Whitehead
+------------------------------
+ - added a user-defined variable to avoid needing to hack the code 
+   if your mail executable isn't in /bin/mail.  tnt-email-binary.
+ - fixed tnt-shutdown so it properly disposes of client-side away
+   messages.
+ - piping IMs to an email now prints a reminder message.  It may be
+   beneficial to add a modeline change, but I don't have time today :P
+
 March 29, 2000 - Neil "Fred" Picciotto
 -------------------------------------
  - made piping to email simpler to configure (i.e. just set some
