@@ -1,3 +1,17 @@
+2001-06-25  NeilFred Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-backup-buddy-list): now only saves a backup if the
+	current buddy list differs from the backup.  mostly i did this so
+	that the "xx:xx:xx Signed on" will remain in the minibuffer, so
+	that when an auto-reconnect occurs, i can tell at a glance that
+	that's what the beep i heard was.  (this was the reason i added
+	the timestamp to that message, but i still had to switch to the
+	"*Messages*" buffer to see it.)
+	(tnt-handle-closed): a change from (tnt-error) to (error) broke
+	auto-reconnect, since (error) halts execution.  the purpose of
+	that change was to avoid the beep the tnt-error makes, so i just
+	changed it to (message)...
+
 2001-06-25  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el (tnt-mute): Added.  Bound to C-x t m.

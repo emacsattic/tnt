@@ -35,8 +35,8 @@
 ;;;;   There is a separate "INSTALL" document.  Read that.
 ;;;;
 ;;;; LATEST VERSION
-;;;;   The TNT project is hosted at Source Forge:
-;;;;   http://sourceforge.net/projects/tnt
+;;;;   The TNT project is hosted at SourceForge:
+;;;;   http://tnt.sourceforge.net/
 ;;;; ----------------------------------------------------------------------
 ;;;;
 ;;;; todo:
@@ -864,7 +864,7 @@ Special commands:
   "Joins a chat room.  If in a chat buffer assume that is the one to join."
   (interactive "p")
   (if (null tnt-current-user)
-      (error "You must be online to join a chat room.")
+      (error "You must be online to join a chat room")
     (let* ((input (or (and (stringp room) room)
                       (and (boundp 'tnt-chat-room) tnt-chat-room)
                       (tnt-read-string-with-default "Join chat room"
@@ -876,7 +876,7 @@ Special commands:
   "Leaves a chat room.  If in a chat buffer assume that is the one to leave."
   (interactive "p")
   (if (null tnt-current-user)
-      (error "You must be online to leave a chat room.")
+      (error "You must be online to leave a chat room")
     (let* ((completion-ignore-case t)
            (input (or (and (stringp room) room)
                       (and (boundp 'tnt-chat-room) tnt-chat-room)
@@ -1086,8 +1086,10 @@ Special commands:
             ;; Duh.  Using put-nonduplicable-text-property seems to
             ;; fix it.  Of course that doesn't exist on FSF.
             (if tnt-running-xemacs
-                (put-nonduplicable-text-property (point-min) (point) 'read-only t)
-              (add-text-properties 1 (point) '(read-only t front-sticky t rear-sticky t))
+                (put-nonduplicable-text-property (point-min) (point)
+                                                 'read-only t)
+              (add-text-properties 1 (point)
+                                   '(read-only t front-sticky t rear-sticky t))
               (add-text-properties (- (point) 1) (point) '(rear-nonsticky t)))
             (setq inhibit-read-only old-inhibit)))
       )))
@@ -1311,7 +1313,7 @@ Special commands:
   (interactive)
   (beginning-of-line)
   (if (null (re-search-backward "\n[^ ]" nil t))
-      (error "No previous buddy"))
+      (error "No previous group"))
   (goto-char (match-beginning 0))
   (tnt-prev-buddy)
   (setq tnt-buddy-list-point (point))
@@ -1545,8 +1547,7 @@ Special commands:
   (if (tnt-buddy-list-is-empty-p)
       (tnt-restore-buddy-list)
     (tnt-backup-buddy-list))
-  (bury-buffer)
-  )
+  (kill-buffer (current-buffer)))
 
 (defun tnt-buddy-list-is-empty-p ()
   "Checks whether buddy list should be considered \"empty\"."
@@ -1566,49 +1567,73 @@ Special commands:
   "Restores the buddy list from the backup file."
   (interactive)
   (if (null tnt-directory)
-      (error "variable tnt-directory undefined")
+      (error "Variable tnt-directory undefined")
     (if (not (file-accessible-directory-p tnt-directory))
-        (error (format "directory %s not accessible" tnt-directory))
+        (error "Directory %s not accessible" tnt-directory)
       (if (null tnt-buddy-list-backup-filename)
-          (error "variable tnt-buddy-list-backup-filename undefined")
-
+          (error "Variable tnt-buddy-list-backup-filename undefined")
+        
         (let ((filename (format "%s/%s"
                                 tnt-directory
                                 (format tnt-buddy-list-backup-filename
                                         (toc-normalize tnt-username)))))
           (if (file-exists-p filename)
               (if (not (file-readable-p filename))
-                  (error (format "file %s not readable" filename))
+                  (error "File %s not readable" filename)
                 (tnt-edit-buddies)
                 (insert-file-contents filename nil nil nil t)
-                (tnt-save-buddy-list))
-            ))))))
+                (tnt-save-buddy-list)))
+          )))))
 
 (defun tnt-backup-buddy-list ()
   "Saves the buddy list to a backup file."
   (interactive)
   (if (null tnt-directory)
-      (error "variable tnt-directory undefined")
+      (error "Variable tnt-directory undefined")
     (if (not (file-exists-p tnt-directory))
         (make-directory tnt-directory))
     (if (not (file-accessible-directory-p tnt-directory))
-        (error (format "directory %s not accessible" tnt-directory))
+        (error "Directory %s not accessible" tnt-directory)
       (if (null tnt-buddy-list-backup-filename)
-          (error "variable tnt-buddy-list-backup-filename undefined")
+          (error "Variable tnt-buddy-list-backup-filename undefined")
 
-        (let ((filename (format "%s/%s"
-                                tnt-directory
-                                (format tnt-buddy-list-backup-filename
-                                        (toc-normalize tnt-username)))))
-          (if (and (file-exists-p filename)
-                   (not (file-writable-p filename)))
-              (error (format "file %s not writable" filename))
+        (let* ((filename (format tnt-buddy-list-backup-filename
+                                 (toc-normalize tnt-username)))
+               (fullpath (format "%s/%s" tnt-directory filename))
+               (new-buffer nil)
+               (new-buf-len 0)
+               (old-buffer nil)
+               (old-buf-len 0))
+        
+          (if (and (file-exists-p fullpath)
+                   (not (file-writable-p fullpath)))
+              (error "File %s not writable" filename)
             (tnt-edit-buddies)
-            (write-file filename)
-            (message "")
-            (rename-buffer tnt-buddy-edit-buffer-name)
-            ))))))
+            (setq new-buffer (current-buffer)
+                  new-buf-len (point-max))
+            (find-file fullpath)
+            (setq old-buffer (current-buffer)
+                  old-buf-len (point-max))
 
+            (if (= (compare-buffer-substrings new-buffer 1 new-buf-len
+                                              old-buffer 1 old-buf-len)
+                   0)
+                (kill-buffer old-buffer)
+              (progn
+                (kill-buffer old-buffer)
+                (switch-to-buffer new-buffer)
+                (write-file fullpath)
+                ;; note: we used to just rename the buffer after
+                ;; writing the file, but then a later call to
+                ;; find-file for the backup file will not create a new
+                ;; buffer for it, it'll use the edit-buddies buffer
+                ;; instead.  so we kill the buffer and re-create it.
+                (let ((pos (point)))
+                  (kill-buffer (current-buffer))
+                  (tnt-edit-buddies)
+                  (goto-char pos)))
+            )))))))
+ 
 
 ;;;----------------------------------------------------------------------------
 ;;; Buddy utilities
@@ -1817,7 +1842,6 @@ Special commands:
         (tnt-shutdown)
         (tnt-error "TNT connection closed immediately on reconnect"))
 
-
     ;; save these values -- NOTE: must be done before tnt-shutdown
     (setq tnt-reconnecting-away tnt-away)
     (setq tnt-reconnecting-away-msg tnt-away-msg)
@@ -1831,21 +1855,20 @@ Special commands:
         (tnt-pipe-message-to-program "TOC-server"
                                      "TNT connection closed by server"))
 
-    ;; error
-    ;; Use (error) instead of (tnt-error) so that no error sound
-    ;; gets generated -- we want to use the signoff sound here.
-    (error (format-time-string (concat tnt-timestamp-format "TNT connection closed")))
+    ;; beep
     (tnt-beep tnt-beep-on-signoff)
-
 
     ;; and finally, attempt to reconnect
     (if tnt-auto-reconnect
         (progn
           (setq tnt-reconnecting t)
-          (message "Trying to reconnect...")
-          (tnt-open tnt-username tnt-password)))
-    )
-  )
+          (message (format-time-string
+                    (concat tnt-timestamp-format
+                            "TNT connection closed, trying to reconnect...")))
+          (tnt-open tnt-username tnt-password))
+      (message (format-time-string
+                (concat tnt-timestamp-format "TNT connection closed")))
+      )))
 
 (defun tnt-handle-sign-on (version)
   (message (format-time-string (concat tnt-timestamp-format "Signed on")))
