@@ -1,3 +1,8 @@
+March 31, 2000 - Jim Whitehead
+------------------------------
+ - Bugfix to fix the "no process" mesasges, due to incorrect calls
+   in tnt-buddy-shutdown
+
 March 31, 2000 - John Jannotti
 ------------------------------
  - use tocstr-send-flap, not tocstr-send-flap1 in tnt-keepalive
