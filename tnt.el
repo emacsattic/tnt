@@ -334,8 +334,8 @@ chatroom name.  This can be an expression such as the default somewhat
 how one would bind a function to a key or it may be a string.  Note
 that the function must return a string."
   :type '(choice :tag "Chatroom Name"
-				 (string :tag "Name")
-				 (function :tag "Function"))
+                 (string :tag "Name")
+                 (function :tag "Function"))
   :group 'tnt)
 
 ;; ...........................................................................
@@ -908,27 +908,27 @@ Settings:
 ;;; ***************************************************************************
 ;;; ***** font lock
 ;;; ***************************************************************************
-(defvar tnt-buddy-list-group-face	'tnt-buddy-list-group-face
+(defvar tnt-buddy-list-group-face   'tnt-buddy-list-group-face
   "Face name to use for Buddy group names.")
 
 ;; ---------------------------------------------------------------------------
-(defvar tnt-buddy-list-active-face	'tnt-buddy-list-active-face
+(defvar tnt-buddy-list-active-face  'tnt-buddy-list-active-face
   "Face name to use for online Buddies.")
 
 ;; ---------------------------------------------------------------------------
-(defvar tnt-buddy-list-away-face	'tnt-buddy-list-away-face
+(defvar tnt-buddy-list-away-face    'tnt-buddy-list-away-face
   "Face name to use for aways Buddies.")
 
 ;; ---------------------------------------------------------------------------
-(defvar tnt-buddy-list-idle-face	'tnt-buddy-list-idle-face
+(defvar tnt-buddy-list-idle-face    'tnt-buddy-list-idle-face
   "Face name to use for idle Buddies.")
 
 ;; ---------------------------------------------------------------------------
-(defvar tnt-buddy-list-pounce-face	'tnt-buddy-list-pounce-face
+(defvar tnt-buddy-list-pounce-face  'tnt-buddy-list-pounce-face
   "Face name to use for Buddies with pending pounce messages.")
 
 ;; ---------------------------------------------------------------------------
-(defvar tnt-buddy-list-inactive-face	'tnt-buddy-list-inactive-face
+(defvar tnt-buddy-list-inactive-face    'tnt-buddy-list-inactive-face
   "Face name to use for inactive Buddies.")
 
 ;; ---------------------------------------------------------------------------
@@ -1352,7 +1352,7 @@ unless PREFIX arg is given."
 
   (when (null tnt-current-user)
     (error "Already offline"))
-  
+
   (message "Signed off")
   (tnt-beep tnt-beep-on-signoff)
 
@@ -1957,7 +1957,7 @@ Special commands:
         (tnt-non-buddy-messages)
         (tnt-chat-alist-to-buffer tnt-chat-alist)
         (tnt-buddy-list-menu)
-        
+
         (set-buffer-modified-p nil)
 
         (goto-char 0)
@@ -2090,8 +2090,7 @@ Special commands:
          (just-onoff (tnt-get-just-signedonoff nnick))
          (event (assoc (tnt-im-buffer-name nick) tnt-event-ring))
          (pounced (cdr-safe (assoc nnick tnt-pounce-alist)))
-         (fullname (car-safe (cdr-safe (or (assoc-ignore-case nick tnt-buddy-fullname-alist)
-                                           (assoc-ignore-case nnick tnt-buddy-fullname-alist)))))
+         (fullname (tnt-fullname-for-nick nick))
          (first (propertize (or fullname unick) 'mouse-face 'highlight))
          )
 
@@ -2630,11 +2629,12 @@ Special commands:
     (let ((name-list (car blist)))
       (insert (car name-list) "\n")
       (setq name-list (cdr name-list))
+
       (while name-list
         (let* ((name (car name-list))
-               (fname (if filter (funcall filter name) name)))
-          (if fname
-              (insert "  " fname "\n")))
+               (filtered-name (if filter (funcall filter name) name)))
+          (if filtered-name
+              (insert "  " filtered-name "\n")))
         (setq name-list (cdr name-list)))
       (setq blist (cdr blist))
       (if blist (insert "\n")))))
@@ -2680,6 +2680,17 @@ Special commands:
 (defun tnt-extract-normalized-buddies (blist)
   (tnt-nsort-and-remove-dups (mapcar 'toc-normalize
                                      (apply 'append (mapcar 'cdr blist)))))
+
+;;; ***************************************************************************
+
+(defun tnt-fullname-for-nick (nick)
+  "Returns the fullname for the given nickname if one exists;
+nil otherwise."
+  (car-safe
+   (cdr-safe (or (assoc-ignore-case nick tnt-buddy-fullname-alist)
+                 (assoc-ignore-case (toc-normalize nick) tnt-buddy-fullname-alist)))
+   ))
+
 
 ;;; ***************************************************************************
 ;;; ***** Pending-event ring
@@ -2799,7 +2810,7 @@ Special commands:
   (interactive)
   (setq tnt-mode-string
         (if (and tnt-current-user tnt-mode-indicator)
-			(format "  [%s%s%s%s]"
+            (format "  [%s%s%s%s]"
                     (if (and tnt-show-events-in-mode
                              (> (length tnt-event-ring) 0)) "*" "")
 
@@ -2811,7 +2822,7 @@ Special commands:
                         tnt-show-away-in-mode "")
                     (if (and tnt-pipe-to-email-now tnt-show-email-in-mode)
                         tnt-show-email-in-mode ""))
-		  "")))
+          "")))
 
 ;;; ***************************************************************************
 ;;; ***** Handlers for TOC events
@@ -3228,7 +3239,7 @@ of the list, delimited by commas."
 (defun tnt-play-sound (sound-file)
   "On non-XEmacs systems, requires that tnt-sound-exec be set."
   (if (file-readable-p sound-file)
-      (cond 
+      (cond
        (tnt-sound-exec
         (with-output-to-string
           (call-process shell-file-name nil t nil shell-command-switch (concat tnt-sound-exec " " tnt-sound-exec-args " " sound-file))))

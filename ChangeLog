@@ -1,3 +1,7 @@
+2003-10-25  Scott Evans  <gse@antisleep.com>
+
+	* tnt.el (tnt-fullname-for-nick): Moved out of tnt-buddy-list-filter.
+
 2003-10-21  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
 	* tnt.el (tnt-pop-event): also recenter when switching to an IM
