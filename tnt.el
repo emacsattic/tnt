@@ -248,6 +248,14 @@ This value may be nil to prevent any such action."
   :type 'string 
   :group 'tnt)
 
+(defcustom tnt-datestamp-format "%Y %b %d"
+  "*String used a datestamp format.
+
+This string will be passed to format-time-string and the result used
+when inserting a datestamp."
+  :type 'string
+  :group 'tnt)
+
 (defcustom tnt-timestamp-format "%T "
   "*String used a timestamp format.
 
@@ -564,8 +572,10 @@ messages are disabled."
 (defvar tnt-im-mode-map nil)
 (defvar tnt-im-user)
 (defvar tnt-message-marker)
+(defvar tnt-last-datestamp)
 
 (make-variable-buffer-local 'tnt-im-user)
+(make-variable-buffer-local 'tnt-last-datestamp)
 
 (if tnt-im-mode-map
     ()
@@ -612,10 +622,11 @@ Special commands:
           (with-current-buffer buffer
             (tnt-im-mode)
             (setq tnt-im-user user)
+            (setq tnt-last-datestamp (format-time-string tnt-datestamp-format))
             (setq tnt-message-marker (make-marker))
             (insert (format "[Conversation with %s on %s]%s"
                             (tnt-buddy-official-name user)
-                            (current-time-string)
+                            tnt-last-datestamp
                             tnt-separator))
             (set-marker tnt-message-marker (point))
           buffer)))))
@@ -892,8 +903,16 @@ Special commands:
 (defun tnt-append-message (message &optional user modified)
   "Prepends USER (MODIFIED) to MESSAGE and appends the result to the buffer."
   (save-excursion
-    (let ((old-point (marker-position tnt-message-marker)))
+    (let ((old-point (marker-position tnt-message-marker))
+          (today-datestamp (format-time-string tnt-datestamp-format)))
       (goto-char tnt-message-marker)
+
+      (if (and tnt-last-datestamp
+               (not (string-equal tnt-last-datestamp today-datestamp)))
+          (progn
+            (setq tnt-last-datestamp today-datestamp)
+            (insert-before-markers "[--- " today-datestamp " ---]"
+                                   tnt-separator)))
 
       (if tnt-use-timestamps
           (insert-before-markers (format-time-string tnt-timestamp-format)))
@@ -1020,10 +1039,15 @@ Special commands:
                              'tnt-buddy-list-filter)
         (set-buffer-modified-p nil)
 
-        (if tnt-buddy-list-point
+        (if tnt-event-ring
             (progn
-              (goto-char tnt-buddy-list-point)
-              (beginning-of-line)))
+              (goto-char 0)
+              (nonincremental-search-forward "(MESSAGE WAITING)")
+              (beginning-of-line))
+          (if tnt-buddy-list-point
+              (progn
+                (goto-char tnt-buddy-list-point)
+                (beginning-of-line))))
         ))))
 
 (defun tnt-buddy-list-filter (nick)
@@ -1032,7 +1056,9 @@ Special commands:
          (nnick (toc-normalize nick))
          (idle (tnt-buddy-idle nick))
          (away (tnt-buddy-away nick))
-         (just-onoff (tnt-get-just-signedonoff nnick)))
+         (just-onoff (tnt-get-just-signedonoff nnick))
+         (event (assoc (tnt-im-buffer-name nick) tnt-event-ring))
+         )
     (if (or status just-onoff)
         (progn
           (put-text-property 0 (length unick)
@@ -1046,6 +1072,7 @@ Special commands:
                          (format " (idle - %s)" idle))
                         (t ""))
                   just-onoff
+                  (if event " (MESSAGE WAITING)")
                   )))))
 
 
@@ -1541,7 +1568,9 @@ Special commands:
       ()
     (setq tnt-event-ring (cons (cons buffer-name (cons message function))
                                tnt-event-ring))
-    (tnt-show-top-event)))
+    (tnt-show-top-event)
+    (tnt-build-buddy-buffer)
+    ))
 
 
 (defun tnt-pop-event (accept)

@@ -1,5 +1,23 @@
 2001-05-16  NeilFred Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-datestamp-format): added.
+	(tnt-last-datestamp): added.  used for inserting a datestamp in IM
+	buffers when the date changes and the IM buffer is still being
+	used.  this is useful if you leave emacs running for days at a
+	time.
+	(tnt-im-buffer): when a new IM buffer is created, we set an
+	initial value for the last-datestamp in that buffer.
+	(tnt-append-message): if it's no longer the same day as the
+	last-datestamp, then update the last-datestamp and insert the
+	datestamp in the buffer.
+	(tnt-buddy-list-filter): now inserts "(MESSAGE WAITING)" in buddy
+	list next to any buddies whose IM buffers are in the event ring.
+	(tnt-build-buddy-buffer): if event ring is non-empty, we now move
+	point to the first "(MESSAGE WAITING)" line; otherwise we use
+	tnt-buddy-list-point as before.
+
+2001-05-16  NeilFred Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-show-buddies): added call to tnt-show-top-event.
 	this makes it so that events in the ring get displayed when user
 	goes to the buddy list buffer, or presses space in the buddy list
