@@ -47,7 +47,7 @@
 (require 'cl)
 
 
-(defconst tnt-version "TNT 2.3.2")
+(defconst tnt-version "TNT 2.4")
 
 
 ;;; Config variables
