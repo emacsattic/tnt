@@ -3,7 +3,7 @@ EMACS=emacs
 EL=tnt.el toc.el tocstr.el
 ELC = $(EL:.el=.elc)
 
-RELEASE=$(EL) $(ELC) INSTALL README PROTOCOL Changelog TODO Makefile
+RELEASE=$(EL) $(ELC) INSTALL README PROTOCOL ChangeLog TODO Makefile
 
 
 .SUFFIXES: .el .elc
