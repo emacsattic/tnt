@@ -1,5 +1,8 @@
 2000-04-06  John Jannotti  <jj@lcs.mit.edu>
 
+	* tnt.el (tnt-handle-goto-url): Added
+	(tnt-open): bind the goto-url function to tnt-handle-goto-url
+
 	* toc.el: Reorganized to reflect the ordering of documentation in
  	PROTOCOL
 	(toc-evil): Added
@@ -9,8 +12,9 @@
 	(toc-get-info): Added
 	(toc-set-info): Added
 	(toc-set-idle): Added
+	(toc-handle-receive): Stop sending cmd for GOTO_URL, since we now
+	handle it correctly.
 
-	
 	* tnt.el (tnt-handle-error): Added catchall clause to notice weird
  	errors
 

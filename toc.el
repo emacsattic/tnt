@@ -259,8 +259,8 @@
 
      ((string= cmd "GOTO_URL")
       (let ((windowid (toc-lop-field str 'index))
-            (url      (substring str index))) ; Url might have a colon
-        (funcall toc-goto-url-function cmd windowid url)))
+            (url      (substring str index))) ; Url might have a colon?
+        (funcall toc-goto-url-function windowid url)))
 
      ;; We probably ought to handle this internally.  Does it ever really
      ;; get sent?

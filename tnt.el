@@ -269,7 +269,7 @@
             toc-chat-update-buddy-function 'tnt-handle-chat-update-buddy
             toc-chat-invite-function       'tnt-handle-chat-invite
             toc-chat-left-function         'tnt-debug
-            toc-goto-url-function          'tnt-debug
+            toc-goto-url-function          'tnt-handle-goto-url
             toc-pause-function             'tnt-debug)
       (toc-open tnt-toc-host tnt-toc-port tnt-username))))
 
@@ -1319,6 +1319,9 @@ Special commands:
                     buffer 'tnt-chat-event-pop-function)
     (beep)))
 
+(defun tnt-handle-goto-url (windowid url)
+  (setq url (concat "http://" tnt-toc-host "/" url))
+  (browse-url url))
 
 ;;;----------------------------------------------------------------------------
 ;;; Minibuffer utilities
