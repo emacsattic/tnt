@@ -355,6 +355,7 @@ apropos", then type the variable name (e.g. "tnt-default-username").
     (setq tnt-recenter-windows nil)
     (setq tnt-email-to-pipe-to "someone@example.com")
     (setq tnt-email-binary "/bin/mail")
+    (setq tnt-show-buddy-signonoff nil)
 
 
 And these two lines can also optionally be included in your .emacs

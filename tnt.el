@@ -217,6 +217,9 @@ Note that you only need to set this if you're using the pipe-to-email
 feature.  defaults to /bin/mail
 ")
 
+(defvar tnt-show-buddy-signonoff t
+  "*Set this to nil in order to not have the minibuffer message every time a 
+buddy signs on or off.  Set to true by default.")
 
 ;; Faces for color highlighting of screen names.
 ;; if they already exist, we don't want to change the colors.
@@ -1034,9 +1037,12 @@ Special commands:
           (tnt-beep tnt-beep-on-buddy-signonoff)
           (let ((buffer (get-buffer (tnt-im-buffer-name nick))))
             (if buffer
-                (with-current-buffer buffer
-                  (tnt-append-message (format "%s %s" nick state)))))
-          (message "%s %s" nick state)
+                    (with-current-buffer buffer
+                      (tnt-append-message (format "%s %s" nick state)))))
+
+          (if tnt-show-buddy-signonoff 
+              (message "%s %s" nick state))
+
           (if tnt-timers-available (tnt-set-just-signedonoff nnick onlinep))
           ))
     (setq tnt-buddy-alist (tnt-addassoc nnick status tnt-buddy-alist))
