@@ -1,3 +1,7 @@
+2000-05-27  Jim Whitehead  <jnwhiteh@syr.edu>
+
+	* tnt.el (tnt-fetch-info): fixed the regexp so it works.
+
 2000-05-26  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-message-on-buddy-signonoff): changed name from
@@ -11,7 +15,7 @@
 	(tnt-fetch-info): added
 	(tnt-handle-closed): now tries to auto-reconnect
 
-2000-05-24  TNT Development  <tntdevel@brokendreams.net>
+2000-05-24  Jim Whitehead  <jnwhiteh@syr.edu>
 
 	* tnt.el (tnt-show-buddy-signonoff): added.
 	(tnt-set-buddy-status): checks for tnt-show-buddy-signoff, determines

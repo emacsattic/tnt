@@ -947,7 +947,7 @@ Special commands:
   (interactive)
   (save-excursion
     (beginning-of-line)
-    (if (null (re-search-forward "^ +\([^(]*\)" nil t))
+    (if (null (re-search-forward "^ +\\([^(\n]*\\)" nil t))
         (error "Position cursor on a buddy name")
       (toc-get-info (buffer-substring (match-beginning 1) (match-end 1))))))
 
