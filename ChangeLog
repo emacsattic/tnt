@@ -1,3 +1,24 @@
+2002-10-02  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
+	* tnt.el (tnt-build-buddy-buffer): now display non-buddy IMs and
+	any chat rooms the user is currently in.
+	(tnt-non-buddy-messages): new function to display in buddy list
+	buffer any events in the ring that are IMs from non-buddies.
+	(tnt-chat-alist-to-buffer): new function to display chat rooms in
+	buddy list buffer.
+	(tnt-leave-chat): make it work when called from in the buddy list;
+	make it remove the chat from the tnt-chat-alist.
+	(tnt-buddy-list-menu): add "[l]eave chat room" option to menu.
+	(tnt-buddy-list-mode-map): add "l" for tnt-leave-chat.
+	(tnt-get-buddy-at-point): check whether the "buddy" at point comes
+	after a line that just says "chat rooms", and if so, assume this
+	"buddy" is actually a chat room.  return value is now a dotted
+	pair, where the car is either "im" or "chat", and the cdr is the
+	name of either the buddy (or non-buddy) or chat room at point.
+	(tnt-toggle-pounce): update call to tnt-get-buddy-at-point.
+	(tnt-im-buddy): update call to tnt-get-buddy-at-point.
+	(tnt-im-buddy-mouse-up): update call to tnt-get-buddy-at-point.
+
 2002-09-26  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
 	* tnt.el (tnt-buddy-list-menu): put "-----" line above the menu.

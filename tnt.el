@@ -1012,7 +1012,9 @@ if nil)"
     (when (and (not nick)
                (eq major-mode 'tnt-buddy-list-mode))
       ;; get nick on this line
-      (setq nick (toc-normalize (tnt-get-buddy-at-point))))
+      (let ((buddy-at-point (tnt-get-buddy-at-point)))
+        (when (string= (car buddy-at-point) "im")
+          (setq nick (toc-normalize (cdr buddy-at-point))))))
 
     (unless nick
       (setq nick (toc-normalize
@@ -1533,13 +1535,20 @@ Special commands:
     (let* ((completion-ignore-case t)
            (input (or (and (stringp room) room)
                       (and (boundp 'tnt-chat-room) tnt-chat-room)
+                      (and (eq major-mode 'tnt-buddy-list-mode)
+                           (let ((buddy-at-point (tnt-get-buddy-at-point)))
+                             (when (string= (car buddy-at-point) "chat")
+                               (cdr buddy-at-point))))
                       (completing-read "Leave chat room: "
                                        (mapcar (lambda (x) (list (cdr x)))
                                                tnt-chat-alist)))))
       (with-current-buffer (tnt-chat-buffer input)
-        (setq tnt-chat-participants nil)
         (toc-chat-leave tnt-chat-roomid)
-        (tnt-append-message (format "%s left" tnt-current-user))))))
+        (setq tnt-chat-participants nil)
+        (setq tnt-chat-alist (tnt-remassoc tnt-chat-roomid tnt-chat-alist))
+        (tnt-append-message (format "%s left" tnt-current-user)))
+      (tnt-build-buddy-buffer)
+      )))
 
 ;;; ***************************************************************************
 (defun tnt-chat-buffer-name (room)
@@ -1813,7 +1822,7 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "i" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map "I" 'tnt-fetch-info)
   (define-key tnt-buddy-list-mode-map "j" 'tnt-join-chat)
-  ;;(define-key tnt-buddy-list-mode-map "l" 'tnt-leave-chat)
+  (define-key tnt-buddy-list-mode-map "l" 'tnt-leave-chat)
   (define-key tnt-buddy-list-mode-map "L" 'tnt-pounce-list)
   (define-key tnt-buddy-list-mode-map "m" 'tnt-toggle-mute)
   (define-key tnt-buddy-list-mode-map "M" 'tnt-toggle-email)
@@ -1900,9 +1909,12 @@ Special commands:
              (col (current-column))
              (current-line (tnt-current-line-in-buffer)))
         (erase-buffer)
-        (tnt-blist-to-buffer tnt-buddy-blist
-                             'tnt-buddy-list-filter)
+
+        (tnt-blist-to-buffer tnt-buddy-blist 'tnt-buddy-list-filter)
+        (tnt-non-buddy-messages)
+        (tnt-chat-alist-to-buffer tnt-chat-alist)
         (tnt-buddy-list-menu)
+        
         (set-buffer-modified-p nil)
 
         (goto-char 0)
@@ -1912,6 +1924,44 @@ Special commands:
           (goto-line current-line)
           (move-to-column col))
         ))))
+
+;;; ***************************************************************************
+(defun tnt-non-buddy-messages ()
+  ;; this is ugly, making use of the buffer name in each event like this,
+  ;; rather than storing the information we actually need in the event.
+  (let ((event-list tnt-event-ring)
+        (event nil)
+        (non-buddies nil))
+    (while event-list
+      (setq event (car event-list))
+      (let ((event-buffer-name (car event)))
+        (save-match-data
+          (when (string-match "\\*\\(im\\|chat\\)-\\([^*]*\\)\\*"
+                              event-buffer-name)
+            (when (and (string= "im" (match-string 1 event-buffer-name))
+                       (not (member (match-string 2 event-buffer-name)
+                                    (tnt-extract-normalized-buddies
+                                     tnt-buddy-blist))))
+              (setq non-buddies (cons (match-string 2 event-buffer-name)
+                                      non-buddies))))))
+      (setq event-list (cdr event-list)))
+    (when non-buddies
+      (insert "\nnon-buddies\n")
+      (mapcar '(lambda(x) (insert "  "
+                                  (propertize x 'mouse-face 'highlight)
+                                  " (MESSAGE WAITING)\n")) non-buddies)
+      )))
+
+;;; ***************************************************************************
+(defun tnt-chat-alist-to-buffer (alist)
+  (if alist (insert "\nchat rooms\n"))
+  (while alist
+    (let ((name (cdar alist)))
+      (insert "  " (propertize name 'mouse-face 'highlight))
+      (when (assoc (tnt-chat-buffer-name name) tnt-event-ring)
+        (insert " (MESSAGE WAITING)"))
+      (insert "\n")
+      (setq alist (cdr alist)))))
 
 ;;; ***************************************************************************
 (defun tnt-buddy-list-menu ()
@@ -1942,7 +1992,7 @@ Special commands:
                        "edit [B]uddy list    "
                        "next men[u]"
                        "\n"
-                       "                     "
+                       "[l]eave chat room    "
                        "[P]ounce on buddy    "
                        (if tnt-show-inactive-buddies-now "hide" "show")
                        " [O]ffline       "
@@ -2031,9 +2081,12 @@ Special commands:
 (defun tnt-im-buddy ()
   "Initiates an IM conversation with the selected buddy."
   (interactive)
-  (let* ((nick (tnt-get-buddy-at-point))
+  (let* ((buddy-at-point (tnt-get-buddy-at-point))
+         (type (car buddy-at-point))
+         (nick (cdr buddy-at-point))
          (nnick (toc-normalize nick)))
     (cond
+     ((string= type "chat") (tnt-join-chat nick))
      ((tnt-buddy-status nick) (tnt-im nick))
      ((assoc (tnt-im-buffer-name nick) tnt-event-ring) (tnt-im nick))
      ((assoc nnick tnt-pounce-alist)
@@ -2061,9 +2114,9 @@ Special commands:
       (if (or (null (re-search-forward "^ +\\([^[(\n]*\\)" nil t))
               (> (match-beginning 1) (tnt-buddy-list-menu-line)))
           (error "Position cursor on a buddy name")
-        (let* ((nick-or-name
-                (buffer-substring-no-properties (match-beginning 1)
-                                                (match-end 1)))
+        (let* ((match-b (match-beginning 1))
+               (match-e (match-end 1))
+               (nick-or-name (buffer-substring-no-properties match-b match-e))
                (nick-or-name (substring nick-or-name 0
                                         (or (string-match "\\s-+$"
                                                           nick-or-name)
@@ -2072,8 +2125,11 @@ Special commands:
                                 tnt-buddy-fullname-alist)))
           (when element
             (setq nick-or-name (or (car-safe element) nick-or-name)))
-          
-          nick-or-name))
+
+          (goto-char match-b)
+          (if (re-search-backward "^chat rooms$" nil t)
+              (cons "chat" nick-or-name)
+            (cons "im" nick-or-name))))
       )))
 
 ;;; ***************************************************************************
@@ -2090,9 +2146,14 @@ Special commands:
   "Initiates an IM conversation if still clicking same buddy as on mouse-down."
   (interactive "e")
   (mouse-set-point event)
-  (let ((nick (tnt-get-buddy-at-point)))
-    (if (string= nick tnt-buddy-on-mouse-down)
-        (tnt-im nick))))
+  (let* ((buddy-at-point (tnt-get-buddy-at-point))
+         (type (car buddy-at-point))
+         (nick (cdr buddy-at-point)))
+    (if (string= (concat type nick) (concat (car tnt-buddy-on-mouse-down)
+                                            (cdr tnt-buddy-on-mouse-down)))
+        (if (string= type "chat")
+            (tnt-join-chat nick)
+          (tnt-im nick)))))
 
 ;;; ***************************************************************************
 (defun tnt-next-buddy ()
