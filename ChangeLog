@@ -1,3 +1,13 @@
+2000-08-02  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-just-reconnected): added.
+	(tnt-just-reconnected-unset-after): added.
+	(tnt-unset-just-reconnected): added.  
+	(tnt-handle-closed): now only reconnects if we didn't just
+	reconnect once.
+	(tnt-handle-nick): sets the just-reconnected flag, and starts a
+	timer to unset it.
+
 2000-07-31  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-backup-or-restore-buddy-list): no longer

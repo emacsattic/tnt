@@ -331,6 +331,11 @@ feature.  defaults to /bin/mail
 (defvar tnt-reconnecting nil)
 (defvar tnt-reconnecting-away nil)
 (defvar tnt-reconnecting-away-msg nil)
+(defvar tnt-just-reconnected nil)
+(defvar tnt-just-reconnected-unset-after 3)
+
+(defun tnt-unset-just-reconnected ()
+  (setq tnt-just-reconnected nil))
 
 (defun tnt-buddy-away (nick)
   (cdr (assoc (toc-normalize nick) tnt-away-alist)))
@@ -1513,21 +1518,28 @@ Special commands:
 
 
 (defun tnt-handle-closed ()
-  ;; save these values
-  (setq tnt-reconnecting-away tnt-away)
-  (setq tnt-reconnecting-away-msg tnt-away-msg)
-  ;; reset everything
-  (tnt-shutdown)
-  ;; if we're forwarding to email, send notification
-  (if (and tnt-email-to-pipe-to tnt-pipe-to-email-now)
-      (tnt-pipe-message-to-program "TOC-server"
-                                   "TNT connection closed by server"))
-  ;; error
-  (tnt-error "TNT connection closed")
-  ;; and finally, attempt to reconnect
-  (setq tnt-reconnecting t)
-  (message "Trying to reconnect...")
-  (tnt-open tnt-username tnt-password)
+  ;; if we just reconnected, don't try to reconnect again
+  (if tnt-just-reconnected
+      (progn
+        (tnt-shutdown)
+        (tnt-error "TNT connection closed immediately on reconnect")
+        )
+    ;; save these values -- NOTE: must be done before tnt-shutdown
+    (setq tnt-reconnecting-away tnt-away)
+    (setq tnt-reconnecting-away-msg tnt-away-msg)
+    ;; reset everything
+    (tnt-shutdown)
+    ;; if we're forwarding to email, send notification
+    (if (and tnt-email-to-pipe-to tnt-pipe-to-email-now)
+        (tnt-pipe-message-to-program "TOC-server"
+                                     "TNT connection closed by server"))
+    ;; error
+    (tnt-error "TNT connection closed")
+    ;; and finally, attempt to reconnect
+    (setq tnt-reconnecting t)
+    (message "Trying to reconnect...")
+    (tnt-open tnt-username tnt-password)
+    )
   )
 
 (defun tnt-handle-sign-on (version)
@@ -1586,6 +1598,11 @@ Special commands:
         (if (and tnt-email-to-pipe-to tnt-pipe-to-email-now)
             (tnt-pipe-message-to-program "TOC-server"
                                          "TNT successfully reconnected"))
+        (if tnt-timers-available
+            (progn
+              (setq tnt-just-reconnected t)
+              (run-at-time tnt-just-reconnected-unset-after nil
+                           'tnt-unset-just-reconnected)))
         )
     (tnt-show-buddies)))
 
@@ -2046,9 +2063,9 @@ seconds, and will tell you when it has finished).
       
       (defun tnt-idle-bug-send-string ()
         (if tnt-idle-bug-sent-string-p
-            (insert "...\n")
+            (insert "idle 2 seconds\n")
           (setq tnt-idle-bug-sent-string-p t)
-          (process-send-string "test" "sending a string to process-filter\n")
+          (process-send-string "test" "idle 2 seconds: sending a string to process-filter\n")
           (process-send-eof "test")))
       
       (defun tnt-idle-bug-idle-1-sec ()
@@ -2074,7 +2091,8 @@ With the buggy handler, the string being sent to the process-filter
 resets the idle timers, so that it believes it has become unidle (and
 then idle again).  So in the above test, it will say \"idle 1 second\"
 twice -- once before the string is sent and once after.  The correct
-idle handler will only say it before.
+idle handler will only say it before, and then will say \"idle 3
+seconds\" immediately after.
 
 You should now exit this emacs process.
 ")
