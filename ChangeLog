@@ -1,3 +1,9 @@
+2004-07-19  NeilFred Picciotto  <fred@full.halflab.com>
+
+	* tnt.el (tnt-reformat-text): make the tnt-strip-a-href call after
+	we've done the tnt-strip-some-html calls instead of before.  this
+	fixes some cases where a URL would show up twice.
+
 2004-04-06  NeilFred Picciotto  <fred@full.halflab.com>
 
 	* tnt.el (tnt-backslashify-string): also put a '\' before '+'.

@@ -2794,21 +2794,21 @@ No sort -> Buddy name -> Fullname"
     (save-match-data
       (end-of-line)
       (let ((eol-point (point)))
-      (beginning-of-line)
+        (beginning-of-line)
         (if (or (null (or (re-search-forward "\\[\\([^]]+\\)\\]" eol-point t)
                           (re-search-forward "^ +\\([^(]+\\)" eol-point t)))
-              (> (match-beginning 1) (tnt-buddy-list-menu-line)))
-          (error "Position cursor on a buddy name")
-        (let* ((match-b (match-beginning 1))
-               (match-e (match-end 1))
-               (nick (buffer-substring-no-properties match-b match-e))
-               (nick (substring nick 0
-                                (or (string-match "\\s-+$" nick)
-                                    (length nick)))))
-          (goto-char match-b)
-          (if (re-search-backward "^chat rooms$" nil t)
-              (cons "chat" nick)
-            (cons "im" nick))))
+                (> (match-beginning 1) (tnt-buddy-list-menu-line)))
+            (error "Position cursor on a buddy name")
+          (let* ((match-b (match-beginning 1))
+                 (match-e (match-end 1))
+                 (nick (buffer-substring-no-properties match-b match-e))
+                 (nick (substring nick 0
+                                  (or (string-match "\\s-+$" nick)
+                                      (length nick)))))
+            (goto-char match-b)
+            (if (re-search-backward "^chat rooms$" nil t)
+                (cons "chat" nick)
+              (cons "im" nick))))
         ))))
 
 ;;; ***************************************************************************
@@ -3947,7 +3947,7 @@ of the list, delimited by commas."
 (defvar tnt-html-regexps-to-replace
   ;; could be defcustom??
   (list
-   '("<BR>\\|<br>" "\n")
+   '("<BR>\\|<br>\\|<br />" "\n")
    '("</?[Ii]>"    "_")
    '("</?[Bb]>"    "*")
         ;; these must be after any html tags (which have "<" and ">"):
@@ -4087,11 +4087,12 @@ of the list, delimited by commas."
 ;;; ***************************************************************************
 (defun tnt-reformat-text (str)
   ;; calls tnt-strip-some-html repeatedly with different substitutions
-  (reduce 'tnt-strip-some-html tnt-html-regexps-to-replace
-          :initial-value
-          (tnt-strip-some-html (tnt-strip-a-href str)
-                               (list tnt-html-tags-to-strip "")
-                               )))
+  (tnt-strip-a-href
+   (reduce 'tnt-strip-some-html tnt-html-regexps-to-replace
+           :initial-value
+           (tnt-strip-some-html str
+                                (list tnt-html-tags-to-strip "")
+                                ))))
 
 ;;; ***************************************************************************
 (defun tnt-repeat (interval function)
