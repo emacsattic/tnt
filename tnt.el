@@ -470,14 +470,16 @@ feature.  defaults to /bin/mail
   (interactive)
   (if (null tnt-username-alist)
       (message "No username list defined.")
-    (progn
-      (setq tnt-username-alist (tnt-rotate-left tnt-username-alist))
-      (if tnt-default-username
-          (setq tnt-default-username (caar tnt-username-alist)))
-      (if tnt-default-password
-          (setq tnt-default-password (cdar tnt-username-alist)))
-      (message "Next login will be as user %s" (caar tnt-username-alist)))
-    ))
+    (if tnt-current-user
+        (message "Can't switch username while online.")
+      (progn
+        (setq tnt-username-alist (tnt-rotate-left tnt-username-alist))
+        (if tnt-default-username
+            (setq tnt-default-username (caar tnt-username-alist)))
+        (if tnt-default-password
+            (setq tnt-default-password (cdar tnt-username-alist)))
+        (message "Next login will be as user %s" (caar tnt-username-alist)))
+      )))
 
 
 
