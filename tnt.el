@@ -1253,7 +1253,7 @@ Special commands:
          (just-onoff (tnt-get-just-signedonoff nnick))
          (event (assoc (tnt-im-buffer-name nick) tnt-event-ring))
          )
-    (if (or status just-onoff)
+    (if (or status just-onoff event)
         (progn
           (put-text-property 0 (length unick)
                              'mouse-face 'highlight unick)
@@ -1266,6 +1266,7 @@ Special commands:
                          (format " (idle - %s)" idle))
                         (t ""))
                   just-onoff
+                  (if (and (not status) (not just-onoff)) " (offline)")
                   (if event " (MESSAGE WAITING)")
                   )))))
 
@@ -1284,7 +1285,8 @@ Special commands:
   "Initiates an IM conversation with the selected buddy."
   (interactive)
   (let ((nick (tnt-get-buddy-at-point)))
-    (if (tnt-buddy-status nick)
+    (if (or (tnt-buddy-status nick)
+            (assoc (tnt-im-buffer-name nick) tnt-event-ring))
         (tnt-im nick)
       (error "Not online: %s" nick))))
 

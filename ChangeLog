@@ -1,3 +1,11 @@
+2002-06-23  NeilFred Picciotto  <fred@guido.halflab.com>
+
+	* tnt.el (tnt-buddy-list-filter): if there's a message waiting
+	from a buddy who has signed off, keep them in the buddy list.
+	(tnt-im-buddy): if buddy is offline and there's a message waiting
+	from them, don't complain when trying to IM them, just switch to
+	their buffer.
+
 2002-06-20  NeilFred Picciotto  <fred@guido.halflab.com>
 
 	* tnt.el (tnt-get-buddy-at-point): move to beginning of line
