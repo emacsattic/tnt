@@ -1801,6 +1801,8 @@ Special commands:
 (defvar tnt-buddy-update-timer nil)
 (defvar tnt-buddy-update-interval 60)
 
+(defvar tnt-current-menu 0)
+
 (unless tnt-buddy-list-mode-map
   (setq tnt-buddy-list-mode-map (make-sparse-keymap))
   (define-key tnt-buddy-list-mode-map "?" 'tnt-show-help)
@@ -1825,6 +1827,7 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "q" 'tnt-kill)
   (define-key tnt-buddy-list-mode-map "r" 'tnt-reject)
   (define-key tnt-buddy-list-mode-map "s" 'tnt-switch-user)
+  (define-key tnt-buddy-list-mode-map "u" 'tnt-next-menu)
   (define-key tnt-buddy-list-mode-map " " 'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "\C-m" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse-down)
@@ -1884,6 +1887,12 @@ Special commands:
       line-num)))
 
 ;;; ***************************************************************************
+(defun tnt-next-menu ()
+  (interactive)
+  (setq tnt-current-menu (if (>= tnt-current-menu 3) 0 (1+ tnt-current-menu)))
+  (tnt-build-buddy-buffer))
+
+;;; ***************************************************************************
 (defun tnt-build-buddy-buffer ()
   (let ((buffer (tnt-buddy-buffer)))
     (with-current-buffer buffer
@@ -1907,43 +1916,64 @@ Special commands:
 ;;; ***************************************************************************
 (defun tnt-buddy-list-menu ()
   (if tnt-current-user
-      (insert (concat "\n\n"
-                      "[p]rev buddy         "
-                      "[n]ext buddy         "
-                      "[RET] IM this buddy  "
-                      "\n"
-                      "[M-p]rev group       "
-                      "[M-n]ext group       "
-                      "[q]uit TNT           "
-                      "\n\n"
-                      "[j]oin chat room     "
-                      "edit [B]uddy list    "
-                      (if tnt-email-to-pipe-to
-                          (if tnt-pipe-to-email-now
-                              "turn off e[M]ail"
-                            "turn on e[M]ail")
-                        "")
-                      "\n"
-                      (if tnt-muted "un[m]ute" "[m]ute  ")
-                      "             "
-                      "[P]ounce on buddy    "
-                      (if tnt-show-inactive-buddies-now "hide" "show")
-                      " [O]ffline buddies"
-                      (if tnt-event-ring
-                          "\n\n[a]ccept message     [r]eject message"
-                        "")
-                      "\n"))
-    (insert (concat "\n"
-                    "tnt currently offline"
-                    "\n\n"
-                    "[o]pen connection"
-                    (let ((username (or tnt-default-username
-                                        (and tnt-username-alist
-                                             (caar tnt-username-alist)))))
-                      (if username (concat " as user: " username) ""))
-                    "\n"
-                    (if tnt-username-alist "[s]witch user" "")
-                    "\n"))
+      (cond ((= tnt-current-menu 0)
+             (if tnt-event-ring
+                 (insert "\n\n"
+                         "[a]ccept message     "
+                         "[r]eject message     "
+                         "                     "
+                         "next men[u]"
+                         "\n")
+               (setq tnt-current-menu (1+ tnt-current-menu))
+               (tnt-buddy-list-menu)))
+            ((= tnt-current-menu 1)
+             (insert "\n\n"
+                     "[p]rev buddy         "
+                     "[n]ext buddy         "
+                     "[RET] IM buddy       "
+                     "next men[u]"
+                     "\n"
+                     "[M-p]rev group       "
+                     "[M-n]ext group       "
+                     "[q]uit tnt           "))
+            ((= tnt-current-menu 2)
+             (insert "\n\n"
+                     "[j]oin chat room     "
+                     (if tnt-away "unset [A]way status  "
+                       "set [A]way status    ")
+                     "edit [B]uddy list    "
+                     "next men[u]"
+                     "\n"
+                     "                     "
+                     "[P]ounce on buddy    "
+                     (if tnt-show-inactive-buddies-now "hide" "show")
+                     " [O]ffline buddies"
+                     "\n"))
+            ((= tnt-current-menu 3)
+             (insert "\n\n"
+                     (if tnt-muted "un[m]ute tnt sounds  "
+                       "[m]ute tnt sounds    ")
+                     (if tnt-email-to-pipe-to
+                         (if tnt-pipe-to-email-now
+                             "turn off e[M]ail     "
+                           "turn on e[M]ail      ")
+                       "                     ")
+                     "                     "
+                     "next men[u]"
+                     "\n"
+                     ))
+            (t (insert "\n")))
+    (insert "\n"
+            "tnt currently offline"
+            "\n\n"
+            "[o]pen connection"
+            (let ((username (or tnt-default-username
+                                (and tnt-username-alist
+                                     (caar tnt-username-alist)))))
+              (if username (concat " as user: " username) ""))
+            "\n"
+            (if tnt-username-alist "[s]witch user" "")
+            "\n")
     ))
 
 ;;; ***************************************************************************
@@ -2142,9 +2172,6 @@ Special commands:
                          (* 60 idle))))
         (state (if onlinep "online" "offline")))
 
-    ;; This part doesn't work on XEmacs.  tnt-login-flag never stays
-    ;; set because run-at-time is broken on XEmacs and runs right
-    ;; away.  Grrrrrrr.
     (if (and (not tnt-login-flag)
              (not (string= status (tnt-buddy-status nick))))
         (progn
@@ -2577,6 +2604,7 @@ Special commands:
     (setq tnt-event-ring (cons (cons buffer-name (cons message function))
                                tnt-event-ring))
     (tnt-show-top-event)
+    (setq tnt-current-menu 0)
     (tnt-build-buddy-buffer)
     ))
 

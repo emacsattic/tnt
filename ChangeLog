@@ -1,5 +1,16 @@
 2002-09-26  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
+	* tnt.el (tnt-current-menu): added.  to allow cycling through
+	several smaller menus, instead of always having one big menu.
+	(tnt-buddy-list-mode-map): added "u" for tnt-next-menu.
+	(tnt-next-menu): added.  cycles through menus.
+	(tnt-buddy-list-menu): split up the one big menu into several
+	smaller menus.
+	(tnt-push-event): when adding an event to the ring, automatically
+	switch to the menu that includes "[a]ccept message".
+
+2002-09-26  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
 	* tnt.el (tnt-unset-login-flag): now works in xemacs.  basically
 	we just set the timer to run right away, the same way it wrongly
 	does anyway in xemacs; and the trick is we also set it as a
