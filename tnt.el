@@ -170,11 +170,11 @@ forwarding on and off with \"C-x t M\".")
 
 ;; Faces for color highlighting of screen names.
 ;; if they already exist, we don't want to change the colors.
-(if (not (internal-find-face 'tnt-other-name-face))
+(if (member 'tnt-other-name-face (face-list))
     (progn
       (make-face 'tnt-other-name-face)
       (set-face-foreground 'tnt-other-name-face "blue")))
-(if (not (internal-find-face 'tnt-my-name-face))
+(if (member 'tnt-my-name-face (face-list))
     (progn
       (make-face 'tnt-my-name-face)
       (set-face-foreground 'tnt-my-name-face "red")))

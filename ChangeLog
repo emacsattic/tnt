@@ -1,3 +1,9 @@
+2000-04-21  John Jannotti  <jj@lcs.mit.edu>
+
+	* tnt.el: Use a slightly silly way to check if a face is already
+	defined.  Emacs uses internal-find-face, XEmacs uses find-face, so 
+	we just call member on (face-list) which both support.
+
 2000-04-18  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-completing-read-list): added &optional
