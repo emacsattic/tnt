@@ -70,7 +70,7 @@
 (defvar tnt-separator "\n\n"
   "*String printed between IMs.")
 
-(defvar tnt-show-timestamps nil
+(defvar tnt-use-timestamps nil
   "*If t, shows timestamps in TNT conversations.")
 
 (defvar tnt-beep-on-buddy-signonoff nil
@@ -614,7 +614,7 @@ Special commands:
       
       (if (not user)
           (insert-before-markers "[" message "]")
-        (if tnt-show-timestamps
+        (if tnt-use-timestamps
             (insert-before-markers (format-time-string "%T ")))
             
         (let ((start (point)))
@@ -653,7 +653,6 @@ Special commands:
 (defvar tnt-away-alist nil)
 
 (define-abbrev-table 'tnt-buddy-list-mode-abbrev-table ())
-
 
 (if tnt-buddy-list-mode-syntax-table
     ()
