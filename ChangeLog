@@ -1,3 +1,32 @@
+2001-06-20  NeilFred Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-reconnecting-idle-time): added.  allows
+	auto-reconnecting to leave idle time reasonably intact.
+	(tnt-send-idle): now takes optional idle time as argument, which
+	is needed for the auto-reconnect.  also now rebuilding the buddy
+	buffer, so that user immediately shows up as idle in their own
+	buddy list.
+	(tnt-send-unidle): now makes sure we're online before telling the
+	toc server we're not idle.
+	(tnt-shutdown): now making sure we unidle.
+	(tnt-buddy-idle): now calling tnt-buddy-idle-secs rather than
+	calculating that internally.
+	(tnt-buddy-idle-secs): added, taking a portion of code out of
+	buddy-idle.  basically just separating the computation from the
+	presentation, so that the computation can be retrieved on its own.
+	(tnt-handle-closed): now saving the idle-time (by calling
+	buddy-idle-secs), and including a timestamp in the minibuffer
+	message.
+	(tnt-handle-nick): now calling send-idle if we saved an idle time
+	when disconnected.
+	(tnt-handle-error): now calls toc-close if the error code was
+	between 980-989.  before, if a login failed, it was trying to
+	auto-reconnect or something, and it would continue to fail...  now
+	it doesn't keep trying.  hopefully this doesn't break something
+	else, and hopefully 980-989 are all of and the only signon errors.
+	(tnt-handle-sign-on): now including a timestamp in the minibuffer
+	message.
+
 2001-05-16  NeilFred Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-build-buddy-buffer): if there's a message from a

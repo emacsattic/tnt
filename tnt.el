@@ -411,6 +411,7 @@ messages are disabled."
 (defvar tnt-reconnecting nil)
 (defvar tnt-reconnecting-away nil)
 (defvar tnt-reconnecting-away-msg nil)
+(defvar tnt-reconnecting-idle-time nil)
 (defvar tnt-just-reconnected nil)
 (defvar tnt-just-reconnected-unset-after 3)
 
@@ -481,19 +482,23 @@ messages are disabled."
 
 ;; the timers are created in tnt-handle-sign-on below
 
-(defun tnt-send-idle ()
-  (if (not tnt-currently-idle)
-      (progn
-        (add-hook 'pre-command-hook 'tnt-send-unidle)
-        (setq tnt-currently-idle t)
-        (toc-set-idle tnt-send-idle-after))))
+(defun tnt-send-idle (&optional idle-secs)
+    (if (and tnt-current-user (not tnt-currently-idle))
+        (let ((idle-secs (if idle-secs idle-secs tnt-send-idle-after)))
+          (add-hook 'pre-command-hook 'tnt-send-unidle)
+          (setq tnt-currently-idle t)
+          (toc-set-idle idle-secs)
+          (tnt-build-buddy-buffer)
+          ;(message "now idle")
+          )))
 
 (defun tnt-send-unidle ()
   (remove-hook 'pre-command-hook 'tnt-send-unidle)
   (if tnt-currently-idle
       (progn
         (setq tnt-currently-idle nil)
-        (toc-set-idle 0)
+        (if tnt-current-user (toc-set-idle 0))
+        ;(message "now unidle")
         )))
 
 
@@ -1167,13 +1172,14 @@ Special commands:
 
 (defun tnt-shutdown ()
   (tnt-set-online-state nil)
+
+  ;; cancel timers
   (if tnt-keepalive-timer (cancel-timer tnt-keepalive-timer))
   (setq tnt-keepalive-timer nil)
   (if tnt-buddy-update-timer (cancel-timer tnt-buddy-update-timer))
   (setq tnt-buddy-update-timer nil)
   (if tnt-idle-timer (cancel-timer tnt-idle-timer))
   (setq tnt-idle-timer nil)
-  (remove-hook 'pre-command-hook 'tnt-send-unidle)
 
   (setq tnt-current-user nil
         tnt-buddy-alist nil
@@ -1186,6 +1192,11 @@ Special commands:
         tnt-just-signedonoff-alist nil
         tnt-away nil
         tnt-last-away-sent nil)
+
+  ;; this needs to happen after the current-user is set to nil, so it
+  ;; knows we're no longer online
+  (if tnt-currently-idle (tnt-send-unidle))
+  
   (tnt-build-buddy-buffer))
 
 
@@ -1231,6 +1242,14 @@ Special commands:
   (cdr (assoc (toc-normalize nick) tnt-buddy-alist)))
 
 (defun tnt-buddy-idle (nick)
+  (let* ((idle-secs-or-nil (tnt-buddy-idle-secs nick))
+         (idle-secs (if idle-secs-or-nil idle-secs-or-nil 0))
+         (idle-mins (/ idle-secs 60)))
+    (cond ((= 0 idle-mins) nil)
+          ((< idle-mins 60) (format "%dm" idle-mins))
+          (t (format "%dh%dm" (/ idle-mins 60) (mod idle-mins 60))))))
+
+(defun tnt-buddy-idle-secs (nick)
   ;; NOTE: (current-time) doesn't actually give seconds since the
   ;; epoch, because elisp only allocates 28 bits for an integer (i
   ;; believe the remaining four bits are used to store what type that
@@ -1243,14 +1262,9 @@ Special commands:
   (let ((idle-since (cdr (assoc (toc-normalize nick) tnt-idle-alist))))
     (if (null idle-since) nil
       (let* ((now (cadr (current-time)))
-             (diff (- now idle-since))
-             (idle-secs (if (< diff 0)
-                               (+ diff 65536)
-                             diff))
-             (idle-mins (/ idle-secs 60)))
-        (cond ((= 0 idle-mins) nil)
-              ((< idle-mins 60) (format "%dm" idle-mins))
-              (t (format "%dh%dm" (/ idle-mins 60) (mod idle-mins 60))))))))
+             (diff (- now idle-since)))
+        (if (< diff 0) (+ diff 65536) diff)))))
+
 
 
 (defun tnt-buddy-official-name (buddy)
@@ -1648,17 +1662,23 @@ Special commands:
         (tnt-shutdown)
         (tnt-error "TNT connection closed immediately on reconnect")
         )
+    
     ;; save these values -- NOTE: must be done before tnt-shutdown
     (setq tnt-reconnecting-away tnt-away)
     (setq tnt-reconnecting-away-msg tnt-away-msg)
+    (setq tnt-reconnecting-idle-time (tnt-buddy-idle-secs tnt-current-user))
+
     ;; reset everything
     (tnt-shutdown)
+
     ;; if we're forwarding to email, send notification
     (if (and tnt-email-to-pipe-to tnt-pipe-to-email-now)
         (tnt-pipe-message-to-program "TOC-server"
                                      "TNT connection closed by server"))
+
     ;; error
-    (tnt-error "TNT connection closed")
+    (tnt-error (format-time-string (concat "TNT connection closed [%T]")))
+
     ;; and finally, attempt to reconnect
     (setq tnt-reconnecting t)
     (message "Trying to reconnect...")
@@ -1667,7 +1687,7 @@ Special commands:
   )
 
 (defun tnt-handle-sign-on (version)
-  (message "Signed on")
+  (message (format-time-string (concat "Signed on [%T]")))
   (if tnt-use-keepalive
       (setq tnt-keepalive-timer
             (tnt-repeat tnt-keepalive-interval 'toc-keepalive)))
@@ -1680,10 +1700,9 @@ Special commands:
         (run-at-time tnt-login-flag-unset-after nil
                      'tnt-unset-login-flag)))
   (if tnt-use-idle-timer
-      (progn
-        (setq tnt-idle-timer (run-with-idle-timer tnt-send-idle-after t
-                                                  'tnt-send-idle))
-    )))
+      (setq tnt-idle-timer (run-with-idle-timer tnt-send-idle-after t
+                                                'tnt-send-idle)))
+  )
 
 (defun tnt-handle-config (config)
   (setq tnt-buddy-blist (tnt-config-to-blist config))
@@ -1715,8 +1734,12 @@ Special commands:
 
         (if tnt-reconnecting-away
             (tnt-set-away tnt-reconnecting-away-msg))
+        (if tnt-reconnecting-idle-time
+            (tnt-send-idle tnt-reconnecting-idle-time))
+        
         (setq tnt-reconnecting-away nil)
         (setq tnt-reconnecting-away-msg nil)
+        (setq tnt-reconnecting-idle-time nil)
 
         (if (and tnt-email-to-pipe-to tnt-pipe-to-email-now)
             (tnt-pipe-message-to-program "TOC-server"
@@ -1854,7 +1877,12 @@ Special commands:
     (tnt-error "You have been logging in and out too rapidly.  Wait ten minutes or longer."))
    ((= code 989)
     (tnt-error "An unknown signon error occured: %s" (car args)))
-   (t (tnt-error "Unknown error %d:%S" code args))))
+   (t (tnt-error "Unknown error %d:%S" code args)))
+
+  ;; if the error was in signing on, we need to delete the process so
+  ;; we don't keep trying to log in
+  (if (and (>= code 980) (< code 990)) (toc-close))
+  )
 
 (defun tnt-handle-eviled (amount eviler)
   (message "You have been warned %s (%d)."
