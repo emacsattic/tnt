@@ -1,3 +1,11 @@
+2000-07-31  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-backup-or-restore-buddy-list): no longer
+	interactive.  now buries the *edit-buddies* buffer.  no longer
+	returns buddy-blist.
+	(tnt-handle-config): now calls backup-or-restore.
+	(tnt-handle-nick): no longer calls backup-or-restore.
+
 2000-07-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-restore-buddy-list): added error reporting, more

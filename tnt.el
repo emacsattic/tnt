@@ -1244,11 +1244,11 @@ Special commands:
 
 (defun tnt-backup-or-restore-buddy-list ()
   "If buddy list is empty and backup file exists, restore, otherwise backup."
-  (interactive)
   (if (tnt-buddy-list-is-empty-p)
       (tnt-restore-buddy-list)
     (tnt-backup-buddy-list))
-  tnt-buddy-blist)
+  (bury-buffer)
+  )
 
 (defun tnt-buddy-list-is-empty-p ()
   "Checks whether buddy list should be considered \"empty\"."
@@ -1554,6 +1554,7 @@ Special commands:
 
 (defun tnt-handle-config (config)
   (setq tnt-buddy-blist (tnt-config-to-blist config))
+  (tnt-backup-or-restore-buddy-list)
   (toc-add-buddies (tnt-extract-normalized-buddies tnt-buddy-blist))
   (cond ((= tnt-permit-mode 1) (toc-permit-all))
         ((= tnt-permit-mode 2) (toc-deny-all))
@@ -1568,9 +1569,11 @@ Special commands:
       (setq tnt-current-user nick)
     (setq tnt-current-user tnt-username))
 
-  (or (tnt-backup-or-restore-buddy-list)
+  (or tnt-buddy-blist
       (setq tnt-buddy-blist (list (list "Buddies" nick))))
+
   (tnt-set-online-state t)
+
   (if tnt-reconnecting
       (progn
         (setq tnt-reconnecting nil)
