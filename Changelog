@@ -1,3 +1,8 @@
+April 3, 2000 - Jim Whitehead
+-----------------------------
+ - tnt-show-timestamps has been renamed to tnt-use-timestamps to go with our
+   naming conventions
+
 April 1, 2000 - Jim Whitehead
 -----------------------------
  - Small change in tnt-get-away-msg to fix a possible error with trying
