@@ -382,7 +382,26 @@ substituted.
 
 Defaults to \"%s-buddies\".
 ")
- 
+
+(defvar tnt-archive-conversations nil
+  "*If non-nil, tnt will archive all conversations.
+
+Defaults to nil.
+")
+
+(defvar tnt-archive-file-roll-over-frequency 'monthly
+  "*How often archive files should roll over.
+
+Available options are:
+
+ 'daily    roll over each day
+ 'monthly  roll over each month
+ 'yearly   roll over each year
+ nil       never roll over
+
+Defaults to 'monthly.
+")
+
 (defvar tnt-email-to-pipe-to nil
   "*Should be nil or a string containing an email address.
 
@@ -788,6 +807,23 @@ Special commands:
   (format "*im-%s*" (toc-normalize user)))
 
 
+(defun tnt-im-archive-filename (user)
+  "Returns the archive file filename (not full path) for IMs with USER."
+  (format "im-%s" user))
+
+
+(defun tnt-archive-directory ()
+  "Returns the directory into which conversations should be archived."
+  (format "%s/%s%s" tnt-directory tnt-current-user
+          (format-time-string
+           (let ((freq tnt-archive-file-roll-over-frequency))
+             (cond ((eq freq 'daily) "/%Y/%m/%d")
+                   ((eq freq 'monthly) "/%Y/%m")
+                   ((eq freq 'yearly) "/%Y")
+                   ((null freq) "")
+                   (t ""))))))
+
+
 (defun tnt-im-buffer (user)
   "Returns the IM buffer for USER."
   (let ((buffer-name (tnt-im-buffer-name user)))
@@ -796,14 +832,15 @@ Special commands:
           (with-current-buffer buffer
             (tnt-im-mode)
             (setq tnt-im-user user)
-            (setq tnt-last-datestamp (format-time-string tnt-datestamp-format))
+            (setq tnt-last-datestamp "")
+            (setq tnt-archive-filename (tnt-im-archive-filename user))
             (setq tnt-message-marker (make-marker))
-            (insert (format "[Conversation with %s on %s]%s"
+            (insert (format "[Conversation with %s]%s"
                             (tnt-buddy-official-name user)
-                            tnt-last-datestamp
                             tnt-separator))
             (set-marker tnt-message-marker (point))
           buffer)))))
+
 
 (defun tnt-send-text-as-instant-message ()
   "Sends text at end of buffer as an IM."
@@ -930,6 +967,10 @@ Special commands:
   "Returns the name of the chat buffer for ROOM."
   (format "*chat-%s*" (toc-normalize room)))
 
+(defun tnt-chat-archive-filename (room)
+  "Returns the archive file filename (not full path) for ROOM."
+  (format "chat-%s" (toc-normalize room)))
+
 
 (defun tnt-chat-buffer (room)
   "Returns the chat buffer for ROOM."
@@ -942,10 +983,10 @@ Special commands:
             (add-hook 'kill-buffer-hook 'tnt-chat-buffer-killed nil t)
             (setq tnt-chat-room room)
             (setq tnt-chat-participants nil)
-            (setq tnt-last-datestamp (format-time-string tnt-datestamp-format))
+            (setq tnt-last-datestamp "")
+            (setq tnt-archive-filename (tnt-chat-archive-filename room))
             (setq tnt-message-marker (make-marker))
-            (insert (format "[Chat room \"%s\" on %s]%s"
-                            room (current-time-string) tnt-separator))
+            (insert (format "[Chat room \"%s\"]%s" room tnt-separator))
             (set-marker tnt-message-marker (point))
           buffer)))))
 
@@ -1132,6 +1173,15 @@ Special commands:
                                    '(read-only t front-sticky t rear-sticky t))
               (add-text-properties (- (point) 1) (point) '(rear-nonsticky t)))
             (setq inhibit-read-only old-inhibit)))
+
+      ;; save to archive file
+      (let ((dir (tnt-archive-directory)))
+        (if (and dir tnt-archive-filename tnt-archive-conversations)
+            (progn
+              (make-directory dir t)
+              (append-to-file old-point (point)
+                              (format "%s/%s" dir tnt-archive-filename))
+              (message ""))))
       )))
 
 (defun tnt-replace-me-statement (message)

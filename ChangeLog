@@ -1,5 +1,25 @@
 2002-06-23  NeilFred Picciotto  <fred@guido.halflab.com>
 
+	* tnt.el (tnt-archive-conversations): new config variable for
+	whether or not to archive conversations to file.  defaults to nil.
+	(tnt-archive-file-roll-over-frequency): if we're archiving, how
+	often to roll the archive files.  also determines the directory
+	structure for those files (either "YYYY/" or "YYYY/mm/" or
+	"YYYY/mm/dd").
+	(tnt-im-archive-filename): return filename for IM archive files.
+	(tnt-archive-directory): generate the date-specific directory for
+	archive files.
+	(tnt-im-buffer): set the buffer-local variable with the archive
+	file filename.
+	(tnt-chat-archive-filename): return filename for chat archive
+	files.
+	(tnt-chat-buffer): set the buffer-local variable with the archive
+	file filename.
+	(tnt-append-message): when appending to the buffer, also append to
+	the archive file.
+
+2002-06-23  NeilFred Picciotto  <fred@guido.halflab.com>
+
 	* tnt.el (tnt-buddy-list-filter): if there's a message waiting
 	from a buddy who has signed off, keep them in the buddy list.
 	(tnt-im-buddy): if buddy is offline and there's a message waiting
