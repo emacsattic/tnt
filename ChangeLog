@@ -1,5 +1,16 @@
 2000-04-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-my-name-face and tnt-other-name-face): now only
+	create these faces if they don't already exist.  point being that
+	if they do exist, the user may have set different colors than the
+	defaults, so we don't want to change those.  this is really only
+	an issue for us developers, since end-users are unlikely to be
+	reloading tnt.el after they've changed the colors.  but i reload
+	tnt.el all the time, and (before) i was always having to reset my
+	colors.
+
+2000-04-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-append-message): insert time stamp whether or not
 	this is a message from a user.
 
