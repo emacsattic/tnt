@@ -325,6 +325,7 @@ feature.  defaults to /bin/mail
 (defvar tnt-away-alist nil)
 (defvar tnt-away nil)
 (defvar tnt-keepalive-timer nil)
+(defvar tnt-reconnecting nil)
 
 (defun tnt-buddy-away (nick)
   (cdr (assoc (toc-normalize nick) tnt-away-alist)))
@@ -1431,6 +1432,7 @@ Special commands:
                                    "TNT connection closed by server"))
   (tnt-error "TNT connection closed")
   ;; auto-reconnect
+  (setq tnt-reconnecting t)
   (message "Trying to reconnect...")
   (tnt-open tnt-username tnt-password)
   )
@@ -1471,7 +1473,9 @@ Special commands:
   (or (tnt-restore-buddy-list-if-necessary)
       (setq tnt-buddy-blist (list (list "Buddies" nick))))
   (tnt-set-online-state t)
-  (tnt-show-buddies))
+  (if tnt-reconnecting
+      (setq tnt-reconnecting nil)
+    (tnt-show-buddies)))
 
 (defun tnt-handle-im-in (user auto message)
   (let ((buffer (tnt-im-buffer user)))
