@@ -1256,6 +1256,7 @@ Special commands:
 
 (defun tnt-restore-buddy-list ()
   "Restores the buddy list from the backup file."
+  (interactive)
   (and tnt-directory
        (file-accessible-directory-p tnt-directory)
        tnt-buddy-list-backup-filename

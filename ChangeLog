@@ -1,3 +1,7 @@
+2000-07-27  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-restore-buddy-list): made interactive.
+
 2000-07-24  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-neliminate-newlines): now replacing newlines *and*
