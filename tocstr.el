@@ -159,12 +159,6 @@
 	tocstr-flap-timer   nil)))
 
 (if tnt-timers-available 
-    (defun tocstr-filter (proc str)
-      (let ((len (length str))
-            (i 0))
-        (while (< i len)
-          (funcall tocstr-flap-state (aref str i))
-          (setq i (1+ i)))))
   
   (defun tocstr-filter (proc str)
     (when tocstr-flap-timer
@@ -188,8 +182,14 @@
         (setq tocstr-flap-parsing nil)
         (unless (eq tocstr-flap-state 'tocstr-flap-await-frame)
           (setq tocstr-flap-timer
-                (run-at-time 15 nil 'tocstr-init-receiver)))))))
+                (run-at-time 15 nil 'tocstr-init-receiver))))))
 
+    (defun tocstr-filter (proc str)
+      (let ((len (length str))
+            (i 0))
+        (while (< i len)
+          (funcall tocstr-flap-state (aref str i))
+          (setq i (1+ i))))))
   
 (defun tocstr-sentinel (proc str)
   (funcall tocstr-closed-function))
@@ -264,3 +264,6 @@
           (error "tnt: Unexpected flap type")))))
         (if cleanup
             (setq tocstr-flap-state 'tocstr-flap-await-frame))))))
+
+
+
