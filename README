@@ -67,23 +67,29 @@ The table below summarizes TNT's primary commands.  They can be invoked
 interactively using either M-x or the key bindings shown.  A detailed
 description of each command follows the table.
 
-+------------------+-------------+-------------------------------------------+
-|  Function        | Key Binding |               Summary                     |
-+------------------+-------------+-------------------------------------------+
-| tnt-open         |   C-x t o   | Starts a new TNT session                  |
-| tnt-kill         |   C-x t k   | Terminates the current session            |
-| tnt-im           |   C-x t i   | Starts an instant-message conversation    |
-| tnt-join-chat    |   C-x t j   | Joins a chat room                         |
-| tnt-show-buddies |   C-x t b   | Shows the buddy list                      |
-| tnt-edit-buddies |   C-x t B   | Invokes the buddy list editor             |
-| tnt-accept       |   C-x t a   | Accepts a message or a chat invitation    |
-| tnt-reject       |   C-x t r   | Rejects a message or a chat invitation    |
-| tnt-next-event   |   C-x t n   | Shows next event in notification ring     |
-| tnt-prev-event   |   C-x t p   | Shows previous event in notification ring |
-| tnt-away-toggle  |   C-x t A   | This allows you to toggle your away status|
-| tnt-pounce-add   |   C-x t P   | Add a user to your pounce list            |
-| tnt-pounce-del   |   C-x t D   | Remove a user from your pounce list       |
-+------------------+-------------+-------------------------------------------+
++-------------------+-------------+-------------------------------------------+
+|  Function         | Key Binding |               Summary                     |
++-------------------+-------------+-------------------------------------------+
+| tnt-show-help     |   C-x t ?   | Displays this help information            |
+| tnt-open          |   C-x t o   | Starts a new TNT session                  |
+| tnt-kill          |   C-x t k   | Terminates the current session            |
+| tnt-im            |   C-x t i   | Starts an instant-message conversation    |
+| tnt-join-chat     |   C-x t j   | Joins a chat room                         |
+| tnt-show-buddies  |   C-x t b   | Shows the buddy list                      |
+| tnt-edit-buddies  |   C-x t B   | Invokes the buddy list editor             |
+| tnt-accept        |   C-x t a   | Accepts a message or a chat invitation    |
+| tnt-reject        |   C-x t r   | Rejects a message or a chat invitation    |
+| tnt-next-event    |   C-x t n   | Shows next event in notification ring     |
+| tnt-prev-event    |   C-x t p   | Shows previous event in notification ring |
+| tnt-switch-user   |   C-x t s   | Switches between usernames for next login |
+| tnt-away-toggle   |   C-x t A   | Toggles away status, sets away message    |
+| tnt-pounce-add    |   C-x t P   | Adds a user to your pounce list           |
+| tnt-pounce-delete |   C-x t D   | Removes a user from your pounce list      |
+| tnt-toggle-email  |   C-x t M   | Toggles forwarding incoming IMs to email  |
++-------------------+-------------+-------------------------------------------+
+
+tnt-show-help (C-x t ?)
+  Opens a buffer with the above help information.
 
 tnt-open (C-x t o)
   This command signs onto the AIM service.  You need to supply your
@@ -216,6 +222,12 @@ tnt-edit-buddies (C-x t B)
   them from group names, the screen names are indented.  When editing
   the buddy list, you must be careful to maintain this format.
 
+tnt-switch-user (C-x t s)
+  If you have multiple usernames, you can set the tnt-username-alist
+  variable (see INSTALL) to simplify logging in.  Once the variable is
+  set, running this command will cycle through available usernames for
+  the next login.
+  
 tnt-away-toggle (C-x t A)
   This function allows you to change your "away" mode.  When you are set as
   away, your away message will be sent to anyone who Instant Messenges you.
@@ -234,5 +246,16 @@ tnt-pounce-add (C-x t P)
   their status either to or from away, they will be sent this message.  
   This can be useful for "leaving" messages for your buddies.
 
-tnt-pounce-del (C-x t D)
+tnt-pounce-delete (C-x t D)
   This is the function you can use to delete a pounce message for a buddy.
+
+tnt-toggle-email (C-x t M)
+  TNT can act as an IM-to-email gateway -- this is useful if, for
+  example, you have an alphanumeric pager which can be reached via an
+  email address, you'll be able to receive IMs on the go!  To set this
+  up, you'll need to set the tnt-email-to-pipe-to and tnt-email-binary
+  variables (see INSTALL).  Once those variable are properly set,
+  running this command will turn forwarding on and off.
+
+
+

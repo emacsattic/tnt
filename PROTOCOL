@@ -344,3 +344,4 @@ TOC DATA FRAME TYPE
 Sequence Number contains your next sequence number.
 Data Length is the length of the payload, including the null termination
 from client to host.
+

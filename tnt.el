@@ -391,8 +391,10 @@ Special commands:
 (defun tnt-show-help ()
   "Displays help for TNT."
   (interactive)
-  (let ((buffer-name "*tnt-help*"))
-    (or (get-buffer buffer-name)
+  (let* ((buffer-name "*tnt-help*")
+         (help-buffer (get-buffer buffer-name)))
+    (or (and help-buffer
+             (switch-to-buffer help-buffer))
         (let ((buffer (get-buffer-create buffer-name)))
           (save-excursion
             (set-buffer buffer)
@@ -411,11 +413,11 @@ Special commands:
 | tnt-reject        |   C-x t r   | Rejects a message or a chat invitation    |
 | tnt-next-event    |   C-x t n   | Shows next event in notification ring     |
 | tnt-prev-event    |   C-x t p   | Shows previous event in notification ring |
-| tnt-switch-user   |   C-x t s   | Switch between usernames for next login   |
-| tnt-away-toggle   |   C-x t A   | Toggles away status, set away message     |
-| tnt-pounce-add    |   C-x t P   | Add a user to your pounce list            |
-| tnt-pounce-delete |   C-x t D   | Remove a user from your pounce list       |
-| tnt-toggle-email  |   C-x t M   | Toggle forwarding incoming IMs to email   |
+| tnt-switch-user   |   C-x t s   | Switches between usernames for next login |
+| tnt-away-toggle   |   C-x t A   | Toggles away status, sets away message    |
+| tnt-pounce-add    |   C-x t P   | Adds a user to your pounce list           |
+| tnt-pounce-delete |   C-x t D   | Removes a user from your pounce list      |
+| tnt-toggle-email  |   C-x t M   | Toggles forwarding incoming IMs to email  |
 +-------------------+-------------+-------------------------------------------+
 "))
           (funcall (tnt-switch-to-buffer-function) buffer)))))

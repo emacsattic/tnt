@@ -1,3 +1,22 @@
+April 4, 2000 - Neil "Fred" Picciotto
+-------------------------------------
+- synchronized help info between the text block displayed by "C-x t ?"
+  and that in the README.
+- added to the README explanations of tnt-show-help, tnt-switch-user,
+  and tnt-toggle-email.
+- if *tnt-help* buffer already exists, tnt-show-help now switches to it
+- removed line in INSTALL which said that it had only been tested in
+  emacs 19.34, replaced it with line from README about the versions
+  it's been tested in.
+- attempting once again to make PROTOCOL and README not be executable
+  (cvs update for me left them non-executable, but cvs checkout, which
+  creates new copies of everything, still gave me them as executable).
+- also making all the files non-writable, so that you have to explicitly
+  chmod files before editing them.
+- checking in .elc files.  (was there some reason they were not being
+  included?)  the .elc files are left writable so that when you
+  compile, you don't have to first chmod or rm the .elc.
+
 April 3, 2000 - Jim Whitehead
 -----------------------------
  - tnt-show-timestamps has been renamed to tnt-use-timestamps to go with our

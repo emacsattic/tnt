@@ -29,8 +29,9 @@ loaded, use the describe-function command (invoked by C-h f) to
 describe the function tnt-open.  If it works, you should be able to
 run TNT.
 
-(NOTE: TNT has currently only been tested with Emacs version 19.34.
-How well it works with earlier or later versions is not known).
+TNT was originally developed using GNU Emacs 19.34.  It was briefly
+tested with versions 19.29, 19.30, 20.2, and 20.3, and it seems to
+work.  It also seems to work with XEmacs 20.4.
 
 
 
