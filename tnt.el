@@ -1115,7 +1115,6 @@ Special commands:
         tnt-away-alist nil
         tnt-idle-alist nil
         tnt-just-signedonoff-alist nil
-        tnt-pounce-alist nil
         tnt-away nil
         tnt-last-away-sent nil)
   (tnt-build-buddy-buffer))
