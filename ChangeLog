@@ -1,5 +1,16 @@
 2000-04-06  John Jannotti  <jj@lcs.mit.edu>
 
+	* toc.el: Reorganized to reflect the ordering of documentation in
+ 	PROTOCOL
+	(toc-evil): Added
+	(toc-add-permits): Added
+	(toc-add-denies): Added
+	(toc-chat-evil): Added
+	(toc-get-info): Added
+	(toc-set-info): Added
+	(toc-set-idle): Added
+
+	
 	* tnt.el (tnt-handle-error): Added catchall clause to notice weird
  	errors
 

@@ -73,7 +73,6 @@
         tocstr-receive-function 'toc-handle-receive)
   (tocstr-open host port sname))
 
-
 (defun toc-close ()
   (tocstr-close))
 
@@ -87,20 +86,8 @@
                        language
                        (toc-encode version))))
 
-
 (defun toc-init-done ()
   (tocstr-send "toc_init_done"))
-
-
-(defun toc-set-config (config)
-  (tocstr-send (format "toc_set_config %s"
-                       (toc-encode config))))
-
-(defun toc-set-away (message)
-  (if message
-      (tocstr-send (concat "toc_set_away " (toc-encode message)))
-    (tocstr-send "toc_set_away")))
-
 
 (defun toc-send-im (user message &optional auto)
   (tocstr-send (format "toc_send_im %s %s%s"
@@ -108,53 +95,74 @@
                        (toc-encode message)
                        (if auto " auto" ""))))
 
-
 (defun toc-add-buddies (buddies)
   (if buddies
       (tocstr-send (format "toc_add_buddy %s"
                            (substring (format "%S" buddies) 1 -1)))))
-
 
 (defun toc-remove-buddies (buddies)
   (if buddies
       (tocstr-send (format "toc_remove_buddy %s"
                            (substring (format "%S" buddies) 1 -1)))))
 
+(defun toc-set-config (config)
+  (tocstr-send (format "toc_set_config %s" (toc-encode config))))
+
+(defun toc-evil (user anon)
+  "Warn USER.  Do so anonymously if ANON"
+  (tocstr-send
+   (format "toc_evil %s %s" (toc-normalize user) (if anon "anon" "norm"))))
+
+(defun toc-add-permits (users)
+  (if users
+      (tocstr-send (format "toc_add_permit %s"
+                           (substring (format "%S" users) 1 -1)))))
+
+(defun toc-add-denies (users)
+  (if users
+      (tocstr-send (format "toc_add_deny %s"
+                           (substring (format "%S" users) 1 -1)))))
 
 (defun toc-chat-join (exchange room)
-  (tocstr-send (format "toc_chat_join %d %s"
-                       exchange
-                       (toc-encode room))))
-
+  (tocstr-send (format "toc_chat_join %d %s" exchange (toc-encode room))))
 
 (defun toc-chat-send (roomid message)
-  (tocstr-send (format "toc_chat_send %s %s"
-                       roomid
-                       (toc-encode message))))
-
+  (tocstr-send (format "toc_chat_send %s %s" roomid (toc-encode message))))
 
 (defun toc-chat-whisper (roomid user message)
-  (tocstr-send (format "toc_chat_whisper %s %s %s"
-                       roomid
-                       user
-                       (toc-encode message))))
+  (tocstr-send
+   (format "toc_chat_whisper %s %s %s" roomid user (toc-encode message))))
 
-
-(defun toc-chat-accept (roomid)
-  (tocstr-send (format "toc_chat_accept %s"
-                       roomid)))
-
-
-(defun toc-chat-leave (roomid)
-  (tocstr-send (format "toc_chat_leave %s"
-                       roomid)))
-
+(defun toc-chat-evil (roomid user anon)
+  "Warn USER in ROOMID.  Do so anonymously if ANON."
+  (tocstr-send (format "toc_chat_evil %s %s %s"
+                       roomid (toc-normalize user) (if anon "anon" "norm"))))
 
 (defun toc-chat-invite (roomid message buddies)
-  (tocstr-send (format "toc_chat_invite %s %s %s"
-                       roomid
-                       (toc-encode message)
+  (tocstr-send (format "toc_chat_invite %s %s %s" roomid (toc-encode message)
                        (mapconcat 'toc-normalize buddies " "))))
+
+(defun toc-chat-leave (roomid)
+  (tocstr-send (format "toc_chat_leave %s" roomid)))
+
+(defun toc-chat-accept (roomid)
+  (tocstr-send (format "toc_chat_accept %s" roomid)))
+
+(defun toc-get-info (user)
+  (tocstr-send (format "toc_get_info %s" (toc-normalize user))))
+
+(defun toc-set-info (info)
+  (tocstr-send (format "toc_set_info %s" (toc-encode info))))
+
+(defun toc-set-idle (secs)
+  (tocstr-send (format "toc_set_idle %d" secs)))
+
+
+;; The following two are not well documented at in PROTOCOL.
+(defun toc-set-away (message)
+  (if message
+      (tocstr-send (concat "toc_set_away " (toc-encode message)))
+    (tocstr-send "toc_set_away")))
 
 (defun toc-keepalive ()
   "Send a keepalive packet to the server."
@@ -215,7 +223,7 @@
      ((string= cmd "EVILED")
       (let ((evil   (string-to-number (toc-lop-field str 'index)))
             (eviler (toc-lop-field str 'index)))
-        (funcall toc-eviled-function cmd evil eviler)))
+        (funcall toc-eviled-function evil eviler)))
 
      ((string= cmd "CHAT_JOIN")
       (let ((roomid  (toc-lop-field str 'index))
