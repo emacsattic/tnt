@@ -18,7 +18,7 @@ LOADPATH =-eval '(setq load-path (cons "." load-path))'
 elc: $(ELC)
 
 
-VERSION_PATTERN=^(defconst tnt-version "TNT \([0-9]\.[0-9]*\).*
+VERSION_PATTERN=^(defconst tnt-version "TNT \([^\"]*\)")
 release: $(RELEASE)
 	@chmod -x PROTOCOL
 	@chmod -x README

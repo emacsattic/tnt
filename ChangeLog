@@ -1,3 +1,10 @@
+2000-05-11  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* Makefile (VERSION_PATTERN): made version pattern more general
+	(supports x.x or x.x.x, or really anything)
+
+	* tnt.el (tnt-version): updated version to 2.2.1
+
 2000-05-03  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-strip-a-href): if the link url appears again as the
