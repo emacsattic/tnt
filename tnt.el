@@ -1042,15 +1042,12 @@ Special commands:
                              'tnt-buddy-list-filter)
         (set-buffer-modified-p nil)
 
-        (if tnt-event-ring
-            (progn
-              (goto-char 0)
-              (nonincremental-search-forward "(MESSAGE WAITING)")
-              (beginning-of-line))
-          (if tnt-buddy-list-point
-              (progn
-                (goto-char tnt-buddy-list-point)
-                (beginning-of-line))))
+        (goto-char 0)
+        (if (or (not tnt-event-ring)
+                (not (search-forward "(MESSAGE WAITING)" nil t)))
+            (if tnt-buddy-list-point
+                (goto-char tnt-buddy-list-point)))
+        (beginning-of-line)
         ))))
 
 (defun tnt-buddy-list-filter (nick)

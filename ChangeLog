@@ -1,5 +1,11 @@
 2001-05-16  NeilFred Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-build-buddy-buffer): if there's a message from a
+	non-buddy, then the search for "MESSAGE WAITING" will fail.  now
+	handling that case properly.
+
+2001-05-16  NeilFred Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-event-ring): moved defvar to earlier in the file.
 
 2001-05-16  NeilFred Picciotto  <fred@guido.derf.net>
