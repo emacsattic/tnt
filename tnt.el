@@ -1032,11 +1032,12 @@ Special commands:
             (if buffer
                 (with-current-buffer buffer
                   (tnt-append-message (format "%s %s" nick state)))))
-          (message "%s %s" nick state)))
+          (message "%s %s" nick state)
+          (if tnt-timers-available (tnt-set-just-signedonoff nnick onlinep))
+          ))
     (setq tnt-buddy-alist (tnt-addassoc nnick status tnt-buddy-alist))
     (setq tnt-idle-alist (tnt-addassoc nnick idletime tnt-idle-alist))
     (setq tnt-away-alist (tnt-addassoc nnick away tnt-away-alist))
-    (if tnt-timers-available (tnt-set-just-signedonoff nnick onlinep))
 
     (tnt-build-buddy-buffer)))
 

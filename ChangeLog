@@ -1,5 +1,13 @@
 2000-05-16  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-set-buddy-status): moved the call to
+	set-just-signedonoff to within the check to see whether status
+	just changed.  this fixes the bug where before it would say
+	someone just signed on who in fact just set "away" or just became
+	idle or whatever.
+
+2000-05-16  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-im-buddy): now checks whether user is online.
 	(tnt-set-buddy-status): now checking tnt-timers-available before
 	setting a user as "just signed on/off".
