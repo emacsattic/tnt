@@ -2418,32 +2418,40 @@ Sorts/groups buddies according to tnt-sort-buddies, tnt-group-*-buddies."
 
 ;;; ***************************************************************************
 
+;; Used in tnt-nick-less-than.  If users want, it's easy to make this
+;; pay attention to sort-fold-case.
+(defun tnt-downcase (string)
+  "Only downcase if non-nil."
+  (if string (downcase string) string))
+
+;;---------------------------------------------------------------------------
+
 (defun tnt-nick-less-than (arg1 arg2)
-  (let* ((nick1-props (cdr arg1))
-         (nick2-props (cdr arg2))
+  (let* ((nick1-props      (cdr arg1))
+         (nick2-props      (cdr arg2))
          (nick1-blist-name (car arg1))
          (nick2-blist-name (car arg2))
-         (nick1-nnick     (plist-get nick1-props 'nnick))
-         (nick2-nnick     (plist-get nick2-props 'nnick))
-         (nick1-fullname  (plist-get nick1-props 'fullname))
-         (nick2-fullname  (plist-get nick2-props 'fullname))
-         (nick1-idle-secs (plist-get nick1-props 'idle-secs))
-         (nick2-idle-secs (plist-get nick2-props 'idle-secs))
-         (nick1-away      (plist-get nick1-props 'away))
-         (nick2-away      (plist-get nick2-props 'away))
-         (nick1-online    (plist-get nick1-props 'online))
-         (nick2-online    (plist-get nick2-props 'online))
-         (nick1-offline   (not nick1-online))
-         (nick2-offline   (not nick2-online))
-         (nick1-nickcount (plist-get nick1-props 'nickcount))
-         (nick2-nickcount (plist-get nick2-props 'nickcount))
-         (nick1-sortname nick1-nnick)
-         (nick2-sortname nick2-nnick)
-         (nick1-vidle nil)
-         (nick2-vidle nil)
-         (nick1-score 0)
-         (nick2-score 0)
-         (name-less-than nil)
+         (nick1-nnick      (tnt-downcase (plist-get nick1-props 'nnick)))
+         (nick2-nnick      (tnt-downcase (plist-get nick2-props 'nnick)))
+         (nick1-fullname   (tnt-downcase (plist-get nick1-props 'fullname)))
+         (nick2-fullname   (tnt-downcase (plist-get nick2-props 'fullname)))
+         (nick1-idle-secs  (plist-get nick1-props 'idle-secs))
+         (nick2-idle-secs  (plist-get nick2-props 'idle-secs))
+         (nick1-away       (plist-get nick1-props 'away))
+         (nick2-away       (plist-get nick2-props 'away))
+         (nick1-online     (plist-get nick1-props 'online))
+         (nick2-online     (plist-get nick2-props 'online))
+         (nick1-offline    (not nick1-online))
+         (nick2-offline    (not nick2-online))
+         (nick1-nickcount  (plist-get nick1-props 'nickcount))
+         (nick2-nickcount  (plist-get nick2-props 'nickcount))
+         (nick1-sortname   nick1-nnick)
+         (nick2-sortname   nick2-nnick)
+         (nick1-vidle      nil)
+         (nick2-vidle      nil)
+         (nick1-score      0)
+         (nick2-score      0)
+         (name-less-than   nil)
          )
 
     ;; Compare names and stow the result so we can use it as

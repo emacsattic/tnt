@@ -1,3 +1,8 @@
+2003-11-11  Scott Evans  <scott@templarcorp.com>
+
+	* tnt.el (tnt-nick-less-than): Make buddylist grouping case-insensitive.
+	(tnt-downcase): Add.
+
 2003-11-04  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el (tnt-default-away-message): Change default to nil
