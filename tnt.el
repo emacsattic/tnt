@@ -1909,7 +1909,7 @@ Special commands:
          (first (propertize (or fullname unick) 'mouse-face 'highlight))
          )
 
-    (when (or status just-onoff tnt-show-inactive-buddies)
+    (when (or status just-onoff event tnt-show-inactive-buddies)
       ;;       (put-text-property 0 (length first)
       ;;                          'mouse-face 'highlight first)
       (concat first
@@ -1949,6 +1949,7 @@ Special commands:
   (let ((nick (tnt-get-buddy-at-point)))
     (cond
      ((tnt-buddy-status nick) (tnt-im nick))
+     ((assoc (tnt-im-buffer-name nick) tnt-event-ring) (tnt-im nick))
      (tnt-show-inactive-buddies
       (and (y-or-n-p (format "%s is offline; pounce instead? " nick))
            (tnt-pounce-add (toc-normalize nick))))

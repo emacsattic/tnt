@@ -1,5 +1,13 @@
 2002-09-24  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
+	* tnt.el (tnt-buddy-list-filter): also include an offline buddy if
+	they have an event waiting (again, putting back functionality from
+	before Joe's stuff)...
+	(tnt-im-buddy): don't complain about offline buddy when they have
+	an event waiting.
+
+2002-09-24  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
 	* tnt.el (tnt-buddy-list-point): remove the variable storing
 	point.
 	(tnt-build-buddy-buffer): fix the way we restore point after
