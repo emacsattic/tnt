@@ -60,8 +60,9 @@
 (defvar tnt-default-username nil
   "*Should be nil or a string containing your username.")
 
-(defvar tnt-default-username-list nil
-  "*Should be nil or a list of strings containing usernames.")
+(defvar tnt-username-alist nil
+  "*Should be nil or a list of associations of usernames with
+    (optionally) passwords.")
 
 (defvar tnt-default-password nil
   "*Should be nil or your password.")
@@ -153,17 +154,18 @@
                                                      tnt-pounce-alist)))))
   (if (not (assoc nick tnt-pounce-alist))
       (message "There is no pounce stored for %s" nick)
-    (setq tnt-pounce-alist (remassoc nick tnt-pounce-alist)))))
+    (setq tnt-pounce-alist (tnt-remassoc nick tnt-pounce-alist))
+    )))
 
 (defun tnt-send-pounce (user)
    (let* ((msg (cdr (assoc user tnt-pounce-alist))))
      (if msg
-	 (let ((buffer (tnt-im-buffer user)))
- 	  (toc-send-im user msg)
- 	  (tnt-append-message-and-adjust-window buffer tnt-current-user msg)
- 	  (tnt-push-event (format "You have pounced on %s" user) buffer nil)
- 	  (tnt-pounce-delete user))
-       )))
+         (let ((buffer (tnt-im-buffer user)))
+           (toc-send-im user msg)
+           (tnt-append-message-and-adjust-window buffer tnt-current-user msg)
+           (tnt-push-event (format "You have pounced on %s" user) buffer nil)
+           (tnt-pounce-delete user))
+     )))
 
 ;;;---------------------------------------------------------------------------
 ;;;  Keepalive/Away Packages - jnwhiteh@syr.edu
@@ -180,7 +182,7 @@
   (interactive)
   (tocstr-send-flap 5 "")  
   (setq tnt-keepalive-timer (run-at-time tnt-keepalive-interval nil 
-					 'tnt-keepalive)))
+                                         'tnt-keepalive)))
 
 (defun tnt-buddy-away (nick)
   (cdr (assoc (toc-normalize nick) tnt-away-alist)))
@@ -238,11 +240,13 @@
       (error "Already online as %s" tnt-current-user)
     (setq tnt-username (or (and (stringp username) username)
                            tnt-default-username
-                           (and (not (null tnt-default-username-list))
-                                (car tnt-default-username-list))
+                           (and tnt-username-alist
+                                (caar tnt-username-alist))
                            (read-from-minibuffer "Screen name: "))
           tnt-password (or (and (stringp password) password)
                            tnt-default-password
+                           (and tnt-username-alist
+                                (cdar tnt-username-alist))
                            (tnt-read-from-minibuffer-no-echo 
                             (format "Password for %s: " tnt-username))))
     (if (string-equal tnt-password "")
@@ -279,15 +283,17 @@
 (defun tnt-switch-user ()
   "Switches the default username to log in as."
   (interactive)
-  (if (null tnt-default-username-list)
+  (if (null tnt-username-alist)
       (message "No username list defined.")
     (progn
-      (setq tnt-default-username-list 
-            (tnt-rotate-left tnt-default-username-list))
+      (setq tnt-username-alist 
+            (tnt-rotate-left tnt-username-alist))
       (if tnt-default-username
-          (setq tnt-default-username (car tnt-default-username-list)))
+          (setq tnt-default-username (caar tnt-username-alist)))
+      (if tnt-default-password
+          (setq tnt-default-password (cdar tnt-username-alist)))
       (message "Next login will be as user %s"
-               (car tnt-default-username-list)))
+               (caar tnt-username-alist)))
     ))
 
 
@@ -387,10 +393,10 @@ Special commands:
   (interactive)
   (let ((buffer-name "*tnt-help*"))
     (or (get-buffer buffer-name)
-	(let ((buffer (get-buffer-create buffer-name)))
-	  (save-excursion
-	    (set-buffer buffer)
-	    (insert "
+        (let ((buffer (get-buffer-create buffer-name)))
+          (save-excursion
+            (set-buffer buffer)
+            (insert "
 +-------------------+-------------+-------------------------------------------+
 |  Function         | Key Binding |               Summary                     |
 +-------------------+-------------+-------------------------------------------+
@@ -412,7 +418,7 @@ Special commands:
 | tnt-toggle-email  |   C-x t M   | Toggle forwarding incoming IMs to email   |
 +-------------------+-------------+-------------------------------------------+
 "))
-	  (funcall (tnt-switch-to-buffer-function) buffer)))))
+          (funcall (tnt-switch-to-buffer-function) buffer)))))
 
 
 
@@ -712,21 +718,22 @@ Special commands:
     (set-buffer (tnt-buddy-buffer))
       (let ((buffer-read-only nil))
         (erase-buffer)
-        (tnt-blist-to-buffer tnt-buddy-blist
-                             '(lambda (nick)
-                                 (let ((unick (tnt-buddy-status nick))
-				       (idle (tnt-buddy-idle nick))
-				       (away (tnt-buddy-away nick)))
-                                   (if unick (format "  %s%s%s" 
-	    unick 
-	    (if away
-		(if (> idle 0) (format " (away - %d)" idle)
-		  (format " (away)")) "")
-		  
-	    (if (and (> idle 0) (not away))
-                (format " (idle - %d)" idle) "")
-	    )))))
-
+        (tnt-blist-to-buffer
+         tnt-buddy-blist
+         '(lambda (nick)
+            (let ((unick (tnt-buddy-status nick))
+                  (idle (tnt-buddy-idle nick))
+                  (away (tnt-buddy-away nick)))
+              (if unick (format "  %s%s%s" 
+                                unick 
+                                (if away
+                                    (if (> idle 0) (format " (away - %d)" idle)
+                                      (format " (away)")) "")
+                                
+                                (if (and (> idle 0) (not away))
+                                    (format " (idle - %d)" idle) "")
+                                )))))
+        
         (set-buffer-modified-p nil))))
 
 (defun tnt-im-buddy ()
@@ -789,9 +796,9 @@ Special commands:
 (defun tnt-buddy-shutdown ()
   (setq tnt-buddy-blist nil
         tnt-buddy-alist nil
-	tnt-away-alist nil
-	tnt-idle-alist nil
-	tnt-pounce-alist nil
+        tnt-away-alist nil
+        tnt-idle-alist nil
+        tnt-pounce-alist nil
         tnt-away nil
         tnt-last-away-sent nil)
   (tnt-build-buddy-buffer))
@@ -799,8 +806,8 @@ Special commands:
 
 (defun tnt-set-buddy-status (nick onlinep idle away)
   (let ((nnick (toc-normalize nick))
-	(status (if onlinep nick))
-	(idletime (if onlinep idle)))
+        (status (if onlinep nick))
+        (idletime (if onlinep idle)))
     (if (not (equal status (tnt-buddy-status nick)))
         (progn
           ;; Beep (if set to)
@@ -1084,11 +1091,11 @@ Special commands:
 (defun tnt-set-online-state (is-online)
   ;; Sets or clears the mode-line online indicator.
   (setq tnt-mode-string (if is-online
-			    (concat " ["
-				    (format "%s" tnt-current-user)
-				    (if tnt-away ":away" "")
-				    "]")
-			  ""))
+                            (concat " ["
+                                    (format "%s" tnt-current-user)
+                                    (if tnt-away ":away" "")
+                                    "]")
+                          ""))
   (or global-mode-string
       (setq global-mode-string '("")))
   (or (memq 'tnt-mode-string global-mode-string)
@@ -1098,14 +1105,14 @@ Special commands:
 (defun tnt-send-away-msg (user)
   (if (not (string= user tnt-last-away-sent))
       (let ((buffer (tnt-im-buffer user)))
-	(setq tnt-last-away-sent user)
-	(toc-send-im user tnt-away-msg t)
-	(tnt-append-message-and-adjust-window buffer
-					      (format "%s (Auto-response)"
-						      tnt-current-user)
-					      tnt-away-msg)
-	))
-)
+        (setq tnt-last-away-sent user)
+        (toc-send-im user tnt-away-msg t)
+        (tnt-append-message-and-adjust-window buffer
+                                              (format "%s (Auto-response)"
+                                                      tnt-current-user)
+                                              tnt-away-msg)
+        ))
+  )
 
 ;;;----------------------------------------------------------------------------
 ;;; Handlers for TOC events
@@ -1152,8 +1159,8 @@ Special commands:
 ;; " AU" == Aol/Oscar Trial/Here (the reason for U being here here is unknown)
 ;; " A"  == Aol/Here
   (if (or (string= away " UU")
-	  (string= away " OU")
- 	  )
+          (string= away " OU")
+          )
       (tnt-set-buddy-status nick online idle t)
     (tnt-set-buddy-status nick online idle nil))
   (if online
@@ -1168,19 +1175,19 @@ Special commands:
   (let ((buffer (tnt-im-buffer user)))
     (if auto
     (tnt-append-message-and-adjust-window buffer 
-					  (format "%s (Auto-response)" user)
-					  message)
+                                          (format "%s (Auto-response)" user)
+                                          message)
     (tnt-append-message-and-adjust-window buffer user message))
-
+    
     (if (and tnt-email-to-pipe-to
              tnt-pipe-to-email-now)
         (tnt-pipe-message-to-program user message))
-
+    
     (if (null (get-buffer-window buffer))
-	(progn
-	  (beep)
-	  (tnt-push-event (format "Message from %s available" user)
-			  (tnt-im-buffer-name user) nil)))
+        (progn
+          (beep)
+          (tnt-push-event (format "Message from %s available" user)
+                          (tnt-im-buffer-name user) nil)))
     (if tnt-away (tnt-send-away-msg user))))
 
 
@@ -1310,9 +1317,9 @@ Special commands:
 (defun tnt-completing-read-list (prompt collection)
   "Reads a list from the minibuffer with completion."
   (let ((str (let ((collection collection))
-	       (completing-read prompt 'tnt-completion-func))))
+               (completing-read prompt 'tnt-completion-func))))
     (split-string str ",")))
-    
+
 (defun tnt-persistent-message (&optional fmt &rest args)
   ;; Displays a persistent message in the echo area.
   (save-excursion
@@ -1456,6 +1463,12 @@ Special commands:
   "Add an association between KEY and VALUE to ALIST and return the new alist."
   (let ((pair (assoc key alist)))
     (if (null pair)
-	(cons (cons key value) alist)
+        (cons (cons key value) alist)
       (setcdr pair value)
       alist)))
+
+(defun tnt-remassoc (key alist)
+  "Remove an association KEY from ALIST, and return the new ALIST."
+  (delete (assoc key alist) alist))
+
+

@@ -44,11 +44,17 @@ immediately _after_ the above two lines.
     If you set this, you will not have to type in your username every
     time you want to log in.
 
-(setq tnt-default-username-list ("UserName1" "UserName2"))
+(setq tnt-username-alist '(("UserName1" . "Password1")
+                           ("UserName2" . "Password2")
+                           ("UserName3")))
+                           
     If you have more than one username, set the list this way.  Then
     you can use "C-x t s" to change which username will be used the
     next time you connect.  Any number of usernames can be listed in
-    this way.  
+    this way, but note that each element of the list MUST be either of
+    the form ("UserName") or of the form ("UserName" . "Password"),
+    and note the apostrophe.  When you log in as a username for which
+    the password is not stored here, you will be prompted.
 
 (setq tnt-default-password "MyPassword")
     If you set this, you will not have to type in your password every
@@ -96,6 +102,10 @@ immediately _after_ the above two lines.
     be able to receive IMs anywhere!  Once the email address is
     specified, turn forwarding on and off with "C-x t M".
 
+(setq tnt-email-binary "/bin/mail")
+    This variable is set by default to /bin/mail, but sysadmins can change
+    it without worrying about changing the elisp code.
+
 (set-face-foreground 'tnt-my-name-face "ColorName1")
 (set-face-foreground 'tnt-other-name-face "ColorName2")
     These set the colors used for the usernames of yourself and the
@@ -105,8 +115,4 @@ immediately _after_ the above two lines.
     the end of one of the above two lines and hitting "C-x C-e".  This
     will save you having to exit and relaunch emacs millions of times
     to get just the right color scheme.
-
-(setq tnt-email-binary "/bin/mail")
-    This variable is set by default to /bin/mail, but sysadmins can change
-    it without worrying about changing the elisp code.
 

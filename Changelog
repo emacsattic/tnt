@@ -1,3 +1,14 @@
+April 1, 2000 - Neil "Fred" Picciotto
+-------------------------------------
+ - removed tnt-default-username-list variable, replaced it with
+   a new tnt-username-alist variable, which assocs usernames with
+   passwords.
+ - explained the above in INSTALL.
+ - tnt-pounce-delete was using "remassoc" which didn't compile for me;
+   perhaps this was another XEmacs-ism?  in any case, wrote
+   tnt-remassoc to remove an assoc from an alist.
+ - removed some tab characters that were still lying around in tnt.el.
+
 March 31, 2000 - Jim Whitehead
 ------------------------------
  - Bugfix to fix the "no process" mesasges, due to incorrect calls
