@@ -266,11 +266,35 @@
       (setq i (1+ i)))
     rstr))
 
-
 (defun toc-encode (str)
-  "Encloses STR in quotes and backslashes special characters in it."
-  (format "\"%s\"" (replace-in-string str "[][{}()\\'\"$]" "\\\\\\&")))
+  ;; Encloses STR in quotes and backslashes special characters in it.
+  (let ((list nil)
+        (pos 0))
+    (while (string-match "\\([^][{}()\\'\"$]*\\)\\([][{}()\\'\"$]\\)" str pos)
+      (setq list (cons (substring str (match-beginning 1) (match-end 1)) list))
+      (setq list (cons "\\" list))
+      (setq list (cons (substring str (match-beginning 2) (match-end 2)) list))
+      (setq pos (match-end 0)))
+    (if (< pos (length str))
+        (setq list (cons (substring str pos) list)))
+    (apply 'concat "\"" (nreverse (cons "\"" list)))))
 
 (defun toc-normalize (str)
-  "Downcases STR and eliminates spaces."
-  (replace-in-string (downcase str) " " ""))
+  ;; Removes spaces and smashes STR to lowercase.
+  (let* ((len (length str))
+         (len2 len))
+    (let ((index 0))
+      (while (< index len)
+        (if (= (aref str index) ? )
+            (setq len2 (1- len2)))
+        (setq index (1+ index))))
+    (let ((str2 (make-string len2 0))
+          (index 0)
+          (index2 0))
+      (while (< index len)
+        (if (= (aref str index) ? )
+            ()
+          (aset str2 index2 (downcase (aref str index)))
+          (setq index2 (1+ index2)))
+        (setq index (1+ index)))
+      str2)))

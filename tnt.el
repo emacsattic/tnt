@@ -812,7 +812,8 @@ Special commands:
           (message "%s %s" nick (if onlinep "online" "offline"))))
     (setq tnt-buddy-alist (tnt-addassoc nnick status tnt-buddy-alist))
     (setq tnt-idle-alist (tnt-addassoc nnick idletime tnt-idle-alist))
-	
+    (setq tnt-away-alist (tnt-addassoc nnick away tnt-away-alist))
+
     (tnt-build-buddy-buffer)))
 
 (defun tnt-buddy-status (nick)
@@ -1391,17 +1392,42 @@ Special commands:
 ;;;----------------------------------------------------------------------------
 ;;; String utilities
 ;;;----------------------------------------------------------------------------
+
 (defun tnt-strip-a-href (str)
   ;; replaces the substring
   ;; <a href="http://www.derf.net/">derf!
   ;; with
   ;; ( http://www.derf.net/ ) derf!
   ;; which will not get stripped out by tnt-strip-html
-  (replace-in-string str "<a href=\"\\([^\"]*\\)\">" "( \\1 ) "))
+  (let ((start-index 0)
+        end-index
+        (segs nil))
+    (while (setq end-index (string-match "<a href=\"" str start-index))
+      (setq segs (cons (substring str start-index end-index) segs))
+      (setq start-index (match-end 0))
+      (setq end-index (string-match "\"" str start-index))
+      (if (null end-index) nil
+        (setq segs (cons "( " segs))
+        (setq segs (cons (substring str start-index end-index) segs))
+        (setq segs (cons " ) " segs))
+        (setq start-index (match-end 0)))
+      (setq end-index (string-match ">" str start-index))
+      (if (null end-index) nil
+        (setq start-index (match-end 0))))
+    (setq segs (cons (substring str start-index) segs))
+    (apply 'concat (nreverse segs))))
 
 (defun tnt-strip-html (str)
-  "Strips HTML tags out of STR, returning a new string."
-  (replace-in-string (downcase str) "<[^ ][^>]*>" ""))
+  ;; Strips all HTML tags out of STR.
+  (let ((start-index 0)
+        end-index
+        (segs nil))
+    (setq str (tnt-strip-a-href str))
+    (while (setq end-index (string-match "<[^ ][^>]*>" str start-index))
+      (setq segs (cons (substring str start-index end-index) segs))
+      (setq start-index (match-end 0)))
+    (setq segs (cons (substring str start-index) segs))
+    (apply 'concat (nreverse segs))))
 
 (defun tnt-neliminate-newlines (str)
   ;; Converts newlines in STR to spaces.  Modifies STR.

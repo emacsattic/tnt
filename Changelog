@@ -3,6 +3,15 @@ March 31, 2000 - Jim Whitehead
  - Bugfix to fix the "no process" mesasges, due to incorrect calls
    in tnt-buddy-shutdown
  - Removed executable permissions on CVS for PROTOCOL and README
+ - Broke alot of fixed code in order to keep the project compatable
+   with GNU emacs.  (replace-in-string) is not standard, and therefore
+   breaks all over the place with GNU.  This affects: 
+   - tnt-strip-a-href and tnt-strip-html in tnt.el and
+   - toc-encode and toc-normalize
+   These have been reverted to their orginal versions.
+ - There was a problem with the changes to tnt-away, etc where (away) is not
+   being appended to the buddy list for any away buddies.  This has been fixed.
+   the problem was due to away being ignored in tnt-set-buddy-status
 
 March 31, 2000 - John Jannotti
 ------------------------------
