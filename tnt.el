@@ -116,6 +116,28 @@ from your computer, so then when you come back, you can see how
 long ago it was that your friend said \"hi\" while you were gone.
 ")
 
+(defvar tnt-timestamp-format "%T "
+  "*String used a timestamp format.
+
+This string will be passed to format-time-string and the result
+prepended to messages.  \"%r \" gives a 12 hour format while the
+default of \"%T \" gives a 24 hour format")
+
+(defvar tnt-default-chatroom '(format "%s Chat%03d" tnt-current-user (random 1000))
+  "*Expression used to generate the default chat room to join when using C-x t j
+
+This can be an expression such as the default somewhat how one would
+bind a function to a key or it may be a string.  Note that the function
+must return a string.")
+
+(defvar tnt-persistent-timeout 5
+  "*Timeout between redisplays of persistent messages.
+
+This number is the time between redisplays of messages created with 
+tnt-persistent-message.  It should not be too small as you'd never see anything
+else in the minibuffer but it should be sufficiently small to allow you to see
+the message now and then until you notice it.")
+
 (defvar tnt-beep-on-message-available-event 'current
   "*If non-nil, beeps when giving the \"Message from ... available\" message.
 
@@ -210,15 +232,23 @@ feature.  defaults to /bin/mail
 
 ;; Faces for color highlighting of screen names.
 ;; if they already exist, we don't want to change the colors.
-(if (not (member 'tnt-other-name-face (face-list)))
-    (progn
-      (make-face 'tnt-other-name-face)
-      (set-face-foreground 'tnt-other-name-face "blue")))
-(if (not (member 'tnt-my-name-face (face-list)))
-    (progn
-      (make-face 'tnt-my-name-face)
-      (set-face-foreground 'tnt-my-name-face "red")))
+;(if (not (member 'tnt-other-name-face (face-list)))
+;    (progn
+;      (make-face 'tnt-other-name-face)
+;      (set-face-foreground 'tnt-other-name-face "blue")))
+;(if (not (member 'tnt-my-name-face (face-list)))
+;    (progn
+;      (make-face 'tnt-my-name-face)
+;      (set-face-foreground 'tnt-my-name-face "red")))
 
+(require 'custom)
+(defgroup tnt nil "The TNT AIM Client" :group 'comm)
+(defface tnt-my-name-face '((((class color)) (:foreground "red")) (t (:bold t)))
+  "The face used for my name on messages sent by this user"
+  :group 'tnt)
+(defface tnt-other-name-face '((((class color)) (:foreground "blue")) (t (:bold t)))
+  "The face used for my name on messages sent by another user"
+  :group 'tnt)
 
 ;;; Key bindings
 
@@ -522,7 +552,8 @@ feature.  defaults to /bin/mail
 (if tnt-im-mode-map
     ()
   (setq tnt-im-mode-map (make-sparse-keymap))
-  (define-key tnt-im-mode-map "\r" 'tnt-send-text-as-instant-message))
+  (define-key tnt-im-mode-map "\r" 'tnt-send-text-as-instant-message)
+  (define-key tnt-im-mode-map "\b" 'tnt-limit-backspace-to-marker))
 
 
 (defun tnt-im-mode ()
@@ -571,7 +602,6 @@ Special commands:
                             tnt-separator))
             (set-marker tnt-message-marker (point)))
           buffer))))
-
 
 (defun tnt-send-text-as-instant-message ()
   "Sends text at end of buffer as an IM."
@@ -645,6 +675,7 @@ Special commands:
     ()
   (setq tnt-chat-mode-map (make-sparse-keymap))
   (define-key tnt-chat-mode-map "\r"   'tnt-send-text-as-chat-message)
+  (define-key tnt-chat-mode-map "\b"   'tnt-limit-backspace-to-marker)
   (define-key tnt-chat-mode-map "\n"   'tnt-send-text-as-chat-whisper)
   (define-key tnt-chat-mode-map "\t"   'tnt-send-text-as-chat-invitation)
   (define-key tnt-chat-mode-map "\M-p" 'tnt-show-chat-participants))
@@ -672,10 +703,8 @@ Special commands:
       (error "You must be online to join a chat room.")
     (let* ((input (or (and (stringp room) room)
                       (and (boundp 'tnt-chat-room) tnt-chat-room)
-                      (read-from-minibuffer "Join chat room: "
-                                            (format "%s Chat%03d"
-                                                    tnt-current-user
-                                                    (random 1000))))))
+                      (tnt-read-string-with-default "Join chat room" 
+                                            (eval tnt-default-chatroom)))))
       (toc-chat-join input)
       (switch-to-buffer (tnt-chat-buffer input)))))
 
@@ -722,6 +751,13 @@ Special commands:
   (if tnt-current-user
       (tnt-leave-chat tnt-chat-room)))
 
+(defun tnt-limit-backspace-to-marker () (interactive)
+  (let ((mpos (marker-position tnt-message-marker)))
+    (if mpos
+        (if (>= mpos (point))
+            (message "Beginning of IM.")
+          (delete-backward-char 1))
+      (delete-backward-char 1))))
 
 (defun tnt-send-text-as-chat-message ()
   (interactive)
@@ -853,10 +889,10 @@ Special commands:
       (goto-char tnt-message-marker)
 
       (if tnt-use-timestamps
-          (insert-before-markers (format-time-string "%T ")))
+          (insert-before-markers (format-time-string tnt-timestamp-format)))
       
       (if (not user)
-          (insert-before-markers "[" message "]")
+          (insert-before-markers "[" (tnt-replace-me-statement message) "]")
 
         (let ((start (point)))
           (insert-before-markers user)
@@ -867,18 +903,23 @@ Special commands:
           (if (string-equal (toc-normalize user) tnt-current-user)
               (add-text-properties start (point) '(face tnt-my-name-face))
             (add-text-properties start (point) '(face tnt-other-name-face)))
-          (insert-before-markers " " message)))
+          (insert-before-markers " " (tnt-replace-me-statement message))))
 
       (insert-before-markers tnt-separator)
       (fill-region old-point (point)))))
 
+(defun tnt-replace-me-statement (message)
+  (if (and (>= (length message) 4) (string= (substring message 0 4) "/me "))
+      (concat "**" (substring message 3))
+    message))
 
 (defun tnt-get-input-message ()
   (let ((message (buffer-substring tnt-message-marker (point-max))))
     (delete-region tnt-message-marker (point-max))
     (goto-char (point-max))
     (if tnt-recenter-windows (recenter -1))
-    (tnt-neliminate-newlines message)))
+    (tnt-replace-me-statement
+     (tnt-neliminate-newlines message))))
 
 
 ;;;----------------------------------------------------------------------------
@@ -1820,20 +1861,33 @@ of the list, delimited by commas."
                                nil nil initial-input-str)))
     (split-string str ",")))
 
-(defun tnt-persistent-message (&optional fmt &rest args)
-  ;; Displays a persistent message in the echo area.
-  (with-current-buffer (get-buffer " *Minibuf-0*")
-    (erase-buffer)
-    (if fmt (insert (apply 'format fmt args)))
-    (message nil)))
+;;(defun tnt-persistent-message (&optional fmt &rest args)
+;;  ;; Displays a persistent message in the echo area.
+;;  (with-current-buffer (get-buffer " *Minibuf-0*")
+;;    (erase-buffer)
+;;    (if fmt (insert (apply 'format fmt args)))
+;;    (message nil)))
+;; You can't just kill someone's minibuffer!  whatup!?
 
+(defvar tnt-persistent-message-disable-id nil)
+
+(defun tnt-persistent-message-persist (m)
+  (setq tnt-persistent-message-disable-id
+        (add-timeout tnt-persistent-timeout 'tnt-persistent-message-persist m))
+  (message m))
+
+(defun tnt-persistent-message (&optional fmt &rest args)
+  (when tnt-persistent-message-disable-id
+    (disable-timeout tnt-persistent-message-disable-id))
+  ;never more than one!
+  (when (and fmt (not (equal fmt "")))
+      (tnt-persistent-message-persist (apply 'format fmt args))))
 
 (defun tnt-error (&rest args)
   ;; Displays message in echo area and beeps.  Use this instead
   ;; of (error) for asynchronous errors.
   (apply 'message args)
   (tnt-beep tnt-beep-on-error))
-
 
 (defvar collection) ; to shut up byte compiler
 
@@ -1869,8 +1923,11 @@ of the list, delimited by commas."
             (setq visible-bell orig-visible))
         (beep))))
 
-
-
+(defun tnt-read-string-with-default (p d)
+  (let ((reply (read-string (format "%s (%s): " p d))))
+    (if (equal reply "")
+        d
+      reply)))
 
 ;;;----------------------------------------------------------------------------
 ;;; String list utilities
