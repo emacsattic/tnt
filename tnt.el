@@ -942,7 +942,10 @@ Special commands:
     (beginning-of-line)
     (if (null (re-search-forward "^ +\\([^(\n]*\\)" nil t))
         (error "Position cursor on a buddy name")
-      (tnt-im (buffer-substring (match-beginning 1) (match-end 1))))))
+      (let ((nick (buffer-substring (match-beginning 1) (match-end 1))))
+        (if (tnt-buddy-status nick)
+            (tnt-im nick)
+          (error "Not online: %s" nick))))))
 
 (defun tnt-im-buddy-mouse (event)
   "Initiates an IM conversation with the selected buddy by mouse click."
@@ -1033,7 +1036,7 @@ Special commands:
     (setq tnt-buddy-alist (tnt-addassoc nnick status tnt-buddy-alist))
     (setq tnt-idle-alist (tnt-addassoc nnick idletime tnt-idle-alist))
     (setq tnt-away-alist (tnt-addassoc nnick away tnt-away-alist))
-    (tnt-set-just-signedonoff nnick onlinep)
+    (if tnt-timers-available (tnt-set-just-signedonoff nnick onlinep))
 
     (tnt-build-buddy-buffer)))
 

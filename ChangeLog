@@ -1,5 +1,11 @@
 2000-05-16  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-im-buddy): now checks whether user is online.
+	(tnt-set-buddy-status): now checking tnt-timers-available before
+	setting a user as "just signed on/off".
+
+2000-05-16  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-just-signedonoff-alist): added.
 	(tnt-just-signedonoff-delay): added.
 	(tnt-build-buddy-buffer): replaced big quoted lambda with quoted
