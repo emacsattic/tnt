@@ -1,4 +1,4 @@
-; -*- indent-tabs-mode: nil -*-
+gone a; -*- indent-tabs-mode: nil -*-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; TNT
@@ -1144,16 +1144,11 @@ Special commands:
           ))
 
     (let ((just-onoff (assoc nick tnt-just-signedonoff-alist))
-          (buffer (get-buffer (tnt-im-buffer-name nick)))
-          (was-away (assoc nick tnt-away-alist)))
+          (buffer (get-buffer (tnt-im-buffer-name nick))))
         (if (and away (not just-onoff))
             (if buffer 
                 (with-current-buffer buffer
-                  (tnt-append-message (format "%s has gone away." nick)))))
-        (if (and was-away (not away))
-            (if buffer
-                (with-current-buffer buffer
-                  (tnt-append-message (format "%s has returned from being away." nick))))))
+                  (tnt-append-message (format "%s has gone away." nick))))))
 
     (if onlinep
         (tnt-send-pounce nnick))
