@@ -111,7 +111,7 @@
   (global-set-key "\C-xts" 'tnt-switch-user)
   (global-set-key "\C-xtA" 'tnt-away-toggle)
   (global-set-key "\C-xtP" 'tnt-pounce-add)
-  (global-set-key "\C-xtD" 'tnt-pounce-del)
+  (global-set-key "\C-xtD" 'tnt-pounce-delete)
   (global-set-key "\C-xtM" 'tnt-toggle-email)
 )
 
@@ -129,13 +129,6 @@
 
 
 ;;; Pounce Code
-(defun pounce-rm-from-sequence (nick sequence result)
-  (if (string= (car (car sequence)) nick)
-      (if (eq nil result)
-	  (setq tnt-pounce-alist (cdr sequence))
-	(setq tnt-pounce-alist (list result (car (cdr sequence)))))
-    (pounce-rm-from-sequence nick (cdr sequence) (car sequence))))
-
 (defun tnt-pounce-add ()
   "Allows a user to store a pounce message for a buddy"
   (interactive)
@@ -149,27 +142,18 @@
     (setq tnt-pounce-alist (tnt-addassoc nick msg tnt-pounce-alist))
     (message "%s has been added to your pounce list" nick)))
 
-(defun tnt-pounce-del ()
+(defun tnt-pounce-delete (&optional nick)
   "Deletes a stored pounce message"
   (interactive)
   (if (null tnt-pounce-alist)
       (message "No pounce messages to delete")
-    (let* ((completion-ignore-case t)
-           (nick (format "%s" (completing-read "Delete pounce for user: "
-                                               tnt-pounce-alist))))
-      (tnt-pounce-delete
-       (toc-normalize nick))))
-  )
-
-
-(defun tnt-pounce-delete (nick)
-  (let* ((pair (assoc nick tnt-pounce-alist)))
-    (if pair
-	  (pounce-rm-from-sequence nick tnt-pounce-alist nil))
-    (if pair
-	   (message "The pounce for %s has been deleted." nick)
-      (message "There is no pounce stored for %s" nick)))
-  )
+    (if (not nick)
+        (let* ((completion-ignore-case t))
+          (setq nick (toc-normalize (completing-read "Delete pounce for user: "
+                                                     tnt-pounce-alist)))))
+  (if (not (assoc nick tnt-pounce-alist))
+      (message "There is no pounce stored for %s" nick)
+    (setq tnt-pounce-alist (remassoc nick tnt-pounce-alist)))))
 
 (defun tnt-send-pounce (user)
    (let* ((msg (cdr (assoc user tnt-pounce-alist))))
@@ -407,26 +391,26 @@ Special commands:
 	  (save-excursion
 	    (set-buffer buffer)
 	    (insert "
-+------------------+-------------+-------------------------------------------+
-|  Function        | Key Binding |               Summary                     |
-+------------------+-------------+-------------------------------------------+
-| tnt-show-help    |   C-x t ?   | Displays this help information            |
-| tnt-open         |   C-x t o   | Starts a new TNT session                  |
-| tnt-kill         |   C-x t k   | Terminates the current session            |
-| tnt-im           |   C-x t i   | Starts an instant-message conversation    |
-| tnt-join-chat    |   C-x t j   | Joins a chat room                         |
-| tnt-show-buddies |   C-x t b   | Shows the buddy list                      |
-| tnt-edit-buddies |   C-x t B   | Invokes the buddy list editor             |
-| tnt-accept       |   C-x t a   | Accepts a message or a chat invitation    |
-| tnt-reject       |   C-x t r   | Rejects a message or a chat invitation    |
-| tnt-next-event   |   C-x t n   | Shows next event in notification ring     |
-| tnt-prev-event   |   C-x t p   | Shows previous event in notification ring |
-| tnt-switch-user  |   C-x t s   | Switch between usernames for next login   |
-| tnt-away-toggle  |   C-x t A   | Toggles away status, set away message     |
-| tnt-pounce-add   |   C-x t P   | Add a user to your pounce list            |
-| tnt-pounce-del   |   C-x t D   | Remove a user from your pounce list       |
-| tnt-toggle-email |   C-x t M   | Toggle forwarding incoming IMs to email   |
-+------------------+-------------+-------------------------------------------+
++-------------------+-------------+-------------------------------------------+
+|  Function         | Key Binding |               Summary                     |
++-------------------+-------------+-------------------------------------------+
+| tnt-show-help     |   C-x t ?   | Displays this help information            |
+| tnt-open          |   C-x t o   | Starts a new TNT session                  |
+| tnt-kill          |   C-x t k   | Terminates the current session            |
+| tnt-im            |   C-x t i   | Starts an instant-message conversation    |
+| tnt-join-chat     |   C-x t j   | Joins a chat room                         |
+| tnt-show-buddies  |   C-x t b   | Shows the buddy list                      |
+| tnt-edit-buddies  |   C-x t B   | Invokes the buddy list editor             |
+| tnt-accept        |   C-x t a   | Accepts a message or a chat invitation    |
+| tnt-reject        |   C-x t r   | Rejects a message or a chat invitation    |
+| tnt-next-event    |   C-x t n   | Shows next event in notification ring     |
+| tnt-prev-event    |   C-x t p   | Shows previous event in notification ring |
+| tnt-switch-user   |   C-x t s   | Switch between usernames for next login   |
+| tnt-away-toggle   |   C-x t A   | Toggles away status, set away message     |
+| tnt-pounce-add    |   C-x t P   | Add a user to your pounce list            |
+| tnt-pounce-delete |   C-x t D   | Remove a user from your pounce list       |
+| tnt-toggle-email  |   C-x t M   | Toggle forwarding incoming IMs to email   |
++-------------------+-------------+-------------------------------------------+
 "))
 	  (funcall (tnt-switch-to-buffer-function) buffer)))))
 
