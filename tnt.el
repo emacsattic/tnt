@@ -1346,11 +1346,13 @@ unless PREFIX arg is given."
 (defun tnt-kill ()
   "Ends the current TNT session and signs off from the host."
   (interactive)
-  (when (null tnt-current-user)
-    (error "Already offline"))
 
   (toc-close)
   (tnt-shutdown)
+
+  (when (null tnt-current-user)
+    (error "Already offline"))
+  
   (message "Signed off")
   (tnt-beep tnt-beep-on-signoff)
 
@@ -1562,7 +1564,8 @@ Special commands:
                                                     (funcall tnt-default-chatroom)))))
       (tnt-remove-chat-event input)
       (toc-chat-join input)
-      (switch-to-buffer (tnt-chat-buffer input)))))
+      (switch-to-buffer (tnt-chat-buffer input))
+      (if tnt-recenter-windows (recenter -1)))))
 
 ;;; ***************************************************************************
 (defun tnt-leave-chat (room)

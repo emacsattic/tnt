@@ -1,3 +1,10 @@
+2003-03-23  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
+	* tnt.el (tnt-kill): call toc-close and tnt-shutdown before giving
+	the "Already offline" error, just to be sure everything gets
+	cleaned up.
+	(tnt-join-chat): recenter when entering the chat buffer.
+
 2003-02-27  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
 	* tnt.el (tnt-im): recenter when entering the im buffer
