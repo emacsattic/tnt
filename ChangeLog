@@ -1,5 +1,11 @@
 2002-09-08  Joe Casadonte  <jcasadonte@northbound-train.com>
 
+	* tnt.el (tnt-default-away-message): added new customization option
+	* tnt.el (tnt-away-toggle): added support for `tnt-default-away-toggle'
+	* tnt.el (tnt-get-away-message): added support for `tnt-default-away-toggle'
+
+2002-09-08  Joe Casadonte  <jcasadonte@northbound-train.com>
+
 	* tnt.el (tnt-kill-window-on-shutdown): added new customization option
 	* tnt.el (tnt-open-or-show-buddies): added new convenience function
 	* tnt.el (tnt-kill): changed to call kill-buffer (maybe)

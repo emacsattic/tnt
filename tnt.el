@@ -166,6 +166,14 @@ not stored here, you will be prompted."
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
+(defcustom tnt-default-away-message "I'm away."
+  "Default message to use when away."
+  :type '(choice
+          (string :tag "Away message" "I'm away.")
+          (const :tag "None (will be prompted each time)" nil))
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
 ;; ----- mode line
 ;; ---------------------------------------------------------------------------
 (defun tnt-customize-mode-line-setting (symbol newval)
@@ -1149,12 +1157,15 @@ if nil)"
   (cdr (assoc (toc-normalize nick) tnt-away-alist)))
 
 ;;; ***************************************************************************
-(defun tnt-away-toggle ()
-  "Toggles away or not, and sets message."
-  (interactive)
+(defun tnt-away-toggle (prefix)
+  "Toggles current away status.
+
+The value of `tnt-default-away-message' is used as the away message,
+unless PREFIX arg is given."
+  (interactive "p")
   (if tnt-away
       (tnt-not-away)
-    (tnt-set-away (tnt-get-away-msg))))
+    (tnt-set-away (tnt-get-away-msg prefix))))
 
 ;;; ***************************************************************************
 (defun tnt-not-away ()
@@ -1176,15 +1187,18 @@ if nil)"
 (defvar tnt-away-msg-history nil)
 
 ;;; ---------------------------------------------------------------------------
-(defun tnt-get-away-msg ()
+(defun tnt-get-away-msg (prefix)
   "Gets the away message."
-  (read-from-minibuffer "Away Message: "
-                        (cons
-                         (if tnt-away-msg-history
-                             (car tnt-away-msg-history)
-                           "I'm away.")
-                         0)
-                        nil nil 'tnt-away-msg-history)
+  (if (or (/= prefix 1)
+          (not tnt-default-away-message))
+      (read-from-minibuffer "Away Message: "
+                            (cons
+                             (if tnt-away-msg-history
+                                 (car tnt-away-msg-history)
+                               "I'm away.")
+                             0)
+                            nil nil 'tnt-away-msg-history)
+    tnt-default-away-message)
   )
 
 ;;; ***************************************************************************
