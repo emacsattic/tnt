@@ -1,3 +1,10 @@
+2000-04-16  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-expand-groups-for-chat-invitation): oops.
+	tnt-online-buddies-collection was not in the format i needed.  now
+	doing the correct thing, using the alist, but checking each buddy
+	to see if they're currently online.
+
 2000-04-15  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-expand-groups-for-chat-invitation): was assuming
