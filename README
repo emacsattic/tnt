@@ -10,6 +10,24 @@ interface, fancy artwork, or other random fluff.  Instead, like other
 emacs extensions, it has a keyboard-driven, text-based interface.  TNT
 is AIM for grownups ;-).
 
+Who is developing TNT?
+----------------------
+TNT is currently being developed on sourceforge.net by the following,
+listed by their AIM screennames:
+
+  jnwhiteh   - Jim Whitehead
+  suckfilter - Scott Evans
+  neilfred   - Neil 'Fred' Picciotto
+  jhjannotti - John Jannotti  
+
+
+Is there support for TNT?
+-------------------------
+TNT is currently housed at sourceforge.net, and is headed by the project
+members there.  To join the mailing list for this project, please go to 
+the following URL:
+  http://lists.sourceforge.net/mailman/listinfo/tnt-devel
+
 
 What versions of Emacs are supported?
 -------------------------------------
@@ -23,15 +41,6 @@ different byte-code format.  You may, however, be able to run successfully
 if you delete (or recompile) the .elc files.
 
 Version 18 of GNU Emacs is not supported.
-
-
-Is there support for TNT?
--------------------------
-TNT is currently housed at sourceforge.net, and is headed by the project
-members there.  To join the mailing list for this project, please go to 
-the following URL:
-  http://lists.sourceforge.net/mailman/listinfo/tnt-devel
-
 
 What does TNT stand for?
 ------------------------
