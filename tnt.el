@@ -94,6 +94,8 @@ properties to add to the result.
 (defvar tnt-event-ring nil)     ; (buffer-name . (message . callback))
 (defvar tnt-show-inactive-buddies-now nil)
 
+(defvar tnt-archive-datestamp-alist nil)
+
 ;;; **************************************************************************
 ;;; ***** Custom support - james@ja.ath.cx
 ;;; *****  with additions by - Joe Casadonte (emacs@northbound-train.com)
@@ -555,6 +557,12 @@ Only applies when `tnt-archive-directory-hierarchy' is set to \"Single
 file\".  A value of 0 means that there is no maximum and the file will
 grow indefinitely"
   :type 'integer
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-include-datestamp-in-buffer-header nil
+  ""
+  :type 'boolean
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
@@ -1543,11 +1551,17 @@ Special commands:
             (tnt-im-mode)
             (setq tnt-archive-filename (tnt-im-archive-filename user))
             (setq tnt-im-user user)
-            (setq tnt-last-datestamp "")
+            (if tnt-include-datestamp-in-buffer-header
+                (progn
+                  (setq tnt-last-datestamp (format-time-string tnt-datestamp-format))
+                  (insert (format "[Conversation with %s on %s]%s"
+                                  (tnt-get-fullname-and-nick (tnt-buddy-official-name user))
+                                  (current-time-string) tnt-separator)))
+              (setq tnt-last-datestamp "")
+              (insert (format "[Conversation with %s]%s"
+                              (tnt-get-fullname-and-nick (tnt-buddy-official-name user))
+                              tnt-separator)))
             (setq tnt-message-marker (make-marker))
-            (insert (format "[Conversation with %s]%s"
-                            (tnt-get-fullname-and-nick (tnt-buddy-official-name user))
-                            tnt-separator))
             (set-marker tnt-message-marker (point))
             buffer)))))
 
@@ -1702,9 +1716,16 @@ Special commands:
             (add-hook 'kill-buffer-hook 'tnt-chat-buffer-killed nil t)
             (setq tnt-chat-room room)
             (setq tnt-chat-participants nil)
-            (setq tnt-last-datestamp "")
+
+            (if tnt-include-datestamp-in-buffer-header
+                (progn
+                  (setq tnt-last-datestamp (format-time-string tnt-datestamp-format))
+                  (insert (format "[Chat room \"%s\" on %s]%s"
+                                  room (current-time-string) tnt-separator)))
+              (setq tnt-last-datestamp "")
+              (insert (format "[Chat room \"%s\"]%s" room tnt-separator)))
+
             (setq tnt-message-marker (make-marker))
-            (insert (format "[Chat room \"%s\"]%s" room tnt-separator))
             (set-marker tnt-message-marker (point))
             buffer)))))
 
@@ -1854,20 +1875,32 @@ Special commands:
   "Prepends USER (MODIFIED) to MESSAGE and appends the result to the buffer."
   (save-excursion
     (let ((old-point (marker-position tnt-message-marker))
-          (today-datestamp (format-time-string tnt-datestamp-format)))
+          (today-datestamp (format-time-string tnt-datestamp-format))
+          (latest-archive-datestamp (assoc (buffer-name) tnt-archive-datestamp-alist)))
       (goto-char tnt-message-marker)
 
-      (if (and tnt-last-datestamp
-               (not (string-equal tnt-last-datestamp today-datestamp)))
-          (progn
-            (setq tnt-last-datestamp today-datestamp)
-            (insert-before-markers tnt-separator
-                                   "[--- " today-datestamp " ---]"
-                                   tnt-separator)))
+	  ;; datestamp -- print if the date-stamp has changed OR if we
+      ;; want the datestamp in the header and we're archiving and it's
+      ;; not in the alist
+      (when (or (and tnt-last-datestamp
+                     (not (string= tnt-last-datestamp today-datestamp)))
+                (and tnt-include-datestamp-in-buffer-header
+                     tnt-archive-conversations
+                     (or (not latest-archive-datestamp)
+                         (not (string= (cdr latest-archive-datestamp) today-datestamp)))))
+		(setq tnt-last-datestamp today-datestamp)
+		(insert-before-markers tnt-separator "[--- " today-datestamp " ---]" tnt-separator)
 
-      (if tnt-use-timestamps
+        (if latest-archive-datestamp
+            (setcdr latest-archive-datestamp today-datestamp)
+          (setq tnt-archive-datestamp-alist
+                (cons (cons (buffer-name) today-datestamp) tnt-archive-datestamp-alist))))
+
+	  ;; optional timestamp
+      (when tnt-use-timestamps
           (insert-before-markers (format-time-string tnt-timestamp-format)))
 
+	  ;; user
       (if (not user)
           (insert-before-markers "[" (tnt-replace-me-statement message) "]")
 
@@ -1882,6 +1915,7 @@ Special commands:
             (add-text-properties start (point) '(face tnt-other-name-face)))
           (insert-before-markers " " (tnt-replace-me-statement message))))
 
+	  ;; formatting
       (insert-before-markers tnt-separator)
       (fill-region old-point (point))
 
@@ -1929,7 +1963,6 @@ Special commands:
 
 					;; goto beg of line
 					(backward-paragraph)
-;;					(beginning-of-line -1)
 
 					;; delete from there back
 					(delete-region (point-min) (point))
@@ -2632,13 +2665,9 @@ messages or pounces."
 (defun tnt-fetch-info ()
   "Requests the user info of a buddy (and launches browser with browse-url)."
   (interactive)
-  (save-excursion
-    (save-match-data
-      (beginning-of-line)
-      (if (null (re-search-forward "^ +\\([^(\n]*\\)" nil t))
-          (error "Position cursor on a buddy name")
-        (toc-get-info (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
-      )))
+
+  (let ((nick (tnt-get-buddy-at-point)))
+	(toc-get-info (cdr nick))))
 
 ;;; ***************************************************************************
 (defun tnt-toggle-inactive-buddies ()
