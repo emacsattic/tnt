@@ -1,3 +1,11 @@
+2002-06-20  NeilFred Picciotto  <fred@guido.halflab.com>
+
+	* tnt.el (tnt-get-buddy-at-point): move to beginning of line
+	before storing (point).
+	(tnt-set-buddy-status): now storing whether the buddy was already
+	away, so that the "has gone away" message does not appear unless
+	it's actually a change in their status.
+
 2001-07-02  NeilFred Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-version): updated to 2.4 for release.

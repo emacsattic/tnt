@@ -1291,8 +1291,8 @@ Special commands:
 (defun tnt-get-buddy-at-point ()
   "Returns the nickname of the buddy at point."
   (save-excursion
-    (setq tnt-buddy-list-point (point))
     (beginning-of-line)
+    (setq tnt-buddy-list-point (point))
     (if (null (re-search-forward "^ +\\([^(\n]*\\)" nil t))
         (error "Position cursor on a buddy name")
       (buffer-substring (match-beginning 1) (match-end 1)))))
@@ -1393,6 +1393,7 @@ Special commands:
 (defun tnt-set-buddy-status (nick onlinep idle away)
   (let ((nnick (toc-normalize nick))
         (status (if onlinep nick))
+        (prevaway (tnt-buddy-away nick))
         (idletime (if (and onlinep idle (> idle 0))
                       ;; see NOTE below about (current-time)
                       (- (cadr (current-time))
@@ -1422,10 +1423,14 @@ Special commands:
 
     (let ((just-onoff (assoc nick tnt-just-signedonoff-alist))
           (buffer (get-buffer (tnt-im-buffer-name nick))))
-        (if (and away (not just-onoff))
-            (if buffer
+        (if (and (not just-onoff) buffer)
+            (if (and away (not prevaway))
                 (with-current-buffer buffer
-                  (tnt-append-message (format "%s has gone away." nick))))))
+                  (tnt-append-message (format "%s has gone away." nick)))
+              (if (and (not away) prevaway)
+                  (with-current-buffer buffer
+                    (tnt-append-message (format "%s has returned." nick))))
+              )))
 
     (if onlinep
         (tnt-send-pounce nnick))
