@@ -1,3 +1,10 @@
+2001-04-18  Scott Evans  <gse@antisleep.com>
+
+	* tnt.el (tnt-handle-chat-in): Updated to be more like
+	tnt-handle-im-in, as far beeping and modeline messages.
+	tnt-message-on-chatroom-message: added
+	
+
 2001-04-09  James A  <james@ja.ath.cx>
 
 	* tnt.el (tnt-append-message): changed the end to cause additions

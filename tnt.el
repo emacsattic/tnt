@@ -164,6 +164,12 @@ set to use (visible or audible).  If set to nil, does not beep.
 (defvar tnt-message-on-buddy-signonoff t
   "*If non-nil, a minibuffer message appears when buddies sign on and off.")
 
+
+(defvar tnt-message-on-chatroom-message t
+  "*If non-nil, a minibuffer message (and a beep, depending on your 'beep'
+settings) appears when you have messages pending in a chatroom buffer.
+")
+
 (defvar tnt-use-split-buddy nil
   "*If non-nil, tnt will split the window when going to the buddy list.
 
@@ -1837,7 +1843,19 @@ Special commands:
 (defun tnt-handle-chat-in (roomid user whisperp message)
   (let ((buffer (tnt-chat-buffer (cdr (assoc roomid tnt-chat-alist)))))
     (tnt-append-message-and-adjust-window
-     buffer message user (if whisperp "whispers"))))
+     buffer message user (if whisperp "whispers"))
+
+    ;; Beep/push message event if appropriate.
+    (if (and tnt-message-on-chatroom-message
+             (not (string-equal user tnt-current-user)))
+        (if (get-buffer-window buffer 'visible)
+            (progn
+              (tnt-beep tnt-beep-on-message-in-visible-buffer)
+              (tnt-remove-im-event user))
+          (progn
+            (tnt-beep tnt-beep-on-message-available-event)
+            (tnt-push-event (format "Chat message from %s available" user)
+                            buffer nil))))))
 
 (defun tnt-handle-chat-update-buddy (roomid inside users)
   (with-current-buffer (tnt-chat-buffer (cdr (assoc roomid tnt-chat-alist)))
