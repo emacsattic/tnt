@@ -1415,7 +1415,8 @@ Special commands:
                     (completing-read "Send IM to: "
                                      (tnt-online-buddies-collection)))))
     (tnt-remove-im-event input)
-    (switch-to-buffer (tnt-im-buffer input))))
+    (switch-to-buffer (tnt-im-buffer input))
+    (if tnt-recenter-windows (recenter -1))))
 
 ;;; ***************************************************************************
 (defun tnt-im-buffer-name (user)
@@ -2030,7 +2031,9 @@ Special commands:
                        "[M-p]rev group       "
                        "[M-n]ext group       "
                        "[q]uit tnt           "
-                       "[?] help"))
+                       "[?] help"
+                       "\n"
+                       ))
               ((= tnt-current-menu 2)
                (insert "[j]oin chat room     "
                        (if tnt-away "unset [A]way status  "
@@ -3324,6 +3327,7 @@ of the list, delimited by commas."
         ;; these must be after any html tags (which have "<" and ">"):
         '("&lt;" "<")
         '("&gt;" ">")
+        '("&quot;" "\"")
         ;; and this must be after any escape sequences which have "&":
         '("&amp;" "&")
         ))
