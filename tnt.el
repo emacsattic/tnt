@@ -82,6 +82,14 @@
 (defvar tnt-use-keepalive nil 
   "*If t, sends a keepalive packet once a minute")
 
+(defvar tnt-use-buddy-update-timer t
+  "*If t, updates the idle times in the buddy list each minute.")
+
+(defvar tnt-use-idle-timer nil
+  "*If t, tells TOC server when emacs has been idle for 10 minuts.
+NOTE: currently never tells TOC server that you're no longer idle!!!
+")
+
 (defvar tnt-recenter-windows t
   "*If t, recenters text to bottom of window when messages are printed.")
 
@@ -185,8 +193,7 @@
   "Sends a keepalive packet to the server"
   (interactive)
   (toc-keepalive)
-  (setq tnt-keepalive-timer (run-at-time tnt-keepalive-interval nil 
-                                         'tnt-keepalive)))
+  )
 
 (defun tnt-buddy-away (nick)
   (cdr (assoc (toc-normalize nick) tnt-away-alist)))
@@ -229,6 +236,35 @@
   (toc-set-away tnt-away-msg)
   (tnt-set-online-state t)
 )
+
+
+;;;----------------------------------------------------------------------------
+;;; telling the TOC server we've gone idle
+;;;----------------------------------------------------------------------------
+
+(defvar tnt-idle-timer nil)
+(defvar tnt-send-idle-after 600)
+(defvar tnt-unidle-timer nil)
+(defvar tnt-send-unidle-after 1)
+(defvar tnt-currently-idle nil)
+
+;; the timers are created in tnt-handle-sign-on below
+
+(defun tnt-send-idle ()
+  (if (not tnt-currently-idle)
+      (progn
+        (setq tnt-currently-idle t)
+        (toc-set-idle tnt-send-idle-after))))
+
+(defun tnt-send-unidle ()
+  (if tnt-currently-idle
+      (progn
+        (setq tnt-currently-idle nil)
+        (toc-set-idle 0)
+        )))
+
+
+
 
 ;;;----------------------------------------------------------------------------
 ;;; Signon/Signoff
@@ -676,6 +712,10 @@ Special commands:
 (defvar tnt-buddy-alist nil)
 (defvar tnt-idle-alist nil)
 (defvar tnt-away-alist nil)
+
+(defvar tnt-buddy-update-timer nil)
+(defvar tnt-buddy-update-interval 60)
+
 
 (define-abbrev-table 'tnt-buddy-list-mode-abbrev-table ())
 
@@ -1185,8 +1225,14 @@ Special commands:
     (tnt-set-online-state nil)
     (setq tnt-current-user nil)
     (tnt-buddy-shutdown)
-    (if tnt-use-keepalive 
+    (if tnt-keepalive-timer
         (cancel-timer tnt-keepalive-timer))
+    (if tnt-buddy-update-timer
+        (cancel-timer tnt-buddy-update-timer))
+    (if tnt-idle-timer
+        (progn
+          (cancel-timer tnt-idle-timer)
+          (cancel-timer tnt-unidle-timer)))
 
 ;; Send a message saying we've been disconnected.
 
@@ -1202,7 +1248,18 @@ Special commands:
   (message "Signed on")
   (tnt-show-buddies)
   (if tnt-use-keepalive
-      (run-at-time tnt-keepalive-interval nil 'tnt-keepalive))
+      (setq tnt-keepalive-timer
+            (run-at-time t tnt-keepalive-interval 'tnt-keepalive)))
+  (if tnt-use-buddy-update-timer
+      (setq tnt-buddy-update-timer
+            (run-at-time t tnt-buddy-update-interval 'tnt-build-buddy-buffer)))
+  (if tnt-use-idle-timer
+      (progn
+        (setq tnt-idle-timer (run-with-idle-timer tnt-send-idle-after t
+                                                  'tnt-send-idle))
+        ;;(setq tnt-unidle-timer (run-with-idle-timer tnt-send-unidle-after t
+        ;;                                            'tnt-send-unidle))
+    ))
   (toc-init-done))
 
 (defun tnt-handle-config (config)

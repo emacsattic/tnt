@@ -1,5 +1,31 @@
 2000-04-07  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-send-idle): added.
+	(tnt-send-unidle): added.  (currently does not get called properly
+	when you become unidle.)
+	(tnt-use-buddy-update-timer): added.
+	(tnt-use-idle-timer): added.  (currently defaults to nil, because
+	becoming unidle is not yet supported.)
+	(tnt-idle-timer): added.
+	(tnt-send-idle-after): added.
+	(tnt-unidle-timer): added.
+	(tnt-send-unidle-after): added.
+	(tnt-currently-idle): added.
+	(tnt-buddy-update-timer): added.
+	(tnt-buddy-update-interval): added.
+	(tnt-keepalive): now using a repeating timer object, rather than
+	creating a new one each time.  for one thing, before we would have
+	been unable to cancel the timer if we log out or get disco'ed
+	before the first time it ran.  also there's no point in allocating
+	a new object every minute...
+	(tnt-handle-closed): now cancelling all the timers.  also,
+	checking whether the timer itself is non-nil rather than whether
+	the "use" variable is non-nil.
+	(tnt-handle-sign-on): now creating timers for updating the
+	*buddies* buffer and for telling the server we've been idle.
+
+2000-04-07  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-buddy-idle): now returning a string of the form
 	"1h12m" or "34m".  
 	(tnt-build-buddy-buffer): since idle is now a string, we can't
