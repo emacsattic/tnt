@@ -1,3 +1,21 @@
+March 29, 2000 - Neil "Fred" Picciotto
+-------------------------------------
+ - made piping to email simpler to configure (i.e. just set some
+   variables, rather than having to go in and change the code)
+ - made pounce-add tab-complete based on all buddies, rather than just
+   those that are currently online
+ - made pounce-del tab-complete based on pounce-list, rather than
+   online buddies
+ - moved a few bits of code around within the file (defvars of user-
+   configurable variables all together at top, tnt-switch-user near
+   tnt-open, and so on)
+ - you can now hit C-g (or just return with no password) to get out of
+   the password prompt
+ - added config var for beeping when buddies sign on and off
+ - fixed miscellaneous typos, etc
+ - added explanations in INSTALL for all the user-configurable
+   variables
+
 March 27, 2000 - Jim Whitehead
 ------------------------------
  - Made keepalive an option to avoid conflicts with Xemacs

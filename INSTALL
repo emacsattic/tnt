@@ -1,56 +1,102 @@
 How do I install TNT?
 ---------------------
+
 To install TNT, you must perform two steps.  First, you must ensure
-that the TNT Lisp files are in a directory that is on your load path;
-second, you must arrange for these files to be loaded into Emacs.
-There are several ways of accomplishing each step.  The method you
-choose will depend on how your computer is set up and on your personal
-preferences.  Rather than attempt to describe all possibilities, I'll
-just describe one simple, albeit non-optimal, method.  If you are
-experienced with Emacs, you'll undoubtedly want to improve on it.
+that the TNT Lisp files are readable to you and in a directory that is
+on your load path; second, you must arrange for these files to be
+loaded into Emacs.  There are several ways of accomplishing each step.
+The method you choose will depend on how your computer is set up and
+on your personal preferences.  Rather than attempt to describe all
+possibilities, I'll just describe one simple, albeit non-optimal,
+method.  If you are experienced with Emacs, you'll undoubtedly want to
+improve on it.
 
 Both steps can be accomplished by adding two lines to your Emacs init
-file.  This file is typically called ".emacs" and usually resides in your
-home directory.  Edit this file and add the following two lines to the
-end, substituting the absolute path of the directory containing this
-README file for the "..." in the first line.  
+file.  This file is typically called ".emacs" and usually resides in
+your home directory.  Edit this file and add the following two lines
+to the end, substituting the absolute path of the directory containing
+this INSTALL file (which should also contain several other files,
+including "tnt.el") for the "/full/path/to/tnt" in the first line.
 
-        (setq load-path (cons ".../lisp" load-path))
-        (load "tnt")
+(setq load-path (cons "/full/path/to/tnt" load-path))
+(load "tnt")
 
 Once you've done this, exit and restart Emacs to force the change to
-take effect.  If you see an error message in the echo area at the bottom
-of the Emacs window, you may have mistyped one of the lines.  If there's
-no error, you're probably all set.  To test whether TNT was loaded, use
-the describe-function command (invoked by C-h f) to describe the function
-tnt-open.  If it works, you should be able to run TNT.
+take effect.  If you see an error message in the echo area at the
+bottom of the Emacs window, you may have mistyped one of the lines.
+If there's no error, you're probably all set.  To test whether TNT was
+loaded, use the describe-function command (invoked by C-h f) to
+describe the function tnt-open.  If it works, you should be able to
+run TNT.
 
-(Note: TNT has currently only been tested with Emacs version 19.34.  How
-well it works with earlier or later versions is not known).
+(NOTE: TNT has currently only been tested with Emacs version 19.34.
+How well it works with earlier or later versions is not known).
+
+
 
 INSTALLATION OPTIONS
 --------------------
 
-The following options can also be included in your .emacs file, to invoke
-some certain non-default options:
+The following options can also be included in your .emacs file,
+immediately _after_ the above two lines.
 
-(setq tnt-use-timestamps t)  
+(setq tnt-default-username "MyUserName")
+    If you set this, you will not have to type in your username every
+    time you want to log in.
+
+(setq tnt-default-username-list ("UserName1" "UserName2"))
+    If you have more than one username, set the list this way.  Then
+    you can use "C-x t s" to change which username will be used the
+    next time you connect.  Any number of usernames can be listed in
+    this way.  
+
+(setq tnt-default-password "MyPassword")
+    If you set this, you will not have to type in your password every
+    time you want to log in.  However, if the file you set this in is
+    readable by other users on your system, they could log in as you,
+    so if you set this, be careful.  Also note that if you use
+    multiple usernames, you should not set the tnt-default-password
+    (unless all your usernames use the same password).
+
+(setq tnt-use-timestamps t)
  	This will add a timestamp for each message you receive or send.
-	This is best for logging, and for people who are on very often.
+	This is useful for logging, and for people who are on very often.
+    It's also convenient if you leave yourself logged in while away
+	from your computer, so then when you come back, you can see how
+	long ago it was that your friend said "hi" while you were gone.
+
+(setq tnt-beep-on-buddy-signonoff t)
+    This makes TNT beep any time one of your buddies signs on or off.
+    Note that whether or not you set this, you will still get messages
+    in your minibuffer saying "MyBuddy online" and "MyBuddy offline".
 
 (setq tnt-use-split-buddy t)
-	This will force tnt to split to window horizontally whenever the
-	buddy list command is invoked.  This rule does not apply when in 
-	in the scratch buffer.
+    This will force tnt to split the window horizontally whenever the
+	buddy list command is invoked.  This rule does not apply when in
+	in the *scratch* buffer, or when already in the *buddies* buffer.
 
 (setq tnt-use-keepalive t)
 	This tells TNT to use the keepalive packets to help keep your
-	connection alive.  Try this is you keep getting booted randomly
+	connection alive.  Try this if you keep getting booted randomly.
 
 (setq tnt-recenter-windows nil)
 	This tells TNT to NOT recenter each window automatically.
 
+(setq tnt-email-to-pipe-to "someone@example.com")
+    Setting this allows you to toggle forwarding of all incoming IMs
+    to the specified address.  This might be useful if you have an
+    email address which goes to an alphanumeric pager, and you want to
+    be able to receive IMs anywhere!  Once the email address is
+    specified, turn forwarding on and off with "C-x t M".
 
-
+(set-face-foreground 'tnt-my-name-face "ColorName1")
+(set-face-foreground 'tnt-other-name-face "ColorName2")
+   These set the colors used for the usernames of yourself and the
+   person you're talking to.  Only works if emacs is running in X (in
+   other words, not for example in a telnet session.)  You can
+   experiment with different colors by simply putting the cursor at
+   the end of one of the above two lines and hitting "C-x C-e".  This
+   will save you having to exit and relaunch emacs millions of times
+   to get just the right color scheme.
 
 

@@ -43,26 +43,51 @@
 
 ;;; Config variables
 
+; these generally should not be changed
 (defvar tnt-toc-host    "toc.oscar.aol.com")
 (defvar tnt-toc-port    5190)
 (defvar tnt-login-host  "login.oscar.aol.com")
 (defvar tnt-login-port  5190)
 (defvar tnt-language    "english")
 
-(defvar tnt-default-username nil)
-(defvar tnt-default-username-list nil)
-(defvar tnt-default-password nil)
+
+; these may be changed, but rather than changing them here, use
+; (setq <variablename> <value>) in your .emacs file.  see INSTALL
+; for more info.
+
+(defvar tnt-default-username nil
+  "*Should be nil or a string containing your username.")
+
+(defvar tnt-default-username-list nil
+  "*Should be nil or a list of strings containing usernames.")
+
+(defvar tnt-default-password nil
+  "*Should be nil or your password.")
 
 (defvar tnt-show-timestamps nil
-  "*If t, show timestamps in TNT conversations.")
+  "*If t, shows timestamps in TNT conversations.")
+
+(defvar tnt-beep-on-buddy-signonoff nil
+  "*If t, beeps when buddies sign on or off.")
+
+(defvar tnt-use-split-buddy nil 
+  "*If t, splits screen automagically when you invoke buddy-view")
+
+(defvar tnt-use-keepalive nil 
+  "*If t, sends a keepalive packet once a minute")
 
 (defvar tnt-recenter-windows t
   "*If t, recenters text to bottom of window when messages are printed.")
 
-(defvar tnt-inhibit-key-bindings nil)
+(defvar tnt-email-to-pipe-to nil
+  "*Should be nil or a string containing an email address.")
+
+
 
 
 ;;; Key bindings
+
+(defvar tnt-inhibit-key-bindings nil)
 
 (if tnt-inhibit-key-bindings
     ()
@@ -81,6 +106,7 @@
   (global-set-key "\C-xtA" 'tnt-away-toggle)
   (global-set-key "\C-xtP" 'tnt-pounce-add)
   (global-set-key "\C-xtD" 'tnt-pounce-del)
+  (global-set-key "\C-xtM" 'tnt-toggle-email)
 )
 
 
@@ -105,16 +131,18 @@
     (pounce-rm-from-sequence nick (cdr sequence) (car sequence))))
 
 (defun tnt-pounce-add ()
-  "Allows a user to store a pounce msg for a buddy"
+  "Allows a user to store a pounce message for a buddy"
   (interactive)
   (let* ((completion-ignore-case t)
-	 (nick_tmp (format "%s" (completing-read "Buddy to Pounce on: " 
- 						 (tnt-buddy-collection))))
- 	 (nick (toc-normalize nick_tmp))
- 	 (msg_tmp (format "%s" 
-			  (read-from-minibuffer "Msg to send (enter for none): ")))
- 	 (msg (if (string= msg_tmp "") "none" msg_tmp))
- 	 (pair (assoc nick tnt-pounce-list)))
+         (nick_tmp (format "%s"
+                           (completing-read "Buddy to Pounce on: " 
+                                            (mapcar 'list
+                                                    (tnt-extract-normalized-buddies tnt-buddy-blist)))))
+         (nick (toc-normalize nick_tmp))
+         (msg_tmp (format "%s" 
+                          (read-from-minibuffer "Msg to send (enter for none): ")))
+         (msg (if (string= msg_tmp "") "none" msg_tmp))
+         (pair (assoc nick tnt-pounce-list)))
     
     ;; They use (cons (cons )) list
     
@@ -125,13 +153,15 @@
   )
 
 (defun tnt-pounce-del ()
-  "Let's a user delete a stored pounce msg"
+  "Deletes a stored pounce message"
   (interactive)
-  (let* ((completion-ignore-case t)
-	 (nick (format "%s" (completing-read "Delete pounce for user: "
- 					     (tnt-buddy-collection)))))
-    (tnt-pounce-delete
-     (toc-normalize nick)))
+  (if (null tnt-pounce-list)
+      (message "No pounce messages to delete")
+    (let* ((completion-ignore-case t)
+           (nick (format "%s" (completing-read "Delete pounce for user: "
+                                               tnt-pounce-list))))
+      (tnt-pounce-delete
+       (toc-normalize nick))))
   )
 
 
@@ -164,8 +194,6 @@
 (defvar tnt-away-alist nil)
 (defvar tnt-away 0)
 (defvar tnt-keepalive-timer nil)
-(defvar tnt-use-keepalive nil 
-  "*If t, sends a keepalive packet once a minute")
 
 (defun tnt-keepalive ()
   "Sends a keepalive packet to the server"
@@ -231,24 +259,28 @@
       (error "Already online as %s" tnt-current-user)
     (setq tnt-username (or (and (stringp username) username)
                            tnt-default-username
+                           (and (not (null tnt-default-username-list))
+                                (car tnt-default-username-list))
                            (read-from-minibuffer "Screen name: "))
           tnt-password (or (and (stringp password) password)
                            tnt-default-password
                            (tnt-read-from-minibuffer-no-echo 
                             (format "Password for %s: " tnt-username))))
-    (setq toc-opened-function            'tnt-handle-opened
-          toc-closed-function            'tnt-handle-closed
-          toc-sign-on-function           'tnt-handle-sign-on
-          toc-config-function            'tnt-handle-config
-          toc-nick-function              'tnt-handle-nick
-          toc-update-buddy-function      'tnt-handle-update-buddy
-          toc-im-in-function             'tnt-handle-im-in
-          toc-chat-join-function         'tnt-handle-chat-join
-          toc-chat-in-function           'tnt-handle-chat-in
-          toc-chat-invite-function       'tnt-handle-chat-invite
-          toc-chat-update-buddy-function 'tnt-handle-chat-update-buddy
-          toc-error-function             'tnt-handle-error)
-    (toc-open tnt-toc-host tnt-toc-port tnt-username)))
+    (if (string-equal tnt-password "")
+        (error "No password given")
+      (setq toc-opened-function            'tnt-handle-opened
+            toc-closed-function            'tnt-handle-closed
+            toc-sign-on-function           'tnt-handle-sign-on
+            toc-config-function            'tnt-handle-config
+            toc-nick-function              'tnt-handle-nick
+            toc-update-buddy-function      'tnt-handle-update-buddy
+            toc-im-in-function             'tnt-handle-im-in
+            toc-chat-join-function         'tnt-handle-chat-join
+            toc-chat-in-function           'tnt-handle-chat-in
+            toc-chat-invite-function       'tnt-handle-chat-invite
+            toc-chat-update-buddy-function 'tnt-handle-chat-update-buddy
+            toc-error-function             'tnt-handle-error)
+      (toc-open tnt-toc-host tnt-toc-port tnt-username))))
 
 
 (defun tnt-kill ()
@@ -263,6 +295,22 @@
     (setq tnt-current-user nil)
     (tnt-buddy-shutdown)
     (message "Signed off")))
+
+
+(defun tnt-switch-user ()
+  "Switches the default username to log in as."
+  (interactive)
+  (if (null tnt-default-username-list)
+      (message "No username list defined.")
+    (progn
+      (setq tnt-default-username-list 
+            (tnt-rotate-left tnt-default-username-list))
+      (if tnt-default-username
+          (setq tnt-default-username (car tnt-default-username-list)))
+      (message 
+       (format "Next login will be as user %s"
+               (car tnt-default-username-list))))
+    ))
 
 
 
@@ -379,9 +427,10 @@ Special commands:
 | tnt-next-event   |   C-x t n   | Shows next event in notification ring     |
 | tnt-prev-event   |   C-x t p   | Shows previous event in notification ring |
 | tnt-switch-user  |   C-x t s   | Switch between usernames for next login   |
-| tnt-away-toggle  |   C-x t A   | This allows you to toggle your away status|
+| tnt-away-toggle  |   C-x t A   | Toggles away status, set away message     |
 | tnt-pounce-add   |   C-x t P   | Add a user to your pounce list            |
 | tnt-pounce-del   |   C-x t D   | Remove a user from your pounce list       |
+| tnt-toggle-email |   C-x t M   | Toggle forwarding incoming IMs to email   |
 +------------------+-------------+-------------------------------------------+
 "))
 	  (apply (tnt-switch-to-buffer-function) (list buffer))))))
@@ -661,14 +710,12 @@ Special commands:
   (tnt-build-buddy-buffer)
   (apply (tnt-switch-to-buffer-function) (list (tnt-buddy-buffer))))
 
-(defvar tnt-use-split-buddy nil 
-  "*If t, splits screen automagically when you invoke buddy-view")
-
 (defun tnt-switch-to-buffer-function ()
- (if (and (not (string-equal (buffer-name) "*scratch*"))
-	  (eq tnt-use-split-buddy t))
-    #'switch-to-buffer-other-window 
-      #'switch-to-buffer))
+ (if (and tnt-use-split-buddy
+          (not (string-equal (buffer-name) "*scratch*"))
+          (not (string-equal (buffer-name) "*buddies*")))
+     'switch-to-buffer-other-window 
+   'switch-to-buffer))
 
 (defun tnt-buddy-buffer ()
   (let ((buffer-name "*buddies*"))
@@ -699,7 +746,7 @@ Special commands:
 		  
 	    (if (> idle 0)
 		(if (eq away 0) 
-		    (format " (idle %d)" idle) "") "" )
+		    (format " (idle - %d)" idle) "") "" )
 	    )))))
 
         (set-buffer-modified-p nil))))
@@ -800,7 +847,9 @@ Special commands:
     ;; Online or not?
     (if (not (string= status old-status))
         (progn
-          ;; Message.
+          ;; Beep (if set to)
+          (if tnt-beep-on-buddy-signonoff (beep))
+          ;; Message
           ;; I think I prefer vanilla messages to tnt-events for this,
           ;; but just in case, here's the code for a tnt-event:
           ;;   (tnt-push-event (format "%s online" nick) nil nil)
@@ -829,6 +878,7 @@ Special commands:
   ;; Return a "collection" of online buddies for completion commands.
   ;; (Remove all nil entries -- these turn up when a buddy logs off).
   (delete '(nil) (mapcar '(lambda(x) (list (cdr x))) tnt-buddy-alist)))
+
 
 
 ;;;----------------------------------------------------------------------------
@@ -1160,7 +1210,10 @@ Special commands:
   (if online
       (tnt-send-pounce (toc-normalize nick)))
   )
-  
+
+
+
+(defvar tnt-pipe-to-email-now nil)
 
 (defun tnt-handle-im-in (user auto message)
   (let ((buffer (tnt-im-buffer user)))
@@ -1169,11 +1222,11 @@ Special commands:
 					  (format "%s (Auto-response)" user)
 					  message)
     (tnt-append-message-and-adjust-window buffer user message))
-    ;; to pipe all incoming messages somewhere, modify the function
-    ;; below to correctly call the program you want to pipe into,
-    ;; then uncomment this next line:
-    ;(tnt-pipe-message-to-program user message)
-    ;(beep)
+
+    (if (and tnt-email-to-pipe-to
+             tnt-pipe-to-email-now)
+        (tnt-pipe-message-to-program user message))
+
     (if (null (get-buffer-window buffer))
 	(progn
 	  (beep)
@@ -1182,26 +1235,41 @@ Special commands:
     (if (eq tnt-away 1) (send-away-msg user))))
 
 
+
+(defun tnt-toggle-email ()
+  "Turns email piping on or off (only if tnt-email-to-pipe-to is set)."
+  (interactive)
+  (if (null tnt-email-to-pipe-to)
+      (error "No email address set in variable tnt-email-to-pipe-to")
+    (progn
+      (setq tnt-pipe-to-email-now (not tnt-pipe-to-email-now))
+      (if tnt-pipe-to-email-now
+          (message (format "Now forwarding any incoming IMs to %s"
+                           tnt-email-to-pipe-to))
+        (message (format "No longer forwarding incoming IMs"))))))
+
+
 (defun tnt-pipe-message-to-program (user message)
   (let ((proc-name "piping-process")
-	(proc-out-buf "*piping-program-output*")
-	(process-connection-type nil))
-    ;; this is a sample process to pipe to -- sending an email
+        (proc-out-buf "*piping-program-output*")
+        (process-connection-type nil))
+    ;; similar code to this could be used to pipe to something else
     (start-process proc-name proc-out-buf
-                 ;; put executable here:
-		   "/usr/bin/mail"
-                 ;; and now any cmd-line args:
-                 ;; (note that although the subject string has spaces,
-                 ;; it's all sent as one arg to the executable, i.e.
-                 ;; one element of argv)
-		   "-s"  ;; -s for subject
-		   (format "IM from %s" user)  ;; a subject line
-		   "foo@bar.com")  ;; an email address to send to
+                   ;; put executable here:
+                   "/bin/mail"
+                   ;; and now any cmd-line args:
+                   ;; (note that although the subject string has spaces,
+                   ;; it's all sent as one arg to the executable, i.e.
+                   ;; one element of argv)
+                   "-s"  ;; -s for subject
+                   (format "IM from %s" user)  ;; a subject line
+                   tnt-email-to-pipe-to)  ;; email address to send to
+    ;; then what gets piped in
     (process-send-string proc-name 
-			 (format "%s: %s\n" user 
-				 (tnt-strip-html message)))
+                         (format "%s: %s\n" user 
+                                 (tnt-strip-html message)))
     (process-send-eof proc-name)))
-  
+
 
 
 
@@ -1284,11 +1352,12 @@ Special commands:
     (while (<= i 126)
       (define-key keymap (char-to-string i)
         '(lambda ()
-            (interactive)
-            (insert last-command-char)
-            (put-text-property (1- (point)) (point) 'invisible t)))
+           (interactive)
+           (insert last-command-char)
+           (put-text-property (1- (point)) (point) 'invisible t)))
       (setq i (1+ i)))
     (define-key keymap "\r" 'exit-minibuffer)
+    (define-key keymap "\C-g" 'keyboard-escape-quit)
     (let ((str (read-from-minibuffer prompt "" keymap)))
       (set-text-properties 0 (length str) nil str)
       str)))
@@ -1443,25 +1512,15 @@ Special commands:
 
 (defun tnt-rotate-left (list)
   ;; Rotates LIST left.
-  (cond (list
-         (setcdr list (nreverse (cdr list)))
-         (nreverse list))))
+  (if (null list) nil
+    (nreverse (cons (car list) (nreverse (cdr list))))))
 
 
 (defun tnt-rotate-right (list)
   ;; Rotates LIST right.
-  (nreverse (tnt-rotate-left (nreverse list))))
+  (if (null list) nil
+    (let ((list (nreverse list)))
+      (cons (car list) (nreverse (cdr list))))))
+      
 
 
-;; not sure where in the file to put this, so i stuck it at the end
-(defun tnt-switch-user ()
-  "Switches the default username to log in as."
-  (interactive)
-  (if (null tnt-default-username-list)
-      (message "No username list defined.")
-      (progn
-	(setq tnt-default-username-list 
-	      (tnt-rotate-left tnt-default-username-list))
-	(setq tnt-default-username (car tnt-default-username-list))
-	(message 
-	 (format "Next login will be as user %s" tnt-default-username)))))
