@@ -44,7 +44,7 @@
 ;;;----------------------------------------------------------------------------
 
 (defvar tnt-timers-available (fboundp 'run-at-time))
-(defvar string-as-unibyte-available (fboundp 'string-as-unibyte))
+(defvar tnt-string-as-unibyte-available (fboundp 'string-as-unibyte))
 
 ;;;----------------------------------------------------------------------------
 ;;; Callback functions
@@ -160,36 +160,57 @@
       (setq tocstr-flap-state 'tocstr-flap-await-frame))
 
 (if tnt-timers-available 
-  
-  (defun tocstr-filter (proc str)
-    (when tocstr-flap-timer
-      (cancel-timer tocstr-flap-timer)
-      (setq tocstr-flap-timer nil))
-    (if tocstr-flap-parsing
-        (setq tocstr-flap-packet
-              (if string-as-unibyte-available
-                  (concat tocstr-flap-packet (string-as-unibyte str))
-              (concat tocstr-flap-packet str))
-              )
+    (if tnt-string-as-unibyte-available
+        (defun tocstr-filter (proc str)
+          (when tocstr-flap-timer
+            (cancel-timer tocstr-flap-timer)
+            (setq tocstr-flap-timer nil))
+          (if tocstr-flap-parsing
+              (setq tocstr-flap-packet
+                    (concat tocstr-flap-packet (string-as-unibyte str)))
             
-      (setq tocstr-flap-parsing t str 
-            (if string-as-unibyte-available
-                (concat tocstr-flap-packet (string-as-unibyte str))
-              (concat tocstr-flap-packet str))
-            tocstr-flap-packet nil)
-      (unwind-protect
-          (while str
-            (let ((len (length str))
-                  (i 0))
-              (while (< i len)
-                (funcall tocstr-flap-state (aref str i))
-                (setq i (1+ i))))
-            (setq str tocstr-flap-packet
-                  tocstr-flap-packet nil))
-        (setq tocstr-flap-parsing nil)
-        (unless (eq tocstr-flap-state 'tocstr-flap-await-frame)
-          (setq tocstr-flap-timer
-                (run-at-time 15 nil 'tocstr-init-receiver))))))
+            (setq tocstr-flap-parsing t str 
+                  (concat tocstr-flap-packet (string-as-unibyte str))
+                  tocstr-flap-packet nil)
+            (unwind-protect
+                (while str
+                  (let ((len (length str))
+                        (i 0))
+                    (while (< i len)
+                      (funcall tocstr-flap-state (aref str i))
+                      (setq i (1+ i))))
+                  (setq str tocstr-flap-packet
+                        tocstr-flap-packet nil))
+              (setq tocstr-flap-parsing nil)
+              (unless (eq tocstr-flap-state 'tocstr-flap-await-frame)
+                (setq tocstr-flap-timer
+                      (run-at-time 15 nil 'tocstr-init-receiver))))))
+
+        (defun tocstr-filter (proc str)
+          (when tocstr-flap-timer
+            (cancel-timer tocstr-flap-timer)
+            (setq tocstr-flap-timer nil))
+          (if tocstr-flap-parsing
+              (setq tocstr-flap-packet
+                    (concat tocstr-flap-packet str))
+            
+            (setq tocstr-flap-parsing t str 
+                  (concat tocstr-flap-packet str)
+                  tocstr-flap-packet nil)
+            (unwind-protect
+                (while str
+                  (let ((len (length str))
+                        (i 0))
+                    (while (< i len)
+                      (funcall tocstr-flap-state (aref str i))
+                      (setq i (1+ i))))
+                  (setq str tocstr-flap-packet
+                        tocstr-flap-packet nil))
+              (setq tocstr-flap-parsing nil)
+              (unless (eq tocstr-flap-state 'tocstr-flap-await-frame)
+                (setq tocstr-flap-timer
+                      (run-at-time 15 nil 'tocstr-init-receiver)))))))
+
 
     (defun tocstr-filter (proc str)
       (let ((len (length str))

@@ -3,7 +3,10 @@
 	* tocstr.el (tnt-timers-available): Changed the calls of 
 	string-as-unibyte to an if statement checking whether or not 
 	the function is bound.
-	(string-as-unibyte-available): Added.
+	(tnt-string-as-unibyte-available): Added.
+	(tnt-timers-available): Moved things around, now tocstr looks for
+	tnt-string-as-unibyte-available before defining.. shoudl solve 
+	our problems)
 
 2000-14-07    <tntdevel@brokendreams.net>
 
