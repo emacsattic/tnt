@@ -454,8 +454,7 @@ Special commands:
   (let ((buffer-name (tnt-im-buffer-name user)))
     (or (get-buffer buffer-name)
         (let ((buffer (get-buffer-create buffer-name)))
-          (save-excursion
-            (set-buffer buffer)
+          (with-current-buffer buffer
             (tnt-im-mode)
             (setq tnt-im-user user)
             (setq tnt-message-marker (make-marker))
@@ -488,8 +487,7 @@ Special commands:
     (or (and help-buffer
              (switch-to-buffer help-buffer))
         (let ((buffer (get-buffer-create buffer-name)))
-          (save-excursion
-            (set-buffer buffer)
+          (with-current-buffer buffer
             (insert "
 +-------------------+-------------+-------------------------------------------+
 |  Function         | Key Binding |               Summary                     |
@@ -582,8 +580,7 @@ Special commands:
                       (completing-read "Leave chat room: "
                                        (mapcar (lambda (x) (list (cdr x)))
                                                tnt-chat-alist)))))
-      (save-excursion
-        (set-buffer (tnt-chat-buffer input))
+      (with-current-buffer (tnt-chat-buffer input)
         (setq tnt-chat-participants nil)
         (toc-chat-leave tnt-chat-roomid)
         (tnt-append-message (format "%s left" tnt-current-user))))))
@@ -598,8 +595,7 @@ Special commands:
   (let ((buffer-name (tnt-chat-buffer-name room)))
     (or (get-buffer buffer-name)
         (let ((buffer (get-buffer-create buffer-name)))
-          (save-excursion
-            (set-buffer buffer)
+          (with-current-buffer buffer
             (tnt-chat-mode)
             (make-local-hook 'kill-buffer-hook)
             (add-hook 'kill-buffer-hook 'tnt-chat-buffer-killed nil t)
@@ -685,15 +681,13 @@ Special commands:
 
 (defun tnt-append-message-and-adjust-window (buffer message &optional user mod)
   (let ((window (get-buffer-window buffer)))
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (tnt-append-message (tnt-strip-html message) user mod)
-      (if window
+      (if (and window tnt-recenter-windows)
           (let ((old-window (selected-window)))
             (select-window window)
-            (if tnt-recenter-windows (recenter -1))
+            (recenter -1)
             (select-window old-window))))))
-
 
 (defun tnt-append-message (message &optional user modified)
   "Prepends USER (MODIFIED) to MESSAGE and appends the result to the buffer."
@@ -787,36 +781,34 @@ Special commands:
   (let ((buffer-name "*buddies*"))
     (or (get-buffer buffer-name)
         (let ((buffer (get-buffer-create buffer-name)))
-          (save-excursion
-            (set-buffer buffer)
+          (with-current-buffer buffer
             (tnt-buddy-list-mode)
             (setq buffer-read-only t))
           buffer))))
 
 
 (defun tnt-build-buddy-buffer ()
-  (save-excursion
-    (set-buffer (tnt-buddy-buffer))
-      (let ((buffer-read-only nil))
-        (erase-buffer)
-        (tnt-blist-to-buffer
-         tnt-buddy-blist
-         '(lambda (nick)
-            (let ((unick (tnt-buddy-status nick))
-                  (idle (tnt-buddy-idle nick))
-                  (away (tnt-buddy-away nick)))
-              (if unick (format "  %s%s"
-                                unick
-                                (cond ((and away idle)
-                                       (format " (away - %s)" idle))
-                                      ((and away (not idle))
-                                       (format " (away)"))
-                                      ((and (not away) idle)
-                                       (format " (idle - %s)" idle))
-                                      (t ""))
-                                      )))))
-
-        (set-buffer-modified-p nil))))
+  (with-current-buffer (tnt-buddy-buffer)
+    (let ((buffer-read-only nil))
+      (erase-buffer)
+      (tnt-blist-to-buffer
+       tnt-buddy-blist
+       '(lambda (nick)
+          (let ((unick (tnt-buddy-status nick))
+                (idle (tnt-buddy-idle nick))
+                (away (tnt-buddy-away nick)))
+            (if unick (format "  %s%s"
+                              unick
+                              (cond ((and away idle)
+                                     (format " (away - %s)" idle))
+                                    ((and away (not idle))
+                                     (format " (away)"))
+                                    ((and (not away) idle)
+                                     (format " (idle - %s)" idle))
+                                    (t ""))
+                              )))))
+      
+      (set-buffer-modified-p nil))))
 
 (defun tnt-im-buddy ()
   "Initiates an IM conversation with the selected buddy."
@@ -903,16 +895,16 @@ Special commands:
         (idletime (if (and onlinep idle (> idle 0))
                       ;; see NOTE below about (current-time)
                       (- (cadr (current-time))
-                         (* 60 idle)))))
+                         (* 60 idle))))
+        (state (if onlinep "online" "offline")))
     (if (not (equal status (tnt-buddy-status nick)))
         (progn
-          ;; Beep (if set to)
           (if tnt-beep-on-buddy-signonoff (beep))
-          ;; Message
-          ;; I think I prefer vanilla messages to tnt-events for this,
-          ;; but just in case, here's the code for a tnt-event:
-          ;; (tnt-push-event (format "%s online" nick) nil nil)
-          (message "%s %s" nick (if onlinep "online" "offline"))))
+          (let ((buffer (get-buffer (tnt-im-buffer-name nick))))
+            (if buffer
+                (with-current-buffer buffer
+                  (tnt-append-message (format "%s %s" nick state)))))
+          (message "%s %s" nick state)))
     (setq tnt-buddy-alist (tnt-addassoc nnick status tnt-buddy-alist))
     (setq tnt-idle-alist (tnt-addassoc nnick idletime tnt-idle-alist))
     (setq tnt-away-alist (tnt-addassoc nnick away tnt-away-alist))
@@ -994,8 +986,7 @@ Special commands:
   (let ((buffer-name tnt-buddy-edit-buffer-name))
     (or (get-buffer buffer-name)
         (let ((buffer (get-buffer-create buffer-name)))
-          (save-excursion
-            (set-buffer buffer)
+          (with-curren-buffer buffer
             (tnt-buddy-edit-mode)
             ;; make-local-hook doesn't work here; tries to call t
             (make-local-variable 'kill-buffer-query-functions)
@@ -1343,8 +1334,7 @@ Special commands:
            amount))
 
 (defun tnt-handle-chat-join (roomid room)
-  (save-excursion
-    (set-buffer (tnt-chat-buffer room))
+  (with-current-buffer (tnt-chat-buffer room)
     (setq tnt-chat-roomid roomid))
   (setq tnt-chat-alist (tnt-addassoc roomid room tnt-chat-alist)))
 
@@ -1354,8 +1344,7 @@ Special commands:
      buffer message user (if whisperp "whispers"))))
 
 (defun tnt-handle-chat-update-buddy (roomid inside users)
-  (save-excursion
-    (set-buffer (tnt-chat-buffer (cdr (assoc roomid tnt-chat-alist))))
+  (with-current-buffer (tnt-chat-buffer (cdr (assoc roomid tnt-chat-alist)))
     (let ((user-string (mapconcat 'identity users ", ")))
       (tnt-append-message (if tnt-chat-participants
                               (format "%s %s"
@@ -1372,8 +1361,7 @@ Special commands:
 (defun tnt-handle-chat-invite (room roomid sender message)
   (tnt-handle-chat-join roomid room)    ; associate roomid with room
   (let ((buffer (tnt-chat-buffer room)))
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (tnt-append-message (tnt-strip-html message) sender "invitation"))
     (tnt-push-event (format "Chat invitation from %s arrived" sender)
                     buffer 'tnt-chat-event-pop-function)
@@ -1413,8 +1401,7 @@ Special commands:
 
 (defun tnt-persistent-message (&optional fmt &rest args)
   ;; Displays a persistent message in the echo area.
-  (save-excursion
-    (set-buffer (get-buffer " *Minibuf-0*"))
+  (with-current-buffer (get-buffer " *Minibuf-0*")
     (erase-buffer)
     (if fmt (insert (apply 'format fmt args)))
     (message nil)))

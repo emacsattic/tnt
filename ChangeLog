@@ -1,3 +1,10 @@
+2000-04-12  John Jannotti  <jj@lcs.mit.edu>
+
+	* tnt.el: use with-current-buffer instead of a save-excursion plus 
+	a set-buffer when possible.
+	(tnt-set-buddy-status): if a buddy goes online/offline and you
+	already have an im-buffer for that buddy, note it in the buffer.
+
 2000-04-11  John Jannotti  <jj@lcs.mit.edu>
 
 	* tnt.el (tnt-im-mode, tnt-chat-mode): Be explicit about turning
