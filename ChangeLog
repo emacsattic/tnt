@@ -1,3 +1,9 @@
+2000-11-06    <tntdevel@brokendreams.net>
+
+	* tocstr.el: (tocstr-init-receiver): the logic here was reversed and 
+	has been fixed to reflect the proper logic.  This should compile
+	now.
+
 2000-11-06  Jim Whitehead  <tntdevel@sourceforge.net>
 
 	* tocstr.el (tocstr-filet): changed the definitions to reflect

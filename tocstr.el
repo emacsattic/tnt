@@ -149,14 +149,14 @@
 
 (defun tocstr-init-receiver ()
   (if tnt-timers-available
-      (setq tocstr-flap-state 'tocstr-flap-await-frame)
     (setq tocstr-flap-state   'tocstr-flap-await-frame
 	tocstr-flap-type    0
 	tocstr-flap-size    0
 	tocstr-flap-data    ""
 	tocstr-flap-packet  nil
 	tocstr-flap-parsing nil
-	tocstr-flap-timer   nil)))
+	tocstr-flap-timer   nil))
+      (setq tocstr-flap-state 'tocstr-flap-await-frame))
 
 (if tnt-timers-available 
   
