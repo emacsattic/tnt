@@ -210,7 +210,10 @@ forwarding on and off with \"C-x t M\".")
 
 (defvar tnt-current-user nil)
 (defvar tnt-pipe-to-email-now nil)
+
+(defvar tnt-buddy-alist nil)
 (defvar tnt-buddy-blist nil)
+
 (defvar tnt-permit-mode 1)
 (defvar tnt-permit-list nil)
 (defvar tnt-deny-list nil)
@@ -769,7 +772,6 @@ Special commands:
 
 (defvar tnt-buddy-list-mode-map nil)
 
-(defvar tnt-buddy-alist nil)
 (defvar tnt-idle-alist nil)
 (defvar tnt-away-alist nil)
 
