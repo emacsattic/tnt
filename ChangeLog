@@ -2,6 +2,8 @@
 
 	* toc.el (toc-handle-receive): Fix some indentation.  Sorry I'm so 
 	anal.
+	(toc-normalize): Try, try again.  Rewrote much more simply, maybe
+	faster.  This time it definitely works in both Emacs and XEmacs.
 
 	* tnt.el (tnt-handle-goto-url): Added
 	(tnt-open): bind the goto-url function to tnt-handle-goto-url
