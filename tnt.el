@@ -73,6 +73,16 @@
 If you set this, you will not have to type in your username every
 time you want to log in.")
 
+(defvar tnt-default-password nil
+  "*Should be nil or your password.
+
+If you set this, you will not have to type in your password every time
+you want to log in.  However, if the file you set this in is readable
+by other users on your system, they could log in as you, so if you set
+this, be careful.  Also note that if you use multiple usernames, you
+should not set the tnt-default-password (unless all your usernames use
+the same password).")
+
 (defvar tnt-username-alist nil
   "*Should be nil or a list of associations of usernames with
     (optionally) passwords.
@@ -88,16 +98,6 @@ way, but note that each element of the list MUST be either of the form
 (\"UserName\") or of the form (\"UserName\" . \"Password\"), and note the
 apostrophe.  When you log in as a username for which the password is
 not stored here, you will be prompted.")
-
-(defvar tnt-default-password nil
-  "*Should be nil or your password.
-
-If you set this, you will not have to type in your password every time
-you want to log in.  However, if the file you set this in is readable
-by other users on your system, they could log in as you, so if you set
-this, be careful.  Also note that if you use multiple usernames, you
-should not set the tnt-default-password (unless all your usernames use
-the same password).")
 
 (defvar tnt-separator "\n\n"
   "*String printed between IMs.

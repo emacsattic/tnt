@@ -9,17 +9,19 @@ The method you choose will depend on how your computer is set up and
 on your personal preferences.  Rather than attempt to describe all
 possibilities, I'll just describe one simple, albeit non-optimal,
 method.  If you are experienced with Emacs, you'll undoubtedly want to
-improve on it.
+improve on it.  If not, just use this, and it should work fine.
 
-Both steps can be accomplished by adding two lines to your Emacs init
-file.  This file is typically called ".emacs" and usually resides in
-your home directory.  Edit this file and add the following two lines
-to the end, substituting the absolute path of the directory containing
-this INSTALL file (which should also contain several other files,
-including "tnt.el") for the "/full/path/to/tnt" in the first line.
+All you'll need to do is add two lines to your Emacs init file.  This
+file is typically called ".emacs" and usually resides in your home
+directory.  Edit this file and add the following two lines to the end,
+substituting the absolute path of the directory containing this
+INSTALL file (which should also contain several other files, including
+"tnt.el") for the "/full/path/to/tnt" in the first line.  For example,
+if this INSTALL file were actually at "/full/path/to/tnt/INSTALL", you
+would use it exactly as shown.
 
-(setq load-path (cons "/full/path/to/tnt" load-path))
-(load "tnt")
+    (setq load-path (cons "/full/path/to/tnt" load-path))
+    (load "tnt")
 
 Once you've done this, exit and restart Emacs to force the change to
 take effect.  If you see an error message in the echo area at the
@@ -29,98 +31,5 @@ loaded, use the describe-function command (invoked by C-h f) to
 describe the function tnt-open.  If it works, you should be able to
 run TNT.
 
-TNT was originally developed using GNU Emacs 19.34.  It was briefly
-tested with versions 19.29, 19.30, 20.2, and 20.3, and it seems to
-work.  It also seems to work with XEmacs 20.4.
-
-
-
-INSTALLATION OPTIONS
---------------------
-
-The following options can also be included in your .emacs file,
-immediately _after_ the above two lines.
-
-(setq tnt-default-username "MyUserName")
-    If you set this, you will not have to type in your username every
-    time you want to log in.
-
-(setq tnt-username-alist '(("UserName1" . "Password1")
-                           ("UserName2" . "Password2")
-                           ("UserName3")))
-
-    If you have more than one username, set the list this way.  Then
-    you can use "C-x t s" to change which username will be used the
-    next time you connect.  Any number of usernames can be listed in
-    this way, but note that each element of the list MUST be either of
-    the form ("UserName") or of the form ("UserName" . "Password"),
-    and note the apostrophe.  When you log in as a username for which
-    the password is not stored here, you will be prompted.
-
-(setq tnt-default-password "MyPassword")
-    If you set this, you will not have to type in your password every
-    time you want to log in.  However, if the file you set this in is
-    readable by other users on your system, they could log in as you,
-    so if you set this, be careful.  Also note that if you use
-    multiple usernames, you should not set the tnt-default-password
-    (unless all your usernames use the same password).
-
-(setq tnt-separator "\n\n")
-    This controls what is printed between message.  One newline is pretty
-    much required in order separate messages.  Two newlines is the default,
-    but other strings, suchs as "\n-\n" may be desirable.
-
-(setq tnt-use-timestamps t)
-    This will add a timestamp for each message you receive or send.
-    This is useful for logging, and for people who are on very often.
-    It's also convenient if you leave yourself logged in while away
-    from your computer, so then when you come back, you can see how
-    long ago it was that your friend said "hi" while you were gone.
-
-(setq tnt-beep-beep-beep 'always)
-or
-(setq tnt-beep-beep-beep 'never)
-    Controls whether or not TNT beeps for incoming messages.
-    By default, beeps happen "sometimes", namely when the message
-    window for the message originator is not visible.
-
-(setq tnt-beep-on-buddy-signonoff t)
-    This makes TNT beep any time one of your buddies signs on or off.
-    Note that whether or not you set this, you will still get messages
-    in your minibuffer saying "MyBuddy online" and "MyBuddy offline".
-
-(setq tnt-use-split-buddy t)
-    This will force tnt to split the window horizontally whenever the
-    buddy list command is invoked.  This rule does not apply when in
-    in the *scratch* buffer, or when already in the *buddies* buffer.
-
-(setq tnt-use-keepalive t)
-    This tells TNT to use the keepalive packets to help keep your
-    connection alive.  Try this if you keep getting booted randomly.
-    This option will most likely break when used in Xemacs, so if
-    you get error messages using this, don't use it.
-
-(setq tnt-recenter-windows nil)
-    This tells TNT to NOT recenter each window automatically.
-
-(setq tnt-email-to-pipe-to "someone@example.com")
-    Setting this allows you to toggle forwarding of all incoming IMs
-    to the specified address.  This might be useful if you have an
-    email address which goes to an alphanumeric pager, and you want to
-    be able to receive IMs anywhere!  Once the email address is
-    specified, turn forwarding on and off with "C-x t M".
-
-(setq tnt-email-binary "/bin/mail")
-    This variable is set by default to /bin/mail, but sysadmins can change
-    it without worrying about changing the elisp code.
-
-(set-face-foreground 'tnt-my-name-face "ColorName1")
-(set-face-foreground 'tnt-other-name-face "ColorName2")
-    These set the colors used for the usernames of yourself and the
-    person you're talking to.  Only works if emacs is running in X (in
-    other words, not for example in a telnet session.)  You can
-    experiment with different colors by simply putting the cursor at
-    the end of one of the above two lines and hitting "C-x C-e".  This
-    will save you having to exit and relaunch emacs millions of times
-    to get just the right color scheme.
+Please also read the README file before installing.
 
