@@ -37,6 +37,7 @@
 	messages.
 	(tnt-persistent-timeout): changed the doc to describe the change
 	above in tnt-persistent-message-persist
+	(tnt-handle-error): added more error messages for numbers.
 
 2001-03-09  NeilFred Picciotto  <fred@guido.derf.net>
 
