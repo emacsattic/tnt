@@ -1272,7 +1272,8 @@ Special commands:
    ((= code 961)
     (tnt-error "Message from %s dropped - too big" (car args)))
    ((= code 962)
-    (tnt-error "Message from %s dropped - sent too fast" (car args)))))
+    (tnt-error "Message from %s dropped - sent too fast" (car args)))
+   (t (tnt-error "Unknown error %d:%S" code args))))
 
 (defun tnt-handle-eviled (amount eviler)
   (message "You have been warned %s (%d)."

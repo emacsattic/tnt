@@ -1,3 +1,8 @@
+2000-04-06  John Jannotti  <jj@lcs.mit.edu>
+
+	* tnt.el (tnt-handle-error): Added catchall clause to notice weird
+ 	errors
+
 2000-04-06  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-leave-chat): now using completing-read with
