@@ -1,3 +1,10 @@
+2000-12-01    <tntdevel@brokendreams.net>
+
+	* tocstr.el (tnt-timers-available): Changed the calls of 
+	string-as-unibyte to an if statement checking whether or not 
+	the function is bound.
+	(string-as-unibyte-available): Added.
+
 2000-14-07    <tntdevel@brokendreams.net>
 
 	* tnt.el: Changed minor version number.  Now version 2.3

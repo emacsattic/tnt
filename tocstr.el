@@ -44,6 +44,7 @@
 ;;;----------------------------------------------------------------------------
 
 (defvar tnt-timers-available (fboundp 'run-at-time))
+(defvar string-as-unibyte-available (fboundp 'string-as-unibyte))
 
 ;;;----------------------------------------------------------------------------
 ;;; Callback functions
@@ -166,9 +167,15 @@
       (setq tocstr-flap-timer nil))
     (if tocstr-flap-parsing
         (setq tocstr-flap-packet
-              (concat tocstr-flap-packet (string-as-unibyte str)))
-      (setq tocstr-flap-parsing t
-            str (concat tocstr-flap-packet (string-as-unibyte str))
+              (if string-as-unibyte-available
+                  (concat tocstr-flap-packet (string-as-unibyte str))
+              (concat tocstr-flap-packet str))
+              )
+            
+      (setq tocstr-flap-parsing t str 
+            (if string-as-unibyte-available
+                (concat tocstr-flap-packet (string-as-unibyte str))
+              (concat tocstr-flap-packet str))
             tocstr-flap-packet nil)
       (unwind-protect
           (while str
