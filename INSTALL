@@ -82,7 +82,9 @@ immediately _after_ the above two lines.
 
 (setq tnt-use-keepalive t)
     This tells TNT to use the keepalive packets to help keep your
-    connection alive.  Try this if you keep getting booted randomly.
+    connection alive.  Try this if you keep getting booted randomly.  
+    This option will most likely break when used in Xemacs, so if 
+    you get error messages using this, don't use it.
 
 (setq tnt-recenter-windows nil)
     This tells TNT to NOT recenter each window automatically.
