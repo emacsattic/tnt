@@ -94,7 +94,7 @@ detailed description of each command follows the table.
 +-------------------+-------------+-------------------------------------------+
 | tnt-show-help     |   C-x t ?   | Displays this help information            |
 | tnt-open          |   C-x t o   | Starts a new TNT session                  |
-| tnt-kill          |   C-x t k   | Terminates the current session            |
+| tnt-kill          |   C-x t q   | Terminates the current session            |
 | tnt-im            |   C-x t i   | Starts an instant-message conversation    |
 | tnt-join-chat     |   C-x t j   | Joins a chat room                         |
 | tnt-leave-chat    |   C-x t l   | Leaves a chat room                        |
@@ -105,13 +105,12 @@ detailed description of each command follows the table.
 | tnt-next-event    |   C-x t n   | Shows next event in notification ring     |
 | tnt-prev-event    |   C-x t p   | Shows previous event in notification ring |
 | tnt-switch-user   |   C-x t s   | Switches between usernames for next login |
-| tnt-away-toggle   |   C-x t A   | Toggles away status, sets away message    |
-| tnt-pounce-add    |   C-x t P   | Adds a user to your pounce list           |
-| tnt-pounce-delete |   C-x t D   | Removes a user from your pounce list      |
+| tnt-toggle-away   |   C-x t A   | Toggles away status, sets away message    |
+| tnt-toggle-pounce |   C-x t P   | Adds or deletes a pounce message          |
+| tnt-pounce-list   |   C-x t L   | Shows the pounce list                     |
 | tnt-toggle-email  |   C-x t M   | Toggles forwarding incoming IMs to email  |
-| tnt-mute          |   C-x t m   | Toggles sounds on/off                     |
+| tnt-toggle-mute   |   C-x t m   | Toggles sounds on/off                     |
 +-------------------+-------------+-------------------------------------------+
-
 
 tnt-show-help (C-x t ?)
 
@@ -141,7 +140,7 @@ tnt-open (C-x t o)
   (see below).
 
 
-tnt-kill (C-x t k)
+tnt-kill (C-x t q)
 
   This command signs off of the AIM service (or "kills" the TNT
   session).  You'll get a "Signed off" message in the echo area, and
@@ -315,17 +314,17 @@ tnt-away-toggle (C-x t A)
   clients.)
 
 
-tnt-pounce-add (C-x t P)
+tnt-toggle-pounce (C-x t P)
 
   When you invoke this command you will be prompted for a buddy's
-  screen name.  When that buddy either logs in or changes their away
-  status, they will immediately be sent this message.
+  screen name.  If the buddy has no pounce message set TNT will prompt
+  for a pounce message.  When they log in or change their away status,
+  they will immediately be sent this message.  If they have a message
+  set, the current message will be deleted.
 
-
-tnt-pounce-delete (C-x t D)
-
-  This command deletes a pounce message for a buddy.
-
+tnt-pounce-list (C-x t L)
+  
+  This command will list all pending pounce messages in a new buffer.
 
 tnt-toggle-email (C-x t M)
 

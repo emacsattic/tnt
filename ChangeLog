@@ -1,3 +1,9 @@
+2002-10-07  Matthias Granberry <matthias@utdallas.edu>
+	* tnt.el (tnt-show-help): added tnt-pounce-list, changed
+	tnt-pounce-add to tnt-toggle-pounce, and changed key binding for
+	tnt-kill.
+	* README: updated for new key bindings
+
 2002-10-02  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
 	* tnt.el (tnt-build-buddy-buffer): now display non-buddy IMs and

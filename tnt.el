@@ -1454,7 +1454,7 @@ Special commands:
 +-------------------+-------------+-------------------------------------------+
 | tnt-show-help     |   C-x t ?   | Displays this help information            |
 | tnt-open          |   C-x t o   | Starts a new TNT session                  |
-| tnt-kill          |   C-x t k   | Terminates the current session            |
+| tnt-kill          |   C-x t q   | Terminates the current session            |
 | tnt-im            |   C-x t i   | Starts an instant-message conversation    |
 | tnt-join-chat     |   C-x t j   | Joins a chat room                         |
 | tnt-leave-chat    |   C-x t l   | Leaves a chat room                        |
@@ -1466,8 +1466,8 @@ Special commands:
 | tnt-prev-event    |   C-x t p   | Shows previous event in notification ring |
 | tnt-switch-user   |   C-x t s   | Switches between usernames for next login |
 | tnt-toggle-away   |   C-x t A   | Toggles away status, sets away message    |
-| tnt-pounce-add    |   C-x t P   | Adds a user to your pounce list           |
-| tnt-pounce-delete |   C-x t D   | Removes a user from your pounce list      |
+| tnt-toggle-pounce |   C-x t P   | Adds or deletes a pounce message          |
+| tnt-pounce-list   |   C-x t L   | Shows the pounce list                     |
 | tnt-toggle-email  |   C-x t M   | Toggles forwarding incoming IMs to email  |
 | tnt-toggle-mute   |   C-x t m   | Toggles sounds on/off                     |
 +-------------------+-------------+-------------------------------------------+
