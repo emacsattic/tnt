@@ -1,3 +1,12 @@
+2004-02-13  NeilFred Picciotto  <fred@full.halflab.com>
+
+	* tnt.el (tnt-completion-func): wasn't working before.  not sure
+	when it ever worked...  changed it to use string-match instead of
+	re-search-forward.
+	(tnt-completing-read-list): don't insert a space after each comma,
+	since when the user types names separated by commas, they're
+	unable to include such spaces.
+
 2004-01-02  NeilFred Picciotto  <fred@full.halflab.com>
 
 	* tnt.el (tnt-get-buddy-at-point): avoid using point-at-eol, since

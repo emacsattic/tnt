@@ -3763,7 +3763,7 @@ nil otherwise."
 (defun tnt-completing-read-list (prompt collection &optional initial-input)
   "Reads a list from the minibuffer with completion for each element
 of the list, delimited by commas."
-  (let* ((initial-input-str (mapconcat 'identity initial-input ", "))
+  (let* ((initial-input-str (mapconcat 'identity initial-input ","))
          (str (completing-read prompt 'tnt-completion-func
                                nil nil initial-input-str)))
     (split-string str ",")))
@@ -3804,12 +3804,9 @@ of the list, delimited by commas."
 ;; Minibuffer completion function that allows lists of comma-separated
  ;; item to be entered, with completion applying to each item.  Before
 ;; calling, bind COLLECTION to the collection to be used for completion.
-  (save-excursion
-    (save-match-data
-      (goto-char (point-min))
-      (re-search-forward " *\\([^,]*\\)$")))
-  (let ((first-part (buffer-substring-no-properties (point-min) (match-beginning 1)))
-        (last-word  (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
+  (let* ((str-pos (save-match-data (string-match "[^,]*$" str)))
+         (first-part (substring str 0 str-pos))
+         (last-word (substring str str-pos)))
     (cond
      ((eq flag nil)
       (let ((completion (try-completion last-word collection pred)))
