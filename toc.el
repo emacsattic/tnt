@@ -61,14 +61,23 @@
 (defvar toc-pause-hooks nil)
 
 
+;;; Private State
+(defvar toc-permit-mode nil
+  "If non-nil, the toc server believes we are in permit mode.")
+
+(defvar toc-permit-list nil
+  "The permit/deny list that the server is maintaining for us.
+Depending on toc-permit-mode, it is a permit or deny list.")
+
 ;;;----------------------------------------------------------------------------
 ;;; Public functions
 ;;;----------------------------------------------------------------------------
-
 (defun toc-open (host port sname)
   (setq tocstr-opened-function  'toc-handle-opened
         tocstr-closed-function  'toc-handle-closed
-        tocstr-receive-function 'toc-handle-receive)
+        tocstr-receive-function 'toc-handle-receive
+        toc-permit-mode nil
+        toc-permit-list nil)
   (tocstr-open host port sname))
 
 (defun toc-close ()
@@ -110,13 +119,6 @@
   "Warn USER.  Do so anonymously if ANON"
   (tocstr-send
    (format "toc_evil %s %s" (toc-normalize user) (if anon "anon" "norm"))))
-
-(defvar toc-permit-mode nil
-  "If non-nil, the toc server believes we are in permit mode.")
-
-(defvar toc-permit-list nil
-  "The list that the server is currently maintaining for us.
-Depening on toc-permit-mode, it is a permit or deny list.")
 
 (defun toc-add-permit (&optional users)
   (if toc-permit-mode

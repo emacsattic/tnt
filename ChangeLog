@@ -8,6 +8,7 @@
 	(toc-deny-all): Smarter if already in the right mode
 	(toc-permit-only): Smarter if already correct
 	(toc-deny-only): Smarter is already correct
+	(toc-open): Reset the permit-mode and permit-list
 
 2000-04-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
