@@ -1,0 +1,12 @@
+List of things to be done
+-------------------------
+
+ - Add auto-reconnection so when the server drops us, we can connect without
+   needing any input.  Almost had this today, but had to go to work, and it 
+   still wasn't working, so i ditched it.
+
+ - Allow receiving of user input.  I believe toc-get-info returns the URL of
+   the user's information.  Perhaps this could be retrieved and displayed in 
+   a buffer.
+
+

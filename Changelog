@@ -2,6 +2,8 @@ April 3, 2000 - Jim Whitehead
 -----------------------------
  - tnt-show-timestamps has been renamed to tnt-use-timestamps to go with our
    naming conventions
+ - added a mail-pipe in tnt-handle-closed to notify you that your connection
+   has been closed (by the server, or by remote signon).
 
 April 1, 2000 - Jim Whitehead
 -----------------------------

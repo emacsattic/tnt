@@ -1123,13 +1123,25 @@ Special commands:
 
 
 (defun tnt-handle-closed ()
-  (tnt-set-online-state nil)
-  (setq tnt-current-user nil)
-  (tnt-buddy-shutdown)
-  (if tnt-use-keepalive 
-      (cancel-timer tnt-keepalive-timer))
-  (tnt-error "TNT connection closed"))
+  (let ((user tnt-current-user)
+        (passwd tnt-password)
+        (away tnt-away)
+        (away-msg tnt-away-msg))
+    (tnt-set-online-state nil)
+    (setq tnt-current-user nil)
+    (tnt-buddy-shutdown)
+    (if tnt-use-keepalive 
+        (cancel-timer tnt-keepalive-timer))
 
+;; Send a message sayign we've been disconnected.
+
+    (if (and tnt-email-to-pipe-to
+             tnt-pipe-to-email-now)
+        (tnt-pipe-message-to-program "TOC-server"
+                                     "TNT connection closed by server"))
+    (tnt-error "TNT connection closed")
+    )
+)
 
 (defun tnt-handle-sign-on (version)
   (message "Signed on")
