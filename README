@@ -35,10 +35,9 @@ What versions of Emacs are supported?
 TNT was originally developed using GNU Emacs 19.34.  More recent
 improvements have been developed on various emacses.  It has been
 tested at some point (not necessarily recently) with versions 19.29,
-19.30, 20.2, and 20.3, and with XEmacs 20.4 and 21.4, and it seems to
-work.  At least one person has had some problems with GNU Emacs 20.7.
-If you run into difficulties, please let us know what emacs you're
-running!
+19.30, 20.2, 20.3, and 20.7, and with XEmacs 20.4 and 21.4, and it
+seems to work.  If you run into difficulties, please let us know what
+emacs you're running!
 
 If you are using a version of GNU Emacs earlier than 19.29, you will
 not be able to load the compiled (.elc) files because those versions
