@@ -1,5 +1,15 @@
 2000-07-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-restore-buddy-list): added error reporting, more
+	checking.  no longer returns buddy-blist.
+	(tnt-backup-buddy-list): added.
+	(tnt-restore-buddy-list-if-necessary): removed.  replaced with
+	below.
+	(tnt-backup-or-restore-buddy-list): added.  calls either "restore"
+	or "backup".
+
+2000-07-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-switch-user): now checks if we're online, and won't
 	change username if we are.
 

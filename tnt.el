@@ -1233,14 +1233,22 @@ Special commands:
       (toc-set-config (tnt-blist-to-config new-blist))
       (setq tnt-buddy-blist new-blist))
     (set-buffer-modified-p nil)
+    (tnt-backup-buddy-list)
     (tnt-build-buddy-buffer)))
 
-(defun tnt-restore-buddy-list-if-necessary ()
-  "If buddy list is empty and backup file exists, restore."
+
+
+;;;----------------------------------------------------------------------------
+;;; Buddy-list backup/restore
+;;;----------------------------------------------------------------------------
+
+(defun tnt-backup-or-restore-buddy-list ()
+  "If buddy list is empty and backup file exists, restore, otherwise backup."
   (interactive)
   (if (tnt-buddy-list-is-empty-p)
       (tnt-restore-buddy-list)
-    tnt-buddy-blist))
+    (tnt-backup-buddy-list))
+  tnt-buddy-blist)
 
 (defun tnt-buddy-list-is-empty-p ()
   "Checks whether buddy list should be considered \"empty\"."
@@ -1259,20 +1267,49 @@ Special commands:
 (defun tnt-restore-buddy-list ()
   "Restores the buddy list from the backup file."
   (interactive)
-  (and tnt-directory
-       (file-accessible-directory-p tnt-directory)
-       tnt-buddy-list-backup-filename
-       (let ((filename (format "%s/%s"
-                               tnt-directory
-                               (format tnt-buddy-list-backup-filename
-                                       (toc-normalize tnt-username)))))
-         (if (file-readable-p filename)
-             (progn
-               (tnt-edit-buddies)
-               (insert-file-contents filename nil nil nil t)
-               (tnt-save-buddy-list)
-               tnt-buddy-blist)))))
+  (if (null tnt-directory)
+      (error "variable tnt-directory undefined")
+    (if (not (file-accessible-directory-p tnt-directory))
+        (error (format "directory %s not accessible" tnt-directory))
+      (if (null tnt-buddy-list-backup-filename)
+          (error "variable tnt-buddy-list-backup-filename undefined")
+        
+        (let ((filename (format "%s/%s"
+                                tnt-directory
+                                (format tnt-buddy-list-backup-filename
+                                        (toc-normalize tnt-username)))))
+          (if (file-exists-p filename)
+              (if (not (file-readable-p filename))
+                  (error (format "file %s not readable" filename))
+                (tnt-edit-buddies)
+                (insert-file-contents filename nil nil nil t)
+                (tnt-save-buddy-list))
+            ))))))
 
+(defun tnt-backup-buddy-list ()
+  "Saves the buddy list to a backup file."
+  (interactive)
+  (if (null tnt-directory)
+      (error "variable tnt-directory undefined")
+    (if (not (file-exists-p tnt-directory))
+        (make-directory tnt-directory))
+    (if (not (file-accessible-directory-p tnt-directory))
+        (error (format "directory %s not accessible" tnt-directory))
+      (if (null tnt-buddy-list-backup-filename)
+          (error "variable tnt-buddy-list-backup-filename undefined")
+
+        (let ((filename (format "%s/%s"
+                                tnt-directory
+                                (format tnt-buddy-list-backup-filename
+                                        (toc-normalize tnt-username)))))
+          (if (and (file-exists-p filename)
+                   (not (file-writable-p filename)))
+              (error (format "file %s not writable" filename))
+            (tnt-edit-buddies)
+            (write-file filename)
+            (message "")
+            (rename-buffer tnt-buddy-edit-buffer-name)
+            ))))))
  
 
 ;;;----------------------------------------------------------------------------
@@ -1531,7 +1568,7 @@ Special commands:
       (setq tnt-current-user nick)
     (setq tnt-current-user tnt-username))
 
-  (or (tnt-restore-buddy-list-if-necessary)
+  (or (tnt-backup-or-restore-buddy-list)
       (setq tnt-buddy-blist (list (list "Buddies" nick))))
   (tnt-set-online-state t)
   (if tnt-reconnecting
