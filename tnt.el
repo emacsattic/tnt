@@ -752,7 +752,8 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "P" 'tnt-prev-group)
   (define-key tnt-buddy-list-mode-map "i" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map "\C-m" 'tnt-im-buddy)
-  (define-key tnt-buddy-list-mode-map [mouse-2] 'tnt-im-buddy-mouse)
+  (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse)
+  (define-key tnt-buddy-list-mode-map [mouse-2] 'ignore)
   (define-key tnt-buddy-list-mode-map " " 'tnt-show-buddies)
   )
 
@@ -803,16 +804,18 @@ Special commands:
           (let ((unick (tnt-buddy-status nick))
                 (idle (tnt-buddy-idle nick))
                 (away (tnt-buddy-away nick)))
-            (if unick (format "  %s%s"
-                              unick
-                              (cond ((and away idle)
-                                     (format " (away - %s)" idle))
-                                    ((and away (not idle))
-                                     (format " (away)"))
-                                    ((and (not away) idle)
-                                     (format " (idle - %s)" idle))
-                                    (t ""))
-                              )))))
+            (if unick
+                (progn
+                  (put-text-property 0 (length unick)
+                                     'mouse-face 'highlight unick)
+                  (concat unick
+                          (cond ((and away idle)
+                                 (format " (away - %s)" idle))
+                                ((and away (not idle))
+                                 (format " (away)"))
+                                ((and (not away) idle)
+                                 (format " (idle - %s)" idle))
+                                (t ""))))))))
       
       (set-buffer-modified-p nil))))
 
@@ -1049,13 +1052,13 @@ Special commands:
 (defun tnt-blist-to-buffer (blist &optional filter)
   (while blist
     (let ((name-list (car blist)))
-      (insert (format "%s\n" (car name-list)))
+      (insert (car name-list) "\n")
       (setq name-list (cdr name-list))
       (while name-list
         (let* ((name (car name-list))
-               (fname (if filter (funcall filter name) (format "  %s" name))))
+               (fname (if filter (funcall filter name) name)))
           (if fname
-              (insert (format "%s\n" fname))))
+              (insert "  " fname "\n")))
         (setq name-list (cdr name-list)))
       (setq blist (cdr blist))
       (if blist (insert "\n")))))

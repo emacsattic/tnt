@@ -1,3 +1,13 @@
+2000-04-12  John Jannotti  <jj@lcs.mit.edu>
+
+	* tnt.el (tnt-blist-to-buffer): Simplify filter interface so
+ 	filters need not add spaces.
+ 	(tnt-build-buddy-buffer): Remove extra spaces in filter.
+	(tnt-blist-to-buffer): Use concat instead of format so string
+	properties inserted by filter are copied.
+	(tnt-build-buddy-buffer): Make buddies mouse highlighted to
+	reflect the fact that they are clickable.
+
 2000-04-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-test-for-buggy-idle): added.  tests emacs for proper
