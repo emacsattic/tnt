@@ -82,8 +82,9 @@
 (defvar tnt-email-to-pipe-to nil
   "*Should be nil or a string containing an email address.")
 
-
-
+(defvar tnt-email-binary "/bin/mail"
+  "*Should be set to the executable of your mail binary /bin/mail 
+    is default")
 
 ;;; Key bindings
 
@@ -219,11 +220,14 @@
 (defun tnt-not-away ()
   "Sets you as NOT away."
   (interactive)
-  (setq tnt-away 0)
-  (setq tnt-last-away-sent nil)
-  (message "You have returned.")
-  (tocstr-send (format "toc_set_away"))
-  (tnt-set-online-state t)
+  (let ((away tnt-away))
+    (setq tnt-away 0)
+    (setq tnt-last-away-sent nil)
+    (if (eq away 1)
+    (message "You have returned."))
+    (tocstr-send (format "toc_set_away"))
+    (tnt-set-online-state t)
+  )
 )
 
 ;; gse: Added history and default away message stuff.
@@ -817,7 +821,7 @@ Special commands:
 	tnt-away-alist nil
 	tnt-idle-alist nil
 	tnt-pounce-list nil)
-
+  (tnt-not-away)
   (tnt-build-buddy-buffer))
 
 
@@ -1256,7 +1260,7 @@ Special commands:
     ;; similar code to this could be used to pipe to something else
     (start-process proc-name proc-out-buf
                    ;; put executable here:
-                   "/bin/mail"
+                   tnt-email-binary
                    ;; and now any cmd-line args:
                    ;; (note that although the subject string has spaces,
                    ;; it's all sent as one arg to the executable, i.e.
@@ -1268,7 +1272,8 @@ Special commands:
     (process-send-string proc-name 
                          (format "%s: %s\n" user 
                                  (tnt-strip-html message)))
-    (process-send-eof proc-name)))
+    (process-send-eof proc-name))
+  (message "Reminder: IMs are being forwarded to %s" tnt-email-to-pipe-to))
 
 
 
