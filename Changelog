@@ -1,3 +1,9 @@
+April 4, 2000 - Neil "Fred" Picciotto
+-------------------------------------
+- moved defvars for tnt-pipe-to-email-now and tnt-buddy-blist up near
+  the top, to eliminate "reference to free variable" byte-compile
+  errors.
+
 April 4, 2000 - Jim Whitehead
 -----------------------------
  - Added Makefile and .cvsignore

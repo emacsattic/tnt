@@ -117,9 +117,12 @@
 )
 
 
-;;; Globals
+;;; Globals (that need to be declared early on...)
 
 (defvar tnt-current-user    nil)
+(defvar tnt-pipe-to-email-now nil)
+(defvar tnt-buddy-blist nil)
+
 
 
 ;;;---------------------------------------------------------------------------
@@ -649,7 +652,6 @@ Special commands:
 (defvar tnt-buddy-list-mode-abbrev-table nil)
 (defvar tnt-buddy-list-mode-map nil)
 
-(defvar tnt-buddy-blist nil)
 (defvar tnt-buddy-alist nil)
 (defvar tnt-idle-alist nil)
 (defvar tnt-away-alist nil)
@@ -1181,8 +1183,6 @@ Special commands:
   )
 
 
-
-(defvar tnt-pipe-to-email-now nil)
 
 (defun tnt-handle-im-in (user auto message)
   (let ((buffer (tnt-im-buffer user)))
