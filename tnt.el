@@ -1350,7 +1350,9 @@ Special commands:
         (if function (funcall function accept))
         (if tnt-event-ring
             (tnt-show-top-event)
-          (tnt-persistent-message)))))
+          (tnt-persistent-message)))
+    (message "No event to %s." (if accept "accept" "reject"))
+    ))
 
 
 (defun tnt-show-top-event ()

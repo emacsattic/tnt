@@ -1,3 +1,8 @@
+2000-05-22  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-pop-event): now gives message if called when there
+	are no events to respond to.
+
 2000-05-16  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-login-flag-unset-after): added.
