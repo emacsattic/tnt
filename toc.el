@@ -209,7 +209,7 @@
             (evil   (string-to-number (toc-lop-field str 'index)))
             (signon (string-to-number (toc-lop-field str 'index)))
             (idle   (string-to-number (toc-lop-field str 'index)))
-	    (away (toc-lop-field str 'index)))
+            (away (toc-lop-field str 'index)))
         (funcall toc-update-buddy-function nick online evil signon idle away)))
 
      ((string= cmd "ERROR")

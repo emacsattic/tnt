@@ -53,6 +53,10 @@
 (defvar tnt-language    "english")
 
 
+; check whether this version of emacs has the "run-at-time" function
+(defvar tnt-timers-available (fboundp 'run-at-time))
+
+
 ; these may be changed, but rather than changing them here, use
 ; (setq <variablename> <value>) in your .emacs file.  see INSTALL
 ; for more info.
@@ -79,15 +83,16 @@
 (defvar tnt-use-split-buddy nil 
   "*If t, splits screen automagically when you invoke buddy-view")
 
-(defvar tnt-use-keepalive nil 
+(defvar tnt-use-keepalive tnt-timers-available 
   "*If t, sends a keepalive packet once a minute")
 
-(defvar tnt-use-buddy-update-timer t
+(defvar tnt-use-buddy-update-timer tnt-timers-available
   "*If t, updates the idle times in the buddy list each minute.")
 
 (defvar tnt-use-idle-timer nil
-  "*If t, tells TOC server when emacs has been idle for 10 minuts.
-NOTE: currently never tells TOC server that you're no longer idle!!!
+  "*If t, tells TOC server when emacs has been idle for 10 minutes.
+NOTE: under certain versions of emacs, you become unidle any time tnt
+receives any message from the toc server.
 ")
 
 (defvar tnt-recenter-windows t
@@ -97,8 +102,8 @@ NOTE: currently never tells TOC server that you're no longer idle!!!
   "*Should be nil or a string containing an email address.")
 
 (defvar tnt-email-binary "/bin/mail"
-  "*Should be set to the executable of your mail binary /bin/mail 
-    is default")
+  "*Should be set to the executable of your mail binary, if you're
+   using the pipe-to-email feature.  defaults to /bin/mail")
 
 ;;; Key bindings
 
@@ -1230,9 +1235,9 @@ Special commands:
     (if tnt-buddy-update-timer
         (cancel-timer tnt-buddy-update-timer))
     (if tnt-idle-timer
-        (progn
-          (cancel-timer tnt-idle-timer)
-          (cancel-timer tnt-unidle-timer)))
+        (cancel-timer tnt-idle-timer))
+    (if tnt-unidle-timer
+        (cancel-timer tnt-unidle-timer))
 
 ;; Send a message saying we've been disconnected.
 
@@ -1257,8 +1262,8 @@ Special commands:
       (progn
         (setq tnt-idle-timer (run-with-idle-timer tnt-send-idle-after t
                                                   'tnt-send-idle))
-        ;;(setq tnt-unidle-timer (run-with-idle-timer tnt-send-unidle-after t
-        ;;                                            'tnt-send-unidle))
+        (setq tnt-unidle-timer (run-with-idle-timer tnt-send-unidle-after t
+                                                    'tnt-send-unidle))
     ))
   (toc-init-done))
 

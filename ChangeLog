@@ -1,3 +1,21 @@
+2000-04-10  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-handle-closed): now checking whether unidle-timer
+	exists before canceling it, rather than when idle-timer exists.
+	(tnt-handle-sign-on): uncommented out the unidle-timer.
+	use-idle-timer is still defaulting to nil, so this doesn't really
+	need to be commented out.
+	(tnt-timers-available): added.  checks (fboundp 'run-at-time).
+	(tnt-use-keepalive): now defaults to timers-available.
+	(tnt-use-buddy-update-timer): now defaults to timers-available.
+	(tnt-use-idle-timer): changed the note in the doc string to better
+	describe the current bug.
+	(tnt-email-binary): just made the doc string more grammatical and
+	informative.
+
+	* toc.el (toc-handle-receive): just fixed some whitespace.  i
+	guess i'm as anal as john.
+
 2000-04-07  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-send-idle): added.
