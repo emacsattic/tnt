@@ -24,9 +24,8 @@ release: $(RELEASE)
 	@chmod -x README
 	@NAME=`sed -n 's/$(VERSION_PATTERN)/tnt-\1/p' tnt.el` ;    \
 	echo Creating $${NAME}.tar.gz ;                            \
-	rm -f $$NAME; ln -s . $$NAME; tar -vzchf -                 \
-        `echo $(RELEASE) | sed "s|^|$$NAME/|g; s| | $$NAME/|g" ` > \
-	$${NAME}.tar.gz;					   \
+	rm -f $$NAME; ln -s . $$NAME; tar vzchf $${NAME}.tar.gz    \
+        `echo $(RELEASE) | sed "s|^|$$NAME/|g; s| | $$NAME/|g" ` ; \
 	rm $$NAME
 
 clean:
