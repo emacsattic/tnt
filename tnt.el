@@ -311,7 +311,8 @@ feature.  defaults to /bin/mail
 
 (defun tnt-send-pounce (user)
    (let* ((msg (cdr (assoc user tnt-pounce-alist)))
-          (ourmsg (if (string= msg "") "Is now available" msg)))
+          (ourmsg (if (string= msg "") 
+                      (format "<POUNCE MSG> %s is now available" user) msg)))
      (if msg
          (let ((buffer (tnt-im-buffer user)))
            (toc-send-im user msg)
