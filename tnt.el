@@ -55,6 +55,7 @@
 
 ; check whether this version of emacs has the "run-at-time" function
 (defvar tnt-timers-available (fboundp 'run-at-time))
+(defvar tnt-buggy-idle t)               ; Default to safety
 
 
 ; these may be changed, but rather than changing them here, use
@@ -89,7 +90,7 @@
 (defvar tnt-use-buddy-update-timer tnt-timers-available
   "*If t, updates the idle times in the buddy list each minute.")
 
-(defvar tnt-use-idle-timer nil
+(defvar tnt-use-idle-timer (and tnt-timers-available (not tnt-buggy-idle))
   "*If t, tells TOC server when emacs has been idle for 10 minutes.
 NOTE: under certain versions of emacs, you become unidle any time tnt
 receives any message from the toc server.
@@ -321,11 +322,8 @@ receives any message from the toc server.
   (if (null tnt-current-user)
       (error "Already offline")
     ;; gse addition: turn off "away" setting
-    (setq tnt-away nil)
     (toc-close)
-    (tnt-set-online-state nil)
-    (setq tnt-current-user nil)
-    (tnt-buddy-shutdown)
+    (tnt-shutdown)
     (message "Signed off")))
 
 
@@ -865,8 +863,19 @@ Special commands:
   (setq tnt-buddy-blist (tnt-config-to-blist config))
   (toc-add-buddies (tnt-extract-normalized-buddies tnt-buddy-blist)))
 
-(defun tnt-buddy-shutdown ()
-  (setq tnt-buddy-blist nil
+(defun tnt-shutdown ()
+  (tnt-set-online-state nil)
+  (if tnt-keepalive-timer (cancel-timer tnt-keepalive-timer))
+  (setq tnt-keepalive-timer nil)
+  (if tnt-buddy-update-timer (cancel-timer tnt-buddy-update-timer))
+  (setq tnt-buddy-update-timer nil)
+  (if tnt-idle-timer (cancel-timer tnt-idle-timer))
+  (setq tnt-idle-timer nil)
+  (if tnt-unidle-timer (cancel-timer tnt-unidle-timer))
+  (setq tnt-unidle-timer nil)
+
+  (setq tnt-current-user nil
+        tnt-buddy-blist nil
         tnt-buddy-alist nil
         tnt-away-alist nil
         tnt-idle-alist nil
@@ -1223,41 +1232,21 @@ Special commands:
 
 
 (defun tnt-handle-closed ()
-  (let ((user tnt-current-user)
-        (passwd tnt-password)
-        (away tnt-away)
-        (away-msg tnt-away-msg))
-    (tnt-set-online-state nil)
-    (setq tnt-current-user nil)
-    (tnt-buddy-shutdown)
-    (if tnt-keepalive-timer
-        (cancel-timer tnt-keepalive-timer))
-    (if tnt-buddy-update-timer
-        (cancel-timer tnt-buddy-update-timer))
-    (if tnt-idle-timer
-        (cancel-timer tnt-idle-timer))
-    (if tnt-unidle-timer
-        (cancel-timer tnt-unidle-timer))
-
-;; Send a message saying we've been disconnected.
-
-    (if (and tnt-email-to-pipe-to
-             tnt-pipe-to-email-now)
-        (tnt-pipe-message-to-program "TOC-server"
-                                     "TNT connection closed by server"))
-    (tnt-error "TNT connection closed")
-    )
-)
+  (tnt-shutdown)
+  (if (and tnt-email-to-pipe-to tnt-pipe-to-email-now)
+      (tnt-pipe-message-to-program "TOC-server"
+                                   "TNT connection closed by server"))
+  (tnt-error "TNT connection closed"))
 
 (defun tnt-handle-sign-on (version)
   (message "Signed on")
   (tnt-show-buddies)
   (if tnt-use-keepalive
       (setq tnt-keepalive-timer
-            (run-at-time t tnt-keepalive-interval 'tnt-keepalive)))
+            (tnt-repeat tnt-keepalive-interval 'tnt-keepalive)))
   (if tnt-use-buddy-update-timer
       (setq tnt-buddy-update-timer
-            (run-at-time t tnt-buddy-update-interval 'tnt-build-buddy-buffer)))
+            (tnt-repeat tnt-buddy-update-interval 'tnt-build-buddy-buffer)))
   (if tnt-use-idle-timer
       (progn
         (setq tnt-idle-timer (run-with-idle-timer tnt-send-idle-after t
@@ -1566,6 +1555,9 @@ Special commands:
     str))
 
 
+(defun tnt-repeat (interval function)
+  (run-at-time interval interval function))
+
 
 ;;;----------------------------------------------------------------------------
 ;;; List utilities
@@ -1589,7 +1581,3 @@ Special commands:
 (defun tnt-remassoc (key alist)
   "Remove an association KEY from ALIST, and return the new ALIST."
   (delete (assoc key alist) alist))
-
-
-
-

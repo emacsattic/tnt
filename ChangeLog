@@ -1,3 +1,21 @@
+2000-04-11  John Jannotti  <jj@lcs.mit.edu>
+
+	* tnt.el (tnt-shutdown): Changed name from tnt-buddy-shutdown as
+	it has become a catchall for all shutdown realted stuff.  tnt-kill 
+	and tnt-handle-close had some duplicated code that I put here
+	because, inevitably, someone would put some shutdown stuff in one
+	but not the other.
+	(tnt-repeat): Added.  Sets up a repeating timer in a way that
+	XEmacs (and Emacs) likes.  Made it its own function because
+	interval has to be the first and second arg to run-at-time, which
+	looks ugly.
+	(tnt-buggy-idle): Added a variable tnt-buggy-idle which helps
+	control whether we do idle handling.  It defaults to t so we do
+	not do idle handling.  It should be some sort of complicated test
+	to see if the bug exists.  For now, to override it, you must set
+	it to nil *before* loading tnt.el since it controls the default
+	setting of a later variable.
+
 2000-04-10  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-handle-closed): now checking whether unidle-timer

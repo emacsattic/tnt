@@ -158,7 +158,7 @@
   (tocstr-send (format "toc_set_idle %d" secs)))
 
 
-;; The following two are not well documented at in PROTOCOL.
+;; The following two are not well documented in PROTOCOL.
 (defun toc-set-away (message)
   (if message
       (tocstr-send (concat "toc_set_away " (toc-encode message)))
