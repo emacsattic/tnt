@@ -809,7 +809,7 @@ Special commands:
 
 (defun tnt-im-archive-filename (user)
   "Returns the archive file filename (not full path) for IMs with USER."
-  (format "im-%s" user))
+  (format "im-%s" (toc-normalize user)))
 
 
 (defun tnt-archive-directory ()
