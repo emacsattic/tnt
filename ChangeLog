@@ -1,3 +1,23 @@
+2000-04-05  John Jannotti  <jj@lcs.mit.edu>
+
+	* tnt.el (tnt-chat-leave): Allows quitting a chat without killing
+ 	the buffer.
+	(tnt-join-chat): tnt-join-chat nows joins the chat associated with
+ 	the current buffer if there is one.
+	(tnt-chat-buffer-killed): Uses tnt-chat-leave
+	(tnt-handle-eviled): handle the eviled message (untested, no client)
+
+	* PROTOCOL: Neatened up so everything it fits in 80 columns
+
+	* toc.el (toc-handle-receive): Added code for all the messages
+ 	that we don't handle yet.  For the moment I've hooked all except
+ 	'eviled' up to tnt-debug which logs the message in a buffer called
+ 	"*tnt-debug*".  For release they should be hooked up to some
+ 	ignore function (unless we actually use them)  Also moved the
+	clauses that decipher the type of messages so that they are in the 
+	same order as the messages are described in PROTOCOL.
+	
+
 2000-04-05 John Jannotti <jj@lcs.mit.edu>
 
 	* tocstr.el (tocstr-init-receiver): Reset flap-state when opening

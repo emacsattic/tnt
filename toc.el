@@ -49,13 +49,17 @@
 (defvar toc-sign-on-function           nil)
 (defvar toc-config-function            nil)
 (defvar toc-nick-function              nil)
-(defvar toc-update-buddy-function      nil)
 (defvar toc-im-in-function             nil)
+(defvar toc-update-buddy-function      nil)
+(defvar toc-error-function             nil)
+(defvar toc-eviled-function            nil)
 (defvar toc-chat-join-function         nil)
 (defvar toc-chat-in-function           nil)
-(defvar toc-chat-invite-function       nil)
 (defvar toc-chat-update-buddy-function nil)
-(defvar toc-error-function             nil)
+(defvar toc-chat-invite-function       nil)
+(defvar toc-chat-left-function         nil)
+(defvar toc-goto-url-function          nil)
+(defvar toc-pause-function             nil)
 
 
 
@@ -185,6 +189,12 @@
       (let ((nick   (toc-lop-field str 'index)))
         (funcall toc-nick-function nick)))
 
+     ((string= cmd "IM_IN")
+      (let ((user    (toc-lop-field str 'index))
+            (auto    (string= "T" (toc-lop-field str 'index)))
+            (message (substring str index)))
+        (funcall toc-im-in-function user auto message)))
+
      ((string= cmd "UPDATE_BUDDY")
       (let ((nick   (toc-lop-field str 'index))
             (online (string= "T" (toc-lop-field str 'index)))
@@ -194,11 +204,18 @@
 	    (away (toc-lop-field str 'index)))
         (funcall toc-update-buddy-function nick online evil signon idle away)))
 
-     ((string= cmd "IM_IN")
-      (let ((user    (toc-lop-field str 'index))
-            (auto    (string= "T" (toc-lop-field str 'index)))
-            (message (substring str index)))
-        (funcall toc-im-in-function user auto message)))
+     ((string= cmd "ERROR")
+      (let ((code   (string-to-number (toc-lop-field str 'index)))
+            (args   nil)
+            (arg    nil))
+        (while (setq arg (toc-lop-field str 'index))
+          (setq args (cons arg args)))
+        (funcall toc-error-function code (nreverse args))))
+
+     ((string= cmd "EVILED")
+      (let ((evil   (string-to-number (toc-lop-field str 'index)))
+            (eviler (toc-lop-field str 'index)))
+        (funcall toc-eviled-function cmd evil eviler)))
 
      ((string= cmd "CHAT_JOIN")
       (let ((roomid  (toc-lop-field str 'index))
@@ -212,13 +229,6 @@
             (message (substring str index)))
         (funcall toc-chat-in-function roomid user whisper message)))
 
-     ((string= cmd "CHAT_INVITE")
-      (let ((room    (toc-lop-field str 'index))
-            (roomid  (toc-lop-field str 'index))
-            (sender  (toc-lop-field str 'index))
-            (message (substring str index)))
-        (funcall toc-chat-invite-function room roomid sender message)))
-
      ((string= cmd "CHAT_UPDATE_BUDDY")
       (let ((roomid  (toc-lop-field str 'index))
             (inside  (string= "T" (toc-lop-field str 'index)))
@@ -228,13 +238,26 @@
                        users)))
         (funcall toc-chat-update-buddy-function roomid inside users)))
 
-     ((string= cmd "ERROR")
-      (let ((code   (string-to-number (toc-lop-field str 'index)))
-            (args   nil)
-            (arg    nil))
-        (while (setq arg (toc-lop-field str 'index))
-          (setq args (cons arg args)))
-        (funcall toc-error-function code (nreverse args)))))))
+     ((string= cmd "CHAT_INVITE")
+      (let ((room    (toc-lop-field str 'index))
+            (roomid  (toc-lop-field str 'index))
+            (sender  (toc-lop-field str 'index))
+            (message (substring str index)))
+        (funcall toc-chat-invite-function room roomid sender message)))
+
+     ((string= cmd "CHAT_LEFT")
+      (let ((roomid  (toc-lop-field str 'index)))
+        (funcall toc-chat-left-function cmd roomid)))
+
+     ((string= cmd "GOTO_URL")
+      (let ((windowid (toc-lop-field str 'index))
+            (url      (substring str index))) ; Url might have a colon
+        (funcall toc-goto-url-function cmd windowid url)))
+
+     ;; We probably ought to handle this internally.  Does it ever really
+     ;; get sent?
+     ((string= cmd "PAUSE")
+      (funcall toc-pause-function cmd)))))
 
 
 

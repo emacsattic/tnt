@@ -229,9 +229,9 @@ IM_IN:<Source User>:<Auto Response T/F?>:<Message>
    Receive an IM from some one.  Everything after the third colon is
    the incoming message, including other colons.
 
-UPDATE_BUDDY:<Buddy User>:<Online? T/F>:<Evil Amount>:<Signon Time>:<IdleTime>:<UC>
-   This one command handles arrival/depart/updates.  Evil Amount is
-   a percentage, Signon Time is UNIX epoc, idle time is in minutes, UC (User Class)
+UPDATE_BUDDY:<Buddy User>:<Online? T/F>:<EvilAmount>:<SignonTime>:<IdleTime>:<UC>
+   This one command handles arrival/depart/updates.  EvilAmount is
+   a percentage, SignonTime is UNIX epoc, IdleTime is in minutes, UC (User Class)
    is a two character string.
    uc[0]:
    ' '  - Ignore

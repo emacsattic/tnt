@@ -259,13 +259,17 @@
             toc-sign-on-function           'tnt-handle-sign-on
             toc-config-function            'tnt-handle-config
             toc-nick-function              'tnt-handle-nick
-            toc-update-buddy-function      'tnt-handle-update-buddy
             toc-im-in-function             'tnt-handle-im-in
+            toc-update-buddy-function      'tnt-handle-update-buddy
+            toc-error-function             'tnt-handle-error
+            toc-eviled-function            'tnt-handle-eviled
             toc-chat-join-function         'tnt-handle-chat-join
             toc-chat-in-function           'tnt-handle-chat-in
-            toc-chat-invite-function       'tnt-handle-chat-invite
             toc-chat-update-buddy-function 'tnt-handle-chat-update-buddy
-            toc-error-function             'tnt-handle-error)
+            toc-chat-invite-function       'tnt-handle-chat-invite
+            toc-chat-left-function         'tnt-debug
+            toc-goto-url-function          'tnt-debug
+            toc-pause-function             'tnt-debug)
       (toc-open tnt-toc-host tnt-toc-port tnt-username))))
 
 
@@ -484,6 +488,7 @@ Special commands:
   (if (null tnt-current-user)
       (error "You must be online to join a chat room.")
     (let* ((input (or (and (stringp room) room)
+                      (and (boundp 'tnt-chat-room) tnt-chat-room)
                       (read-from-minibuffer "Join chat room: "
                                             (format "%s Chat%03d"
                                                     tnt-current-user
@@ -491,6 +496,19 @@ Special commands:
       (toc-chat-join 4 input)
       (switch-to-buffer (tnt-chat-buffer input)))))
 
+(defun tnt-leave-chat (room)
+  "Leaves a chat room.  If in a chat buffer assume that is the one to leave."
+  (interactive "p")
+  (if (null tnt-current-user)
+      (error "You must be online to leave a chat room.")
+    (let* ((input (or (and (stringp room) room)
+                      (and (boundp 'tnt-chat-room) tnt-chat-room)
+                      (read-from-minibuffer "Leave chat room: "))))
+      (save-excursion
+        (set-buffer (tnt-chat-buffer input))
+        (setq tnt-chat-participants nil)
+        (toc-chat-leave tnt-chat-roomid)
+        (tnt-append-message nil (format "%s left" tnt-current-user))))))
 
 (defun tnt-chat-buffer-name (room)
   ;; Returns the name of the chat buffer for ROOM.
@@ -518,7 +536,7 @@ Special commands:
 
 (defun tnt-chat-buffer-killed ()
   (if tnt-current-user
-      (toc-chat-leave tnt-chat-roomid)))
+      (tnt-leave-chat tnt-chat-room)))
 
 
 (defun tnt-send-text-as-chat-message ()
@@ -1121,6 +1139,14 @@ Special commands:
 ;;; Handlers for TOC events
 ;;;----------------------------------------------------------------------------
 
+(defun tnt-debug (&rest args)
+  "Generic handler for messages that are unimplemented.  Used to learn more."
+  (message "Got a strange packet. Look in *tnt-debug* for info.")
+  (let ((log-buffer (get-buffer-create "*tnt-debug*")))
+    (prin1 args log-buffer)
+    (princ "\n" log-buffer)))
+    
+
 (defun tnt-handle-opened ()
   (toc-signon tnt-login-host tnt-login-port tnt-username tnt-password
               tnt-language tnt-version))
@@ -1137,7 +1163,7 @@ Special commands:
     (if tnt-use-keepalive 
         (cancel-timer tnt-keepalive-timer))
 
-;; Send a message sayign we've been disconnected.
+;; Send a message saying we've been disconnected.
 
     (if (and tnt-email-to-pipe-to
              tnt-pipe-to-email-now)
@@ -1154,35 +1180,14 @@ Special commands:
       (run-at-time tnt-keepalive-interval nil 'tnt-keepalive))
   (toc-init-done))
 
-
 (defun tnt-handle-config (config)
   (tnt-initialize-buddy-list config))
-
 
 (defun tnt-handle-nick (nick)
   (setq tnt-current-user nick)
   (or tnt-buddy-blist
       (setq tnt-buddy-blist (list (list "Buddies" nick))))
   (tnt-set-online-state t))
-
-(defun tnt-handle-update-buddy (nick online evil signon idle away)
-;; The modes for this section are listed in protocol, but here they are.
-;; " U"  == Oscar Trial/Available.
-;; " UU" == Oscar Trial/Away
-;; " OU" == Oscar/Away
-;; " O"  == Oscar/Available
-;; " AU" == Aol/Oscar Trial/Here (the reason for U being here here is unknown)
-;; " A"  == Aol/Here
-  (if (or (string= away " UU")
-          (string= away " OU")
-          )
-      (tnt-set-buddy-status nick online idle t)
-    (tnt-set-buddy-status nick online idle nil))
-  (if online
-      (tnt-send-pounce (toc-normalize nick)))
-  )
-
-
 
 (defun tnt-handle-im-in (user auto message)
   (let ((buffer (tnt-im-buffer user)))
@@ -1203,8 +1208,6 @@ Special commands:
                           (tnt-im-buffer-name user) nil)))
     (if tnt-away (tnt-send-away-msg user))))
 
-
-
 (defun tnt-toggle-email ()
   "Turns email piping on or off (only if tnt-email-to-pipe-to is set)."
   (interactive)
@@ -1216,7 +1219,6 @@ Special commands:
           (message (format "Now forwarding any incoming IMs to %s"
                            tnt-email-to-pipe-to))
         (message (format "No longer forwarding incoming IMs"))))))
-
 
 (defun tnt-pipe-message-to-program (user message)
   (let ((proc-name "piping-process")
@@ -1241,6 +1243,47 @@ Special commands:
   (message "Reminder: IMs are being forwarded to %s" tnt-email-to-pipe-to))
 
 
+(defun tnt-handle-update-buddy (nick online evil signon idle away)
+;; The modes for this section are listed in protocol, but here they are.
+;; " U"  == Oscar Trial/Available.
+;; " UU" == Oscar Trial/Away
+;; " OU" == Oscar/Away
+;; " O"  == Oscar/Available
+;; " AU" == Aol/Oscar Trial/Here (the reason for U being here here is unknown)
+;; " A"  == Aol/Here
+  (if (or (string= away " UU")
+          (string= away " OU")
+          )
+      (tnt-set-buddy-status nick online idle t)
+    (tnt-set-buddy-status nick online idle nil))
+  (if online
+      (tnt-send-pounce (toc-normalize nick)))
+  )
+
+(defun tnt-handle-error (code args)
+  (cond
+   ((= code 901)
+    (tnt-error "User %s not online" (car args)))
+   ((= code 902)
+    (tnt-error "Warning of %s is not allowed" (car args)))
+   ((= code 903)
+    (tnt-error "Message dropped - you are sending too fast"))
+   ((= code 950)
+    (tnt-error "Chat room %s is not available" (car args)))
+   ((= code 960)
+    (tnt-error "Message dropped - sending too fast for %s" (car args)))
+   ((= code 961)
+    (tnt-error "Message from %s dropped - too big" (car args)))
+   ((= code 962)
+    (tnt-error "Message from %s dropped - sent too fast" (car args)))))
+
+(defun tnt-handle-eviled (amount eviler)
+  (message "You have been warned %s (%d)."
+           (if (equal eviler "")
+               "anonymously"
+             (concat "by " eviler))
+           amount))
+
 (defun tnt-handle-chat-join (roomid room)
   (let ((buffer (tnt-chat-buffer room)))
     (save-excursion
@@ -1255,18 +1298,6 @@ Special commands:
                                               (format "%s (whispers)" user)
                                             user)
                                           message)))
-
-
-(defun tnt-handle-chat-invite (room roomid sender message)
-  (tnt-handle-chat-join roomid room)    ; associate roomid with room
-  (let ((buffer (tnt-chat-buffer room)))
-    (save-excursion
-      (set-buffer buffer)
-      (tnt-append-message (format "%s (invitation)" sender)
-                          (tnt-strip-html message)))
-    (tnt-push-event (format "Chat invitation from %s arrived" sender)
-                    buffer 'tnt-chat-event-pop-function)
-    (beep)))
 
 
 (defun tnt-handle-chat-update-buddy (roomid inside users)
@@ -1286,23 +1317,16 @@ Special commands:
           (setq users (cdr users)))))))
                                                
   
-(defun tnt-handle-error (code args)
-  (cond
-   ((= code 901)
-    (tnt-error "User %s not online" (car args)))
-   ((= code 902)
-    (tnt-error "Warning of %s is not allowed" (car args)))
-   ((= code 903)
-    (tnt-error "Message dropped - you are sending too fast"))
-   ((= code 950)
-    (tnt-error "Chat room %s is not available" (car args)))
-   ((= code 960)
-    (tnt-error "Message dropped - sending too fast for %s" (car args)))
-   ((= code 961)
-    (tnt-error "Message from %s dropped - too big" (car args)))
-   ((= code 962)
-    (tnt-error "Message from %s dropped - sent too fast" (car args)))))
-
+(defun tnt-handle-chat-invite (room roomid sender message)
+  (tnt-handle-chat-join roomid room)    ; associate roomid with room
+  (let ((buffer (tnt-chat-buffer room)))
+    (save-excursion
+      (set-buffer buffer)
+      (tnt-append-message (format "%s (invitation)" sender)
+                          (tnt-strip-html message)))
+    (tnt-push-event (format "Chat invitation from %s arrived" sender)
+                    buffer 'tnt-chat-event-pop-function)
+    (beep)))
 
 
 ;;;----------------------------------------------------------------------------
