@@ -1,3 +1,8 @@
+2002-10-08  Matthias Granberry  <matthias@utdallas.edu>
+
+	* tnt.el (tnt-play-sound): incorporated Doug Alcom (lathi)'s patch
+	to allow xemacs to play sounds without native sound support.
+
 2002-10-08  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
 	* tnt.el (tnt-customize): just calls (customize "tnt").

@@ -3189,21 +3189,13 @@ of the list, delimited by commas."
 (defun tnt-play-sound (sound-file)
   "On non-XEmacs systems, requires that tnt-sound-exec be set."
   (if (file-readable-p sound-file)
-      (if tnt-running-xemacs
-          (play-sound-file sound-file)
-
-        ;; On non-XEmacs systems, use Jim's code.
-        (let ((proc-name "sound-process")
-              (proc-out-buf "*sound-output*")
-              (process-connection-type nil))
-          (if tnt-sound-exec
-              (progn
-                (apply 'start-process
-                       proc-name proc-out-buf tnt-sound-exec
-                       (append tnt-sound-exec-args (list sound-file)))
-                (process-send-eof proc-name))
-            (message "Warning: tnt-sound-exec is not set"))))
-    (message "Warning: %s is not a readable file" sound-file)))
+      (cond 
+       (tnt-sound-exec
+        (with-output-to-string
+          (call-process shell-file-name nil t nil shell-command-switch (concat tnt-sound-exec " " tnt-sound-exec-args " " sound-file))))
+       (tnt-running-xemacs (play-sound-file sound-file))
+       (t (message "Warning: tnt-sound-exec is not set"))))
+  (message "Warning: %s is not a readable file" sound-file)))
 
 ;;; ***************************************************************************
 (defun tnt-beep (beep-type)
