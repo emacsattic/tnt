@@ -1,3 +1,8 @@
+2003-10-21  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
+	* tnt.el (tnt-pop-event): also recenter when switching to an IM
+	buffer from here
+
 2003-03-23  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
 	* tnt.el (tnt-kill): call toc-close and tnt-shutdown before giving

@@ -2750,7 +2750,8 @@ Special commands:
              (function (cdr (cdr event))))
         (setq tnt-event-ring (cdr tnt-event-ring))
         (if accept
-            (switch-to-buffer buffer-name)
+            (progn (switch-to-buffer buffer-name)
+                   (if tnt-recenter-windows (recenter -1)))
           (kill-buffer buffer-name))
         (if function (funcall function accept))
         (tnt-show-top-event)
