@@ -125,34 +125,43 @@ from your computer, so then when you come back, you can see how
 long ago it was that your friend said \"hi\" while you were gone.
 ")
 
-(defvar tnt-beep-on-message-available-event 'audible
+(defvar tnt-beep-on-message-available-event 'current
   "*If non-nil, beeps when giving the \"Message from ... available\" message.
 
-If set to 'visible, uses a visible bell.  If nil, no beep.
+If set to 'visible, uses a visible bell.  If set to 'audible, uses an
+audible bell.  If set to 'current, uses whatever emacs is currently
+set to use (visible or audible).  If set to nil, does not beep.
 
-Note that the value here will also be used for the 
+Note that the value here is also used when receiving a chat
+invitation.
 ")
 
 (defvar tnt-beep-on-message-in-visible-buffer nil
   "*If non-nil, beeps every time a message comes into a visible IM buffer.
 
-If set to 'visible, uses a visible bell.  If nil, no beep.
+If set to 'visible, uses a visible bell.  If set to 'audible, uses an
+audible bell.  If set to 'current, uses whatever emacs is currently
+set to use (visible or audible).  If set to nil, does not beep.
 ")
 
 (defvar tnt-beep-on-buddy-signonoff nil
   "*If non-nil, beeps when buddies sign on or off.
 
-If set to 'visible, uses a visible bell.  If nil, no beep.
+If set to 'visible, uses a visible bell.  If set to 'audible, uses an
+audible bell.  If set to 'current, uses whatever emacs is currently
+set to use (visible or audible).  If set to nil, does not beep.
 
 Note that whatever value this variable has, you will still get
 messages in your minibuffer saying \"MyBuddy online\" and \"MyBuddy
 offline\".
 ")
 
-(defvar tnt-beep-on-error 'audible
+(defvar tnt-beep-on-error 'current
   "*If non-nil, beeps when an error occurs.
 
-If set to 'visible, uses a visible.  If nil, no beep.
+If set to 'visible, uses a visible bell.  If set to 'audible, uses an
+audible bell.  If set to 'current, uses whatever emacs is currently
+set to use (visible or audible).  If set to nil, does not beep.
 ")
   
 
@@ -1591,14 +1600,16 @@ of the list, delimited by commas."
   ;; ---------      ------
   ;; nil            no beep
   ;; 'visible       visible beep
-  ;; other non-nil  audible beep
+  ;; 'audible       audible beep
+  ;; 'current       whichever emacs is currently set to
   (if beep-type
-      (let ((orig-visible visible-bell))
-        (if (eq beep-type 'visible)
-            (setq visible-bell t)
-          (setq visible-bell nil))
-        (beep)
-        (setq visible-bell orig-visible))))
+      (if (or (eq beep-type 'visible)
+              (eq beep-type 'audible))
+          (let ((orig-visible visible-bell))
+            (setq visible-bell (eq beep-type 'visible))
+            (beep)
+            (setq visible-bell orig-visible))
+        (beep))))
 
 
 

@@ -1,3 +1,11 @@
+2000-05-15  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-beep): now accepts 'current, as well as 'visible and
+	'audible.
+	(tnt-beep-on-message-available-event): now defaults to 'current
+	instead of 'audible.
+	(tnt-beep-on-error): now defaults to 'current instead of 'audible.
+
 2000-05-14  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-beep): added.  beeps visibly, audibly, or not at
