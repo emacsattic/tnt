@@ -702,7 +702,7 @@ Special commands:
     (mapcar (lambda (name)
               (let ((group (assoc name tnt-buddy-blist)))
                 (if (null group) (list name)
-                  (intersection (mapcar 'car tnt-buddy-alist)
+                  (intersection (mapcar 'car (tnt-online-buddies-collection))
                                 (set-difference (cdr group)
                                                 exclude-list
                                                 ':test 'string=)

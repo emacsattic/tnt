@@ -1,3 +1,10 @@
+2000-04-15  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-expand-groups-for-chat-invitation): was assuming
+	tnt-buddy-alist contains only online buddies.  in fact it also
+	contains buddies who have been online and signed off.  now calling
+	tnt-online-buddies-collection instead.
+
 2000-04-13  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-config-to-blist): fixed paren typo.
