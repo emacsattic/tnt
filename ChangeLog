@@ -1,3 +1,16 @@
+2000-11-06  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-buddy-list-point): added.
+	(tnt-show-buddies): now switching to the buffer before we build
+	it.
+	(tnt-build-buddy-buffer): now using globally-stored point, rather
+	than locally.
+	(tnt-get-buddy-at-point): store point.
+	(tnt-next-buddy): store point.
+	(tnt-prev-buddy): store point.
+	(tnt-next-group): store point.
+	(tnt-prev-group): store point.
+
 2000-08-02  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-just-reconnected): added.

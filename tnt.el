@@ -876,6 +876,7 @@ Special commands:
 (defvar tnt-buddy-update-timer nil)
 (defvar tnt-buddy-update-interval 60)
 
+(defvar tnt-buddy-list-point 0)
 
 (if tnt-buddy-list-mode-map
     ()
@@ -910,8 +911,9 @@ Special commands:
 (defun tnt-show-buddies ()
   "Shows the buddy list in the selected window."
   (interactive)
+  (tnt-switch-to-buffer (tnt-buddy-buffer))
   (tnt-build-buddy-buffer)
-  (tnt-switch-to-buffer (tnt-buddy-buffer)))
+  )
 
 (defun tnt-switch-to-buffer (buffer)
  (if (and tnt-use-split-buddy
@@ -933,17 +935,17 @@ Special commands:
 (defun tnt-build-buddy-buffer ()
   (let ((buffer (tnt-buddy-buffer)))
     (with-current-buffer buffer
-      (let* ((buffer-read-only nil)
-             (my-window (get-buffer-window buffer))
-             (my-buffer-point (window-point my-window)))
-          
+      (let* ((buffer-read-only nil))
+        
         (erase-buffer)
         (tnt-blist-to-buffer tnt-buddy-blist
                              'tnt-buddy-list-filter)
         (set-buffer-modified-p nil)
 
-        (if (and my-window my-buffer-point)
-            (set-window-point my-window my-buffer-point))
+        (if tnt-buddy-list-point
+            (progn
+              (goto-char tnt-buddy-list-point)
+              (beginning-of-line)))
         ))))
 
 (defun tnt-buddy-list-filter (nick)
@@ -990,6 +992,7 @@ Special commands:
 (defun tnt-get-buddy-at-point ()
   "Returns the nickname of the buddy at point."
   (save-excursion
+    (setq tnt-buddy-list-point (point))
     (beginning-of-line)
     (if (null (re-search-forward "^ +\\([^(\n]*\\)" nil t))
         (error "Position cursor on a buddy name")
@@ -1018,7 +1021,9 @@ Special commands:
   (if (null (re-search-forward "\n " nil t))
       (error "No next buddy"))
   (goto-char (match-beginning 0))
-  (forward-char))
+  (forward-char)
+  (setq tnt-buddy-list-point (point))
+  )
 
 
 (defun tnt-prev-buddy ()
@@ -1028,7 +1033,9 @@ Special commands:
   (if (null (re-search-backward "\n " nil t))
       (error "No previous buddy"))
   (goto-char (match-beginning 0))
-  (forward-char))
+  (forward-char)
+  (setq tnt-buddy-list-point (point))
+  )
 
 
 (defun tnt-next-group ()
@@ -1037,7 +1044,9 @@ Special commands:
   (beginning-of-line)
   (if (null (re-search-forward "\n[^ ]" nil t))
       (error "No next group"))
-  (tnt-next-buddy))
+  (tnt-next-buddy)
+  (setq tnt-buddy-list-point (point))
+  )
 
 
 (defun tnt-prev-group ()
@@ -1047,7 +1056,9 @@ Special commands:
   (if (null (re-search-backward "\n[^ ]" nil t))
       (error "No previous buddy"))
   (goto-char (match-beginning 0))
-  (tnt-prev-buddy))
+  (tnt-prev-buddy)
+  (setq tnt-buddy-list-point (point))
+  )
 
 (defun tnt-shutdown ()
   (tnt-set-online-state nil)
