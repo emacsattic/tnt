@@ -1,9 +1,97 @@
 2002-09-02  Joe Casadonte  <jcasadonte@northbound-train.com>
 
+	* tnt.el (general changes): cleanup up code, putting visual
+	                            separators between functions
+	* tnt.el (general changes): moved variables around to group like
+	                            with like)
+	* tnt.el (tnt-toc-host}: changed from defvar to defcustom
+	* tnt.el (tnt-toc-port}: changed from defvar to defcustom
+	* tnt.el (tnt-login-host}: changed from defvar to defcustom
+	* tnt.el (tnt-login-port}: changed from defvar to defcustom
+	* tnt.el (tnt-language}: changed from defvar to defcustom
+	* tnt.el (tnt-timers-available}: changed from defvar to defconst
+	                                 (more efficient)
+	* tnt.el (tnt-running-xemacs}: added call to `save-match-data'
+	* tnt.el (tnt-customize): added new interactive function to easily
+	                          customize all TNT options
+	* tnt.el (tnt-default-username}: changed from defvar to defcustom
+	* tnt.el (tnt-default-password}: changed from defvar to defcustom
+	* tnt.el (tnt-username-alist}: changed from defvar to defcustom;
+	                               fixed doc string to prevent font-lock
+				       from messing up
+	* tnt.el (tnt-default-chatroom}: changed from defvar to defcustom
+	* tnt.el (tnt-sound-exec}: changed from defvar to defcustom
+	* tnt.el (tnt-sound-exec-args}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-incoming-message}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-first-incoming-message}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-visible-incoming-message}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-outgoing-message}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-chat-invitation}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-chat-message}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-visible-chat-message}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-buddy-signon}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-buddy-signoff}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-signon}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-signoff}: changed from defvar to defcustom
+	* tnt.el (tnt-beep-on-error}: changed from defvar to defcustom
+	* tnt.el (tnt-message-on-buddy-signonoff}: changed from defvar to defcustom
+	* tnt.el (tnt-message-on-chatroom-message}: changed from defvar to defcustom
+	* tnt.el (tnt-use-timestamps}: changed from defvar to defcustom
+	* tnt.el (tnt-use-split-buddy}: changed from defvar to defcustom
+	* tnt.el (tnt-separator}: changed from defvar to defcustom
+	* tnt.el (tnt-recenter-windows}: changed from defvar to defcustom
+	* tnt.el (tnt-directory}: changed from defvar to defcustom
+	* tnt.el (tnt-buddy-list-backup-filename}: changed from defvar to defcustom
+	* tnt.el (tnt-email-to-pipe-to}: changed from defvar to defcustom
+	* tnt.el (tnt-email-binary}: changed from defvar to defcustom
+	* tnt.el (tnt-im-buffers-read-only}: changed from defvar to defcustom
+	* tnt.el (tnt-auto-reconnect}: changed from defvar to defcustom
+	* tnt.el (tnt-inhibit-key-bindings}: changed from defvar to defcustom
+	* tnt.el (main): changed (if tnt-inhibit-key-bindings () ...) to (unless tnt-inhibit-key-bindings ...)
+	* tnt.el (tnt-pounce-delete}: added to documentation string
+	* tnt.el (tnt-unset-just-reconnected}: added documentation string
+	* tnt.el (tnt-buddy-away }: added documentation string
+	* tnt.el (tnt-open}: changed to use `read-passwd' instead of `tnt-read-from-minibuffer-no-echo'
+		 (if available -- it's more secure)
+	* tnt.el (tnt-kill}: changed from (if (null ...) (error ...) ...) to (when (null ...) (error ...)) ...
+	* tnt.el (main): changed (if tnt-im-mode-map () ...) to (unless tnt-im-mode-map ...)
+	* tnt.el (main): changed (if tnt-chat-mode-map () ...) to (unless tnt-chat-mode-map ...)
+	* tnt.el (tnt-join-chat}: changed call to `eval' to `funcall' (more efficient)
+	* tnt.el (tnt-get-input-message}: changed from `buffer-substring' to `buffer-substring-no-properties'
+	* tnt.el (main): changed (if tnt-buddy-list-mode-map () ...) to (unless tnt-buddy-list-mode-map ...)
+	* tnt.el (tnt-switch-to-buffer}: switched to use new `tnt-buddy-list-buffer-name' variable
+	* tnt.el (tnt-buddy-buffer}: switched to use new `tnt-buddy-list-buffer-name' variable
+	* tnt.el (tnt-fetch-info}: added call to `save-match-data'
+	* tnt.el (tnt-fetch-info}: changed from `buffer-substring' to `buffer-substring-no-properties'
+	* tnt.el (tnt-get-buddy-at-point}: added call to `save-match-data'
+	* tnt.el (tnt-get-buddy-at-point}: changed where `beginning-of-line' is called
+	* tnt.el (tnt-next-buddy}: added call to `save-match-data'
+	* tnt.el (tnt-prev-buddy}: added call to `save-match-data'
+	* tnt.el (tnt-next-group}: added call to `save-match-data'
+	* tnt.el (tnt-prev-group}: added call to `save-match-data'
+	* tnt.el (main): changed (if tnt-buddy-edit-mode-map () ...) to (unless tnt-buddy-edit-mode-map ...)
+	* tnt.el (tnt-save-buddy-list}: changed from (if (null ...) (error ...) ...) to (when (null ...) (error ...)) ...
+	* tnt.el (tnt-buffer-to-blist}: added call to `save-match-data'
+	* tnt.el (tnt-buffer-to-blist}: changed from `buffer-substring' to `buffer-substring-no-properties' (twice)
+	* tnt.el (tnt-config-to-blist}: added call to `save-match-data'
+	* tnt.el (tnt-save-buddy-list}: changed from (if (null ...) (error ...) (progn ...))
+	                                to (when (null ...) (error ...)) ...
+	* tnt.el (tnt-completion-func}: added call to `save-match-data'
+	* tnt.el (tnt-completion-func}: changed from `buffer-substring' to `buffer-substring-no-properties' (twice)
+	* tnt.el (tnt-strip-a-href}: added call to `save-match-data'
+	* tnt.el (tnt-backslashify-string}: added call to `save-match-data'
+	* tnt.el (tnt-strip-html}: added call to `save-match-data'
+	* tnt.el (tnt-strip-some-html}: added call to `save-match-data'
+	* tnt.el (main}: added in call to `tnt-load-hook' at end of file
+	* tnt.el (tnt-buddy-list-buffer-name}: added new defcustom var - replaces old hard-coded value
+	* tnt.el (tnt-load-hook}: added new defcustom var
+	* tnt.el (tnt-persistent-timeout}: changed doc string ('< 0' instead of  '< 1')
+
+2002-09-02  Joe Casadonte  <jcasadonte@northbound-train.com>
+
 	* tnt.el (tnt-buffer-to-blist): fixed bug by always adding extra
           newline at end of buffer (would prevent the buffer from being
           saved if the newline was not present)
-
         * tnt.el (tnt-persistent-message-persist): fixed bug (comparison
           was switched)
 
