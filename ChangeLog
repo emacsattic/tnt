@@ -1,3 +1,25 @@
+2000-05-16  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-just-signedonoff-alist): added.
+	(tnt-just-signedonoff-delay): added.
+	(tnt-build-buddy-buffer): replaced big quoted lambda with quoted
+	function tnt-buddy-list-filter.
+	(tnt-buddy-list-filter): added.  
+	(tnt-buddy-list-filter): now displays just-onoff, indicating
+	whether a buddy just signed on or off.  this also means that a
+	buddy can be displayed even if they're not online, which didn't
+	used to be the case.
+	(tnt-shutdown): sets just-signedonoff-alist to nil.
+	(tnt-set-buddy-status): calls set-just-signedonoff.
+	(tnt-set-just-signedonoff): added.  stores info in the new alist,
+	and sets a timer to unset a minute later.
+	(tnt-unset-just-signedonoff): added.  called by the timer above.
+	removes an element from the alist.  but note that a new entry
+	could have been added to the alist in between, in which case we do
+	not remove it.  (using a timestamp to ensure that.)
+	(tnt-get-just-signedonoff): added.  returns nil if no entry in the
+	alist, or " (just signed %s)" with "on" or "off" substituted.
+
 2000-05-15  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-beep): now accepts 'current, as well as 'visible and

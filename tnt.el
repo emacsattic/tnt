@@ -846,6 +846,9 @@ Special commands:
 (defvar tnt-idle-alist nil)
 (defvar tnt-away-alist nil)
 
+(defvar tnt-just-signedonoff-alist nil)
+(defvar tnt-just-signedonoff-delay 60)
+
 (defvar tnt-buddy-update-timer nil)
 (defvar tnt-buddy-update-interval 60)
 
@@ -906,26 +909,31 @@ Special commands:
   (with-current-buffer (tnt-buddy-buffer)
     (let ((buffer-read-only nil))
       (erase-buffer)
-      (tnt-blist-to-buffer
-       tnt-buddy-blist
-       '(lambda (nick)
-          (let ((unick (tnt-buddy-status nick))
-                (idle (tnt-buddy-idle nick))
-                (away (tnt-buddy-away nick)))
-            (if unick
-                (progn
-                  (put-text-property 0 (length unick)
-                                     'mouse-face 'highlight unick)
-                  (concat unick
-                          (cond ((and away idle)
-                                 (format " (away - %s)" idle))
-                                ((and away (not idle))
-                                 (format " (away)"))
-                                ((and (not away) idle)
-                                 (format " (idle - %s)" idle))
-                                (t ""))))))))
-      
+      (tnt-blist-to-buffer tnt-buddy-blist
+                           'tnt-buddy-list-filter)
       (set-buffer-modified-p nil))))
+
+(defun tnt-buddy-list-filter (nick)
+  (let* ((status (tnt-buddy-status nick))
+         (unick (or status nick))
+         (nnick (toc-normalize nick))
+         (idle (tnt-buddy-idle nick))
+         (away (tnt-buddy-away nick))
+         (just-onoff (tnt-get-just-signedonoff nnick)))
+    (if (or status just-onoff)
+        (progn
+          (put-text-property 0 (length unick)
+                             'mouse-face 'highlight unick)
+          (concat unick
+                  (cond ((and away idle)
+                         (format " (away - %s)" idle))
+                        ((and away (not idle))
+                         (format " (away)"))
+                        ((and (not away) idle)
+                         (format " (idle - %s)" idle))
+                        (t ""))
+                  just-onoff
+                  )))))
 
 (defun tnt-im-buddy ()
   "Initiates an IM conversation with the selected buddy."
@@ -999,6 +1007,7 @@ Special commands:
         tnt-permit-mode 1
         tnt-away-alist nil
         tnt-idle-alist nil
+        tnt-just-signedonoff-alist nil
         tnt-pounce-alist nil
         tnt-away nil
         tnt-last-away-sent nil)
@@ -1024,6 +1033,7 @@ Special commands:
     (setq tnt-buddy-alist (tnt-addassoc nnick status tnt-buddy-alist))
     (setq tnt-idle-alist (tnt-addassoc nnick idletime tnt-idle-alist))
     (setq tnt-away-alist (tnt-addassoc nnick away tnt-away-alist))
+    (tnt-set-just-signedonoff nnick onlinep)
 
     (tnt-build-buddy-buffer)))
 
@@ -1065,6 +1075,31 @@ Special commands:
 (defun tnt-online-buddies-and-groups-collection ()
   (append (mapcar (lambda(x) (list (car x))) tnt-buddy-blist)
           (tnt-online-buddies-collection)))
+
+(defun tnt-set-just-signedonoff (nick onlinep)
+  (let ((timestamp (cadr (current-time))))
+    (setq tnt-just-signedonoff-alist
+          (tnt-addassoc nick (list timestamp onlinep)
+                        tnt-just-signedonoff-alist))
+    (run-at-time tnt-just-signedonoff-delay nil
+                 'tnt-unset-just-signedonoff nick timestamp)
+    ))
+
+(defun tnt-unset-just-signedonoff (nick timestamp-to-remove)
+  (let ((most-recent (cadr (assoc nick tnt-just-signedonoff-alist))))
+    (if (= most-recent timestamp-to-remove)
+        (progn
+          (setq tnt-just-signedonoff-alist
+                (tnt-remassoc nick tnt-just-signedonoff-alist))
+          (tnt-build-buddy-buffer)
+          ))))
+
+(defun tnt-get-just-signedonoff (nick)
+  (let ((just-onoff (assoc nick tnt-just-signedonoff-alist)))
+    (if (null just-onoff) nil
+      (format " (just signed %s)"
+              (if (caddr just-onoff) "on" "off")))))
+
 
 ;;;----------------------------------------------------------------------------
 ;;; Buddy-list edit mode
