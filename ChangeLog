@@ -1,3 +1,13 @@
+2002-10-17  Matthias Granberry  <matthias@utdallas.edu>
+	* tnt.el (tnt-default-info-message): initial support for setting
+	profiles.
+	(tnt-set-info): sends user-defined profile to TOC server.
+	(tnt-get-info-msg): modified tnt-get-away-msg to use with profile
+	strings.
+	(tnt-inhibit-key-bindings): added "C-x t f" for tnt-set-info.
+	(tnt-buddy-list-mode-map): added "f" for tnt-set-info.
+	(tnt-customize): removed second definition of tnt-customize
+
 2002-10-08  Matthias Granberry  <matthias@utdallas.edu>
 
 	* tnt.el (tnt-play-sound): incorporated Doug Alcom (lathi)'s patch

@@ -142,6 +142,15 @@ the same password) -- see `tnt-username-alist' instead."
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
+(defcustom tnt-default-info-message
+  "<a href=\"http://tnt.sourceforge.net/\">TNT</a>---AIM for grownups</a>"
+  "Default message to put in your profile."
+  :type '(choice
+          (string :tag "Profile message" "<a href=\"http://tnt.sourceforge.net/\">TNT</a>---AIM for grownups</a>")
+          (const :tag "None (will be prompted each time)" nil))
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
 (defcustom tnt-username-alist nil
   "Should be nil or a list of usernames and (optionally) passwords.
 
@@ -979,6 +988,7 @@ Defaults to 'monthly.
   (global-set-key "\C-xtb" 'tnt-show-buddies)
   (global-set-key "\C-xtB" 'tnt-edit-buddies)
   (global-set-key "\C-xtc" 'tnt-customize)
+  (global-set-key "\C-xtf" 'tnt-set-info)
   (global-set-key "\C-xti" 'tnt-im)
   (global-set-key "\C-xtj" 'tnt-join-chat)
   (global-set-key "\C-xtl" 'tnt-leave-chat)
@@ -1223,6 +1233,32 @@ unless PREFIX arg is given."
         (toc-send-im user tnt-away-msg t)
         (tnt-append-message-and-adjust-window
          buffer tnt-away-msg tnt-current-user "Auto-response"))))
+
+;;; ***************************************************************************
+;;; ***** giving the TOC server our profile
+;;; ***************************************************************************
+
+(defvar tnt-info-msg-history nil)
+
+(defun tnt-set-info (&optional prefix)
+  "Send profile to TOC server."
+  (interactive "p")
+  (toc-set-info (tnt-get-info-msg prefix)))
+
+;;; ---------------------------------------------------------------------------
+(defun tnt-get-info-msg (prefix)
+  "Gets the info message."
+  (if (or (/= prefix 1)
+          (not tnt-default-info-message))
+      (read-from-minibuffer "Info Message: "
+                            (cons
+                             (if tnt-info-msg-history
+                                 (car tnt-info-msg-history)
+                               "<a href=\"http://tnt.sourceforge.net/\">TNT</a>---AIM for grownups")
+                             0)
+                            nil nil 'tnt-info-msg-history)
+    tnt-default-info-message)
+  )
 
 ;;; ***************************************************************************
 ;;; ***** telling the TOC server we've gone idle
@@ -1821,6 +1857,7 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "b" 'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "B" 'tnt-edit-buddies)
   (define-key tnt-buddy-list-mode-map "c" 'tnt-customize)
+  (define-key tnt-buddy-list-mode-map "f" 'tnt-set-info)
   (define-key tnt-buddy-list-mode-map "i" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map "I" 'tnt-fetch-info)
   (define-key tnt-buddy-list-mode-map "j" 'tnt-join-chat)
@@ -1902,11 +1939,6 @@ Special commands:
   (interactive)
   (setq tnt-current-menu (if (>= tnt-current-menu 3) 0 (1+ tnt-current-menu)))
   (tnt-build-buddy-buffer))
-
-;;; ***************************************************************************
-(defun tnt-customize ()
-  (interactive)
-  (customize "tnt"))
 
 ;;; ***************************************************************************
 (defun tnt-build-buddy-buffer ()
