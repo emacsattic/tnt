@@ -879,8 +879,8 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "P" 'tnt-prev-group)
   (define-key tnt-buddy-list-mode-map "i" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map "\C-m" 'tnt-im-buddy)
-  (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse)
-  (define-key tnt-buddy-list-mode-map [mouse-2] 'ignore)
+  (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse-down)
+  (define-key tnt-buddy-list-mode-map [mouse-2] 'tnt-im-buddy-mouse-up)
   (define-key tnt-buddy-list-mode-map "I" 'tnt-fetch-info)
   (define-key tnt-buddy-list-mode-map " " 'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "q" 'tnt-kill)
@@ -975,20 +975,34 @@ Special commands:
 (defun tnt-im-buddy ()
   "Initiates an IM conversation with the selected buddy."
   (interactive)
+  (let ((nick (tnt-get-buddy-at-point)))
+    (if (tnt-buddy-status nick)
+        (tnt-im nick)
+      (error "Not online: %s" nick))))
+
+(defun tnt-get-buddy-at-point ()
+  "Returns the nickname of the buddy at point."
   (save-excursion
     (beginning-of-line)
     (if (null (re-search-forward "^ +\\([^(\n]*\\)" nil t))
         (error "Position cursor on a buddy name")
-      (let ((nick (buffer-substring (match-beginning 1) (match-end 1))))
-        (if (tnt-buddy-status nick)
-            (tnt-im nick)
-          (error "Not online: %s" nick))))))
+      (buffer-substring (match-beginning 1) (match-end 1)))))
 
-(defun tnt-im-buddy-mouse (event)
-  "Initiates an IM conversation with the selected buddy by mouse click."
+(defvar tnt-buddy-on-mouse-down "")
+
+(defun tnt-im-buddy-mouse-down (event)
+  "Stores nickname of the buddy selected by mouse click."
   (interactive "e")
   (mouse-set-point event)
-  (tnt-im-buddy))
+  (setq tnt-buddy-on-mouse-down (tnt-get-buddy-at-point)))
+
+(defun tnt-im-buddy-mouse-up (event)
+  "Initiates an IM conversation if still clicking same buddy as on mouse-down."
+  (interactive "e")
+  (mouse-set-point event)
+  (let ((nick (tnt-get-buddy-at-point)))
+    (if (string= nick tnt-buddy-on-mouse-down)
+        (tnt-im nick))))
 
 (defun tnt-next-buddy ()
   "Moves the cursor to the next buddy."

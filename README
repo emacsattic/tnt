@@ -348,14 +348,21 @@ apropos", then type the variable name (e.g. "tnt-default-username").
 
     (setq tnt-separator "\n\n")
     (setq tnt-use-timestamps t)
-    (setq tnt-beep-beep-beep 'always)
-    (setq tnt-beep-on-buddy-signonoff t)
+    (setq tnt-beep-on-message-available-event 'audible)
+    (setq tnt-beep-on-message-in-visible-buffer 'visible)
+    (setq tnt-beep-on-buddy-signonoff 'current)
+    (setq tnt-beep-on-error nil)
+    (setq tnt-message-on-buddy-signonoff nil)
     (setq tnt-use-split-buddy t)
-    (setq tnt-use-keepalive t)
+    (setq tnt-use-keepalive nil)
+    (setq tnt-use-buddy-update-timer nil)
+    (setq tnt-use-idle-timer nil)
+    (setq tnt-directory "/some/tnt/directory")
+    (setq tnt-buddy-list-backup-filename nil)
     (setq tnt-recenter-windows nil)
     (setq tnt-email-to-pipe-to "someone@example.com")
     (setq tnt-email-binary "/bin/mail")
-    (setq tnt-show-buddy-signonoff nil)
+
 
 
 And these two lines can also optionally be included in your .emacs

@@ -1,3 +1,17 @@
+2000-07-11  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-get-buddy-at-point): added.  pulled part of
+	tnt-im-buddy out into its own function.
+	(tnt-im-buddy): now calling get-buddy-at-point
+	(tnt-buddy-on-mouse-down): added.  variable to store the nickname
+	that the user "mouse-down"ed on, to check whether they mouse-up on
+	the same nickname.
+	(tnt-im-buddy-mouse-down): added.  stores nickname in above.
+	(tnt-im-buddy-mouse-up): added.  compares nickname to above, then
+	starts IM conversation.
+	(tnt-im-buddy-mouse): removed.
+	(tnt-buddy-list-mode-map): changed mouse-down and mouse-up bindings.
+
 2000-07-10  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-build-buddy-buffer): now saving point in the
