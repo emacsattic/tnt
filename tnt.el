@@ -1670,6 +1670,8 @@ Special commands:
     (if buffer-exists (tnt-play-sound 'incoming)
       (tnt-play-sound 'first))
 
+    (if (get-buffer-window buffer 'visible)
+
         (progn
           (tnt-beep tnt-beep-on-message-in-visible-buffer)
           (tnt-remove-im-event user)
@@ -1678,7 +1680,8 @@ Special commands:
       (tnt-beep tnt-beep-on-message-available-event)
       (tnt-push-event (format "Message from %s available" user)
                       (tnt-im-buffer-name user) nil))
-    (if tnt-away (tnt-send-away-msg user)))
+
+    (if tnt-away (tnt-send-away-msg user))))
 
 (defun tnt-toggle-email ()
   "Turns email piping on or off (only if tnt-email-to-pipe-to is set)."
