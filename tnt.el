@@ -655,9 +655,17 @@ Special commands:
   (let* ((completion-ignore-case t)
          (user-list (or (and (listp users) users)
                        (tnt-completing-read-list
-                        "Users to invite: " (tnt-online-buddies-collection)))))
+                        "Users to invite: "
+                        (tnt-online-buddies-and-groups-collection)))))
     (if user-list
-        (let ((msg (tnt-get-input-message)))
+
+        ;; replace (buddy-list) groups in the user-list with the
+        ;; members of those groups who are online, and not already in
+        ;; the chat
+        (let* ((user-list
+                (tnt-expand-groups-for-chat-invitation user-list
+                                                       tnt-chat-participants))
+               (msg (tnt-get-input-message)))
           (if (= (length msg) 0)
               (setq msg (read-from-minibuffer "Message: "
                                               "Join me in this Buddy Chat.")))
@@ -666,7 +674,8 @@ Special commands:
                                       (mapconcat 'tnt-buddy-official-name
                                                  user-list ", ")))
           (if tnt-recenter-windows (recenter -1))
-          (toc-chat-invite tnt-chat-roomid msg user-list)))))
+          (toc-chat-invite tnt-chat-roomid msg user-list)
+          ))))
 
 
 (defun tnt-show-chat-participants ()
@@ -681,6 +690,23 @@ Special commands:
   ;; current buffer is the chat buffer.
   (if accept
       (toc-chat-accept tnt-chat-roomid)))
+
+(defun tnt-expand-groups-for-chat-invitation (user-list exclude-list)
+  (remove-duplicates 
+   (append
+    (mapcar (lambda (name)
+              (let ((group (assoc name tnt-buddy-blist)))
+                (if (null group) (list name)
+                  (intersection (mapcar 'car tnt-buddy-alist)
+                                (set-difference (cdr group)
+                                                exclude-list
+                                                ':test 'string=)
+                                ':test 'string=)
+                  )))
+            user-list)
+    )
+   ':test 'string=)
+  )
 
 
 
@@ -961,6 +987,10 @@ Special commands:
   ;; (Remove all nil entries -- these turn up when a buddy logs off).
   (delete '(nil) (mapcar '(lambda(x) (list (cdr x))) tnt-buddy-alist)))
 
+(defun tnt-online-buddies-and-groups-collection ()
+  (append (mapcar (lambda(x) (list (car x))) tnt-buddy-blist)
+          (tnt-online-buddies-collection)))
+
 
 
 ;;;----------------------------------------------------------------------------
@@ -990,7 +1020,7 @@ Special commands:
 
 
 (defun tnt-edit-buddies ()
-  "Shows the buddy-list editor editor in the selected window."
+  "Shows the buddy-list editor in the selected window."
   (interactive)
   (switch-to-buffer (tnt-buddy-edit-buffer)))
 

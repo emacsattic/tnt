@@ -1,5 +1,17 @@
 2000-04-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-send-text-as-chat-invitation): you can now give the
+	name of one of your buddy groups in the list of people to invite.
+	(tnt-expand-groups-for-chat-invitation): given the user-list,
+	replaces any groups with all the members of that group who are
+	currently online and are not already in this chat.
+	(tnt-online-buddies-and-groups-collection): added.  for
+	tab-completion of the invite list.  basically appends the list of
+	all online buddies with the list of all groups (whether or not
+	anyone in that group is currently online).
+
+2000-04-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-completing-read-list): removed extraneous (let
 	((collection collection)) ...)
 
