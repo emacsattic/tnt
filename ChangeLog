@@ -7,6 +7,8 @@
 	properties inserted by filter are copied.
 	(tnt-build-buddy-buffer): Make buddies mouse highlighted to
 	reflect the fact that they are clickable.
+	(tnt-buddy-list-mode-map): Make it so that mouse-2 doesn't also
+	try to yank when in buddy-list-mode.
 
 2000-04-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
