@@ -1,3 +1,26 @@
+2001-04-09  James A  <james@ja.ath.cx>
+
+	* tnt.el (tnt-append-message): changed the end to cause additions
+	to buffers to be read-only but still leave the input section of
+	the buffer writable.
+	(tnt-timestamp-format): added
+	(tnt-default-chatroom): added
+	(tnt-persistent-timeout): added
+	(custom): added support for custom to change faces
+	(tnt-append-message): added support for tnt-timestamp-format
+	(tnt-persistent-message-disable-id): added
+	(tnt-persistent-message-persist): added
+	(tnt-persistent-message): removed other version and replaced with
+	this one which will redisplay the persistent message in a
+	non-destructive way every tnt-persistent-timeout seconds.
+	(tnt-read-string-with-default): added
+	(tnt-join-chat): changed to use tnt-read-sting-with-default so
+	that you simply press enter to use the default chatroom name or
+	type in a new name much like you would do with a buffer kill or
+	switch.  The reason is that with a random name, it's unlikely
+	that the user will want to change it without completely removing
+	it.
+
 2001-03-09  NeilFred Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-html-tags-to-strip): added.

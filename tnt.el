@@ -229,30 +229,14 @@ Note that you only need to set this if you're using the pipe-to-email
 feature.  defaults to /bin/mail
 ")
 
-(setq tnt-using-xemacs (string= (substring (emacs-version) 0 6) "XEmacs"))
-;; This is necessary to be able to distinguish between XEmacs and GNU Emacs
-;; to know whether to use extents to make parts read only or not.  Extents
-;; do not appear to be in GNU Emacs at all but I would imagine that there
-;; is something similar so this will be a very useful variable to make the
-;; functionality exactly the same but have it work in both GNU and XEmacs!
-
-;; Faces for color highlighting of screen names.
-;; if they already exist, we don't want to change the colors.
-;(if (not (member 'tnt-other-name-face (face-list)))
-;    (progn
-;      (make-face 'tnt-other-name-face)
-;      (set-face-foreground 'tnt-other-name-face "blue")))
-;(if (not (member 'tnt-my-name-face (face-list)))
-;    (progn
-;      (make-face 'tnt-my-name-face)
-;      (set-face-foreground 'tnt-my-name-face "red")))
-
 (require 'custom)
 (defgroup tnt nil "The TNT AIM Client" :group 'comm)
-(defface tnt-my-name-face '((((class color)) (:foreground "red")) (t (:bold t)))
+(defface tnt-my-name-face '((((class color)) (:foreground "red")) 
+                            (t (:bold t)))
   "The face used for my name on messages sent by this user"
   :group 'tnt)
-(defface tnt-other-name-face '((((class color)) (:foreground "blue")) (t (:bold t)))
+(defface tnt-other-name-face '((((class color)) (:foreground "blue"))
+                               (t (:bold t)))
   "The face used for my name on messages sent by another user"
   :group 'tnt)
 
@@ -293,9 +277,6 @@ feature.  defaults to /bin/mail
 (defvar tnt-permit-mode 1)
 (defvar tnt-permit-list nil)
 (defvar tnt-deny-list nil)
-
-(setq tnt-extent-read-only nil) ;;This will always be nil if we're not in XEmacs
-(make-variable-buffer-local 'tnt-extent-read-only)
 
 ;;;---------------------------------------------------------------------------
 ;;;  Sound Package - jnwhiteh@syr.edu
@@ -560,8 +541,7 @@ feature.  defaults to /bin/mail
 (if tnt-im-mode-map
     ()
   (setq tnt-im-mode-map (make-sparse-keymap))
-  (define-key tnt-im-mode-map "\r" 'tnt-send-text-as-instant-message)
-  (define-key tnt-im-mode-map "\b" 'tnt-limit-backspace-to-marker))
+  (define-key tnt-im-mode-map "\r" 'tnt-send-text-as-instant-message))
 
 
 (defun tnt-im-mode ()
@@ -609,12 +589,13 @@ Special commands:
                             (current-time-string)
                             tnt-separator))
             (set-marker tnt-message-marker (point))
-            (if (functionp 'make-extent)
-                (set-extent-property
-                 (setq tnt-extent-read-only (make-extent 1 (point)))
-                 'read-only t)
-              (setq tnt-extent-read-only nil)))
-          buffer))))
+            ;(add-text-properties 1 (point) '(read-only t)))
+            ;(if (functionp 'make-extent)
+            ;    (set-extent-property
+            ;     (setq tnt-extent-read-only (make-extent 1 (point)))
+            ;     'read-only t)
+            ;  (setq tnt-extent-read-only nil)))
+          buffer)))))
 
 (defun tnt-send-text-as-instant-message ()
   "Sends text at end of buffer as an IM."
@@ -687,7 +668,6 @@ Special commands:
     ()
   (setq tnt-chat-mode-map (make-sparse-keymap))
   (define-key tnt-chat-mode-map "\r"   'tnt-send-text-as-chat-message)
-  (define-key tnt-chat-mode-map "\b"   'tnt-limit-backspace-to-marker)
   (define-key tnt-chat-mode-map "\n"   'tnt-send-text-as-chat-whisper)
   (define-key tnt-chat-mode-map "\t"   'tnt-send-text-as-chat-invitation)
   (define-key tnt-chat-mode-map "\M-p" 'tnt-show-chat-participants))
@@ -768,14 +748,6 @@ Special commands:
 (defun tnt-chat-buffer-killed ()
   (if tnt-current-user
       (tnt-leave-chat tnt-chat-room)))
-
-(defun tnt-limit-backspace-to-marker () (interactive)
-  (let ((mpos (marker-position tnt-message-marker)))
-    (if mpos
-        (if (>= mpos (point))
-            (message "Beginning of IM.")
-          (delete-backward-char 1))
-      (delete-backward-char 1))))
 
 (defun tnt-send-text-as-chat-message ()
   (interactive)
@@ -925,9 +897,11 @@ Special commands:
       
       (insert-before-markers tnt-separator)
       (fill-region old-point (point))
-      (when tnt-extent-read-only
-        (set-extent-endpoints tnt-extent-read-only 
-                              (extent-start-position tnt-extent-read-only) (point))))))
+      (let ((old-inhibit inhibit-read-only))
+        (setq inhibit-read-only t)
+        (add-text-properties 1 (point) '(read-only t front-sticky t rear-sticky t))
+        (add-text-properties (- (point) 1) (point) '(rear-nonsticky t))
+        (setq inhibit-read-only old-inhibit)))))
 
 (defun tnt-replace-me-statement (message)
   (if (and (>= (length message) 4) (string= (substring message 0 4) "/me "))
@@ -1881,14 +1855,6 @@ of the list, delimited by commas."
          (str (completing-read prompt 'tnt-completion-func
                                nil nil initial-input-str)))
     (split-string str ",")))
-
-;;(defun tnt-persistent-message (&optional fmt &rest args)
-;;  ;; Displays a persistent message in the echo area.
-;;  (with-current-buffer (get-buffer " *Minibuf-0*")
-;;    (erase-buffer)
-;;    (if fmt (insert (apply 'format fmt args)))
-;;    (message nil)))
-;; You can't just kill someone's minibuffer!  whatup!?
 
 (defvar tnt-persistent-message-disable-id nil)
 
