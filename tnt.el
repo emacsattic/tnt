@@ -1963,6 +1963,7 @@ Special commands:
   (interactive)
   (tnt-switch-to-buffer (tnt-buddy-buffer))
   (tnt-build-buddy-buffer)
+  (font-lock-mode 1)
   (tnt-show-top-event)
   )
 
@@ -3698,19 +3699,20 @@ of the list, delimited by commas."
 ;;; ***************************************************************************
 (defvar tnt-html-tags-to-strip
   ;; could be defcustom??
-  (concat "<HTML>\\|</HTML>\\|"
+  (concat "</?HTML>\\|"
           "<BODY[^>]*>\\|</BODY>\\|"
           "<FONT[^>]*>\\|</FONT>\\|"
           "<PRE>\\|</PRE>\\|"
+          "</?[Uu]>\\|"
           "</A>"))
 
 ;;; ***************************************************************************
 (defvar tnt-html-regexps-to-replace
   ;; could be defcustom??
-  tnt-html-regexps-to-replace
   (list
-   '("<BR>"      "\n")
-   '("</?[bui]>" "")
+   '("<BR>\\|<br>" "\n")
+   '("</?[Ii]>"    "_")
+   '("</?[Bb]>"    "*")
    ;; these must be after any html tags (which have "<" and ">"):
    '("&lt;"      "<")
    '("&gt;"      ">")
@@ -3728,7 +3730,7 @@ of the list, delimited by commas."
 
 ;;; ***************************************************************************
 ;; for example, you might put in your .emacs (or wherever):
-;;    (tnt-add-html-regexp-to-replace "<I>\\|</I>" "_")
+;;    (tnt-add-html-regexp-to-replace "<U>\\|</U>" "_")
 (defun tnt-add-html-regexp-to-replace (replace-regexp replace-with)
   (setq tnt-html-regexps-to-replace
         (cons (list replace-regexp replace-with)

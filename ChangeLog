@@ -1,3 +1,12 @@
+2003-10-29  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
+	* tnt.el (tnt-show-buddies): call (font-lock-mode 1).  not sure if
+	this is the right place for this.
+	(tnt-html-regexps-to-replace): removed scott's added "</?[bui]>"
+	regexp; removed his spurious "tnt-html-regexps-to-replace" line;
+	added replacements for I and B tags to _ and *, respectively.
+	(tnt-html-tags-to-strip): added "</?[Uu]>".
+
 2003-10-28  Scott Evans  <scott@templarcorp.com>
 
 	* tnt.el (tnt-buddy-list-message-waiting-face): Add.
