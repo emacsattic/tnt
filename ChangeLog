@@ -1,3 +1,7 @@
+2003-12-30  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
+	* tnt.el (tnt-strip-offline-nicks): also don't strip if "just-onoff".
+
 2003-11-11  Scott Evans  <scott@templarcorp.com>
 
 	* tnt.el (tnt-nick-less-than): Make buddylist grouping case-insensitive.

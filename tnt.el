@@ -2528,7 +2528,8 @@ messages or pounces."
         (when (or
                (plist-get nick-props 'online)
                (plist-get nick-props 'event)
-               (plist-get nick-props 'pounced))
+               (plist-get nick-props 'pounced)
+               (plist-get nick-props 'just-onoff))
           (setq result (append result (list nick)))))
       (setq nick-list (cdr nick-list)))
     result))
