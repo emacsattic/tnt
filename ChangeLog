@@ -1,3 +1,12 @@
+2002-09-02  Joe Casadonte  <jcasadonte@northbound-train.com>
+
+	* tnt.el (tnt-buffer-to-blist): fixed bug by always adding extra
+          newline at end of buffer (would prevent the buffer from being
+          saved if the newline was not present)
+
+        * tnt.el (tnt-persistent-message-persist): fixed bug (comparison
+          was switched)
+
 2002-07-01  NeilFred Picciotto  <fred@guido.halflab.com>
 
 	* tnt.el (tnt-send-pounce): clearly we should beep when we pounce.
@@ -68,7 +77,7 @@
 	than the incorrect call to tnt-remove-im-event.  also correctly
 	calling tnt-push-event.  and finally, also using the new
 	tnt-beep-on-chat-message variables.
-	(tnt-handle-chat-invite): now correctly calling tnt-push-event.  
+	(tnt-handle-chat-invite): now correctly calling tnt-push-event.
 
 2001-06-25  NeilFred Picciotto  <fred@guido.derf.net>
 
@@ -91,9 +100,9 @@
 2001-06-22  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el misc changes:
-	(tnt-auto-reconnect): Added user-configurable variable.	
-	(tnt-running-xemacs): Added variable.	
-	
+	(tnt-auto-reconnect): Added user-configurable variable.
+	(tnt-running-xemacs): Added variable.
+
 	* tnt.el read-only bugfix:
 	(tnt-append-message): Use put-nonduplicable-text-property
 	to add read-only property on XEmacs.  This fixes a bug: previously
@@ -126,7 +135,7 @@
 	that run-at-time doesn't work on XEmacs and the function executes
 	immediately.  So this will remain broken on XEmacs but I left in
 	the timer variable anyway 'cause it's a good idea.
-	
+
 2001-06-20  NeilFred Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-reconnecting-idle-time): added.  allows
@@ -200,7 +209,7 @@
 	* tnt.el (tnt-handle-chat-in): Updated to be more like
 	tnt-handle-im-in, as far beeping and modeline messages.
 	tnt-message-on-chatroom-message: added
-	
+
 
 2001-04-09  James A  <james@ja.ath.cx>
 
@@ -252,19 +261,19 @@
 	(tnt-add-html-regexp-to-replace): added.
 	(tnt-reformat-text): calling strip-some-html once for the
 	tags-to-strip, and then doing the old call to reduce for
-	regexps-to-replace.  
+	regexps-to-replace.
 
 2001-02-19   <jdaniel@mit.edu>
 
-	* tnt.el (tnt-send-idle): Added a call to 
-	(add-hook 'pre-command-hook 'tnt-send-unidle).  pre-command-hook is 
+	* tnt.el (tnt-send-idle): Added a call to
+	(add-hook 'pre-command-hook 'tnt-send-unidle).  pre-command-hook is
 	called before every user-command which makes the unidle-timer
-	unnecessary.  I think buggy emacs versions still keep tnt-send-idle 
-	from being called when it should, but no longer cause spurious calls 
+	unnecessary.  I think buggy emacs versions still keep tnt-send-idle
+	from being called when it should, but no longer cause spurious calls
 	to tnt-send-unidle.
-	(tnt-send-unidle): Added call to remove-hook the hook added by 
+	(tnt-send-unidle): Added call to remove-hook the hook added by
 	tnt-send-idle
-	(tnt-use-idle-timer): Removed check for tnt-buggy-idle and the note 
+	(tnt-use-idle-timer): Removed check for tnt-buggy-idle and the note
 	about buggy emacs versions
 	(tnt-buggy-idle): Removed
 	(tnt-unidle-timer): Removed
@@ -275,21 +284,21 @@
 
 2001-02-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
-	* tnt.el (tnt-html-regexps): now stripping out <PRE> tags 
+	* tnt.el (tnt-html-regexps): now stripping out <PRE> tags
 
 2001-01-28    <tntdevel@brokendreams.net>
 
-	* tnt.el (tnt-pounce-delete): Added a message when deleting an 
+	* tnt.el (tnt-pounce-delete): Added a message when deleting an
 	existing pounce message.
 
 2001-01-16    <tntdevel@brokendreams.net>
 
 	* tnt.el (tnt-set-buddy-status): Added messages when a user sets
-	themselves as away, and returns (for convenience).  
+	themselves as away, and returns (for convenience).
 
 2001-01-10    <tntdevel@brokendreams.net>
 
-	* tnt.el (tnt-shutdown): Removed clearing of pounce msgs.. They should 
+	* tnt.el (tnt-shutdown): Removed clearing of pounce msgs.. They should
 	stick around.
 
 2001-01-07    <tntdevel@brokendreams.net>
@@ -301,7 +310,7 @@
 	(tnt-play-sound): Added fucntionality for playing sounds corresponding
 	to incoming IM's, outgoing IM's, and first receipt of IM's.
 	(tnt-handle-im-in): Added a call to (tnt-play-sound 'incoming)
-	(tnt-send-text-as-instant-message): Added a call to 
+	(tnt-send-text-as-instant-message): Added a call to
 	(tnt-play-sound 'outgoing).  I've restricted this to here because it
 	makes away messages silent as they should be.
 	(tnt-handle-im-in): Added a call to (tnt-play-sound 'first) if a buffer
@@ -311,7 +320,7 @@
 
 	* tnt.el (tnt-set-buddy-status): Added a call to tnt-send-pounce to
 	fix up the pounce code.
-	(tnt-pounce-add): Added a call to toc-normalize when reading in from 
+	(tnt-pounce-add): Added a call to toc-normalize when reading in from
 	the minibuffer.
 
 2001-01-02  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
@@ -329,12 +338,12 @@
 
 2000-12-01    <tntdevel@brokendreams.net>
 
-	* tocstr.el (tnt-timers-available): Changed the calls of 
-	string-as-unibyte to an if statement checking whether or not 
+	* tocstr.el (tnt-timers-available): Changed the calls of
+	string-as-unibyte to an if statement checking whether or not
 	the function is bound.
 	(tnt-string-as-unibyte-available): Added.
 	(tnt-timers-available): Moved things around, now tocstr looks for
-	tnt-string-as-unibyte-available before defining.. shoudl solve 
+	tnt-string-as-unibyte-available before defining.. shoudl solve
 	our problems)
 
 2000-14-07    <tntdevel@brokendreams.net>
@@ -343,13 +352,13 @@
 
 2000-11-07    <tntdevel@brokendreams.net>
 
-	* tocstr.el (tnt-timers-available): Changed occurances of 
+	* tocstr.el (tnt-timers-available): Changed occurances of
 	string-make-unibyte to string-as-unibyte.  This should solve
 	the compat problems.
 
 2000-11-06    <tntdevel@brokendreams.net>
 
-	* tocstr.el: (tocstr-init-receiver): the logic here was reversed and 
+	* tocstr.el: (tocstr-init-receiver): the logic here was reversed and
 	has been fixed to reflect the proper logic.  This should compile
 	now.
 
@@ -357,7 +366,7 @@
 
 	* tocstr.el (tocstr-filet): changed the definitions to reflect
 	the proper them-else
-	
+
 2000-11-06  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-buddy-list-point): added.
@@ -375,7 +384,7 @@
 
 	* tnt.el (tnt-just-reconnected): added.
 	(tnt-just-reconnected-unset-after): added.
-	(tnt-unset-just-reconnected): added.  
+	(tnt-unset-just-reconnected): added.
 	(tnt-handle-closed): now only reconnects if we didn't just
 	reconnect once.
 	(tnt-handle-nick): sets the just-reconnected flag, and starts a
@@ -489,10 +498,10 @@
 	* tnt.el (tnt-im): Added a call to tnt-remove-im-event to clear
 	any pending im's from that user from the event-ring.  Makes things
 	a little cleaner
-	
+
 2000-06-08  Jim Whitehead  <jnwhiteh@mailbox.syr.edu>
 
-	* tocstr.el: Integrated the patch into tocstr.el.  Used the 
+	* tocstr.el: Integrated the patch into tocstr.el.  Used the
 	tnt-timers-available functionality to save compatability.  The
 	"enhancements" will be available in all versions of emacs containing
 	the run-at-time procedure.
@@ -533,7 +542,7 @@
 2000-05-26  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-message-on-buddy-signonoff): changed name from
-	"show-buddy-signonoff", to be consistent with "beep-on-..." vars. 
+	"show-buddy-signonoff", to be consistent with "beep-on-..." vars.
 	(tnt-set-buddy-status): changed name of var
 
 2000-05-26  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
@@ -586,7 +595,7 @@
 	(tnt-just-signedonoff-delay): added.
 	(tnt-build-buddy-buffer): replaced big quoted lambda with quoted
 	function tnt-buddy-list-filter.
-	(tnt-buddy-list-filter): added.  
+	(tnt-buddy-list-filter): added.
 	(tnt-buddy-list-filter): now displays just-onoff, indicating
 	whether a buddy just signed on or off.  this also means that a
 	buddy can be displayed even if they're not online, which didn't
@@ -668,7 +677,7 @@
 
 	* tnt.el: fixed bug introduced on 2000-04-21.  was checking
 	(member 'tnt-other-name-face (face-list)), should be checking
-	(not (member ...)).  
+	(not (member ...)).
 
 2000-04-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
@@ -684,7 +693,7 @@
 2000-04-21  John Jannotti  <jj@lcs.mit.edu>
 
 	* tnt.el: Use a slightly silly way to check if a face is already
-	defined.  Emacs uses internal-find-face, XEmacs uses find-face, so 
+	defined.  Emacs uses internal-find-face, XEmacs uses find-face, so
 	we just call member on (face-list) which both support.
 
 2000-04-18  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
@@ -728,7 +737,7 @@
 	(tnt-handle-config): Set up permit/deny correctly
 	(tnt-config-to-blist): Also parse permit/deny stuff
 	(tnt-blist-to-config): Also spit out permit deny stuff
-	(tnt-blist-to-config): Simplified, probably sped up by getting rid 
+	(tnt-blist-to-config): Simplified, probably sped up by getting rid
 	of whiles and using built in mapconcats
 
 	* toc.el (toc-permit-only): Added
@@ -797,7 +806,7 @@
 
 2000-04-12  John Jannotti  <jj@lcs.mit.edu>
 
-	* tnt.el: use with-current-buffer instead of a save-excursion plus 
+	* tnt.el: use with-current-buffer instead of a save-excursion plus
 	a set-buffer when possible.
 	(tnt-set-buddy-status): if a buddy goes online/offline and you
 	already have an im-buffer for that buddy, note it in the buffer.
@@ -825,7 +834,7 @@
 	Emacs doesn't have mapc.
 
 	* tnt.el (tnt-shutdown): Changed name from tnt-buddy-shutdown as
-	it has become a catchall for all shutdown realted stuff.  tnt-kill 
+	it has become a catchall for all shutdown realted stuff.  tnt-kill
 	and tnt-handle-close had some duplicated code that I put here
 	because, inevitably, someone would put some shutdown stuff in one
 	but not the other.
@@ -894,7 +903,7 @@
 2000-04-07  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-buddy-idle): now returning a string of the form
-	"1h12m" or "34m".  
+	"1h12m" or "34m".
 	(tnt-build-buddy-buffer): since idle is now a string, we can't
 	compare it to 0, but if it's not nil, it should always be a string
 	to display.  also, changed a complicated nesting of ifs into an
@@ -914,7 +923,7 @@
 
 2000-04-06  John Jannotti  <jj@lcs.mit.edu>
 
-	* toc.el (toc-handle-receive): Fix some indentation.  Sorry I'm so 
+	* toc.el (toc-handle-receive): Fix some indentation.  Sorry I'm so
 	anal.
 	(toc-normalize): Try, try again.  Rewrote much more simply, maybe
 	faster.  This time it definitely works in both Emacs and XEmacs.
@@ -968,7 +977,7 @@
 	be left out, not sent as nil.  More significantly, a new optional
 	argument MODIFIED is used for the various parenthetical comments
 	made about some messages, such as Auto-response, whispers,
-	invites, etc.  This is so that the coloring mechanism gets to look 
+	invites, etc.  This is so that the coloring mechanism gets to look
 	at the unadorned username.  Now when I whisper to someone in a
 	chat room it will still be printed in my color.
 
@@ -988,9 +997,9 @@
  	'eviled' up to tnt-debug which logs the message in a buffer called
  	"*tnt-debug*".  For release they should be hooked up to some
  	ignore function (unless we actually use them)  Also moved the
-	clauses that decipher the type of messages so that they are in the 
+	clauses that decipher the type of messages so that they are in the
 	same order as the messages are described in PROTOCOL.
-	
+
 
 2000-04-05 John Jannotti <jj@lcs.mit.edu>
 
@@ -1031,7 +1040,7 @@
 
 	* tnt.el: tnt-show-timestamps has been renamed to
  	tnt-use-timestamps to go with our naming conventions
-	
+
 	* tnt.el (tnt-handle-closed): added a mail-pipe in to notify you
  	that your connection has been closed (by the server, or by remote
  	signon).
