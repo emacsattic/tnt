@@ -2126,6 +2126,7 @@ Special commands:
   (setq major-mode 'tnt-buddy-list-mode)
   (set-syntax-table text-mode-syntax-table)
   (set (make-local-variable 'font-lock-defaults) '(tnt-buddy-list-font-lock-keywords t))
+  (setq tnt-archive-filename nil)
   (run-hooks 'tnt-buddy-list-mode-hook))
 
 ;;; ***************************************************************************
