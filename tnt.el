@@ -1503,7 +1503,7 @@ unless PREFIX arg is given."
 (make-variable-buffer-local 'tnt-last-datestamp)
 
 (unless tnt-im-mode-map
-  (setq tnt-im-mode-map (make-sparse-keymap))
+  (setq tnt-im-mode-map (make-sparse-keymap "tnt-im-mode-map"))
   (define-key tnt-im-mode-map "\r" 'tnt-send-text-as-instant-message)
   (define-key tnt-im-mode-map "\C-\r" 'tnt-send-text-as-instant-message-no-format)
   (define-key tnt-im-mode-map (read-kbd-macro "M-RET") (function (lambda () "" (interactive) (insert "
@@ -1645,7 +1645,7 @@ Special commands:
 (make-variable-buffer-local 'tnt-chat-participants)
 
 (unless tnt-chat-mode-map
-  (setq tnt-chat-mode-map (make-sparse-keymap))
+  (setq tnt-chat-mode-map (make-sparse-keymap "tnt-chat-mode-map"))
   (define-key tnt-chat-mode-map "\r"   'tnt-send-text-as-chat-message)
   (define-key tnt-chat-mode-map "\n"   'tnt-send-text-as-chat-whisper)
   (define-key tnt-chat-mode-map "\t"   'tnt-send-text-as-chat-invitation)
@@ -2135,7 +2135,7 @@ Special commands:
 (defvar tnt-current-menu 0)
 
 (unless tnt-buddy-list-mode-map
-  (setq tnt-buddy-list-mode-map (make-sparse-keymap))
+  (setq tnt-buddy-list-mode-map (make-sparse-keymap "tnt-buddy-list-mode-map"))
   (define-key tnt-buddy-list-mode-map "?"    'tnt-show-help)
   (define-key tnt-buddy-list-mode-map "a"    'tnt-accept)
   (define-key tnt-buddy-list-mode-map "A"    'tnt-toggle-away)
@@ -3053,7 +3053,7 @@ No sort -> Buddy name -> Fullname"
 (defvar tnt-buddy-edit-mode-map nil)
 
 (unless tnt-buddy-edit-mode-map
-  (setq tnt-buddy-edit-mode-map (make-sparse-keymap))
+  (setq tnt-buddy-edit-mode-map (make-sparse-keymap "tnt-buddy-edit-mode-map"))
   (define-key tnt-buddy-edit-mode-map "\C-x\C-s" 'tnt-save-buddy-list)
   (define-key tnt-buddy-edit-mode-map "\C-c\C-c"
     (function (lambda () "" (interactive) (tnt-save-buddy-list t))))

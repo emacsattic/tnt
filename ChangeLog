@@ -1,3 +1,10 @@
+2004-09-10  NeilFred Picciotto  <fred@full.halflab.com>
+
+	* tnt.el (tnt-im-mode-map): include a name for make-sparse-keymap
+	(tnt-chat-mode-map): include a name for make-sparse-keymap
+	(tnt-buddy-list-mode-map): include a name for make-sparse-keymap
+	(tnt-buddy-edit-mode-map): include a name for make-sparse-keymap
+
 2004-08-12  NeilFred Picciotto  <fred@full.halflab.com>
 
 	* tnt.el (tnt-im-mode-map): for some reason,
