@@ -112,7 +112,7 @@ properties to add to the result.
 (defun tnt-customize ()
   "Customization of the group 'tnt'."
   (interactive)
-  (customize-group "tnt"))
+  (customize-group 'tnt))
 
 ;; ---------------------------------------------------------------------------
 ;; ----- basic, essential configuration
@@ -308,7 +308,7 @@ Buddies
            (string :tag "Full Name")))
   :group 'tnt)
 
-
+;; ---------------------------------------------------------------------------
 (defcustom tnt-sort-buddies-by nil
   "If non-nil, sort buddy list.  Possible values are
 'fullname and 'buddyname."
@@ -318,18 +318,21 @@ Buddies
           (const :tag "Fullname"   fullname))
   :group 'tnt)
 
+;; ---------------------------------------------------------------------------
 (defcustom tnt-group-away-buddies nil
   "Non-nil means \"away\" buddies are grouped together
 at the end of the buddy list."
   :type 'boolean
   :group 'tnt)
 
+;; ---------------------------------------------------------------------------
 (defcustom tnt-group-idle-buddies nil
   "Non-nil means \"idle\" buddies are grouped together
 at the end of the buddy list."
   :type 'boolean
   :group 'tnt)
 
+;; ---------------------------------------------------------------------------
 (defcustom tnt-group-offline-buddies nil
   "Non-nil means offline buddies are grouped together
 at the end of the buddy list.  This setting is really
@@ -337,15 +340,15 @@ only relevant if tnt-show-inactive-buddies is set."
   :type 'boolean
   :group 'tnt)
 
-(defcustom tnt-very-idle-minimum nil
+;; ---------------------------------------------------------------------------
+(defcustom tnt-very-idle-minimum 0
   "Minimum idle time, in seconds, after which a buddy will
 be marked \"very idle\".  Very idle buddies are grouped with
 away buddies if tnt-group-away-buddies is set.
 
-If nil, nobody will go \"very idle\"."
+If 0, nobody will go \"very idle\"."
   :type 'integer
   :group 'tnt)
-
 
 ;; ---------------------------------------------------------------------------
 ;; ----- IM/Chat formatting
@@ -511,6 +514,71 @@ have been sent, you can't change them."
 (defcustom tnt-supress-pounce-when-away nil
   "If non-nil, don't pounce if you're away."
   :type 'boolean
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-archive-conversations nil
+  "If non-nil, tnt will archive all conversations.
+
+Defaults to nil.  See `tnt-archive-directory-hierarchy' to
+determine how the archives are organized."
+  :type 'boolean
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-archive-directory-hierarchy 'monthly
+  "Determines the file organization of the archived conversations.
+
+All archives will be kept under the `tnt-directory' (which see).  From
+there, further organization is possible:
+
+Daily - <TNT-DIR>/<year>/<month>/<day>/xxx
+Monthly - <TNT-DIR>/<year>/<month>/xxx
+Yearly - <TNT-DIR>/<year>/xxx
+Single File - <TNT-DIR>/xxx
+
+where 'xxx' is the actual name of the archive file (one per user).
+
+Defaults to Monthly."
+  :type '(choice
+		  (const :tag "Daily" daily)
+		  (const :tag "Monthly" monthly)
+		  (const :tag "Yearly" yearly)
+          (const :tag "Single file" nil))
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-archive-max-single-file-size 0
+  "The maximum file size (in bytes) of archive file.
+
+Only applies when `tnt-archive-directory-hierarchy' is set to \"Single
+file\".  A value of 0 means that there is no maximum and the file will
+grow indefinitely"
+  :type 'integer
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-im-mode-hook nil
+  "Hook run when TNT IM mode is invoked."
+  :type 'hook
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-chat-mode-hook nil
+  "Hook run when TNT Chat mode is invoked."
+  :type 'hook
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-buddy-list-mode-hook nil
+  "Hook run when TNT Buddy List mode is invoked."
+  :type 'hook
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-buddy-edit-mode-hook nil
+  "Hook run when TNT Buddy Edit mode is invoked."
+  :type 'hook
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
@@ -976,7 +1044,6 @@ Settings:
   "Face name to use for Buddies with pending pounce messages.")
 
 ;; ---------------------------------------------------------------------------
-
 (defvar tnt-buddy-list-message-waiting-face  'tnt-buddy-list-message-waiting-face
   "Face name to use for Buddies with pending pounce messages.")
 
@@ -992,8 +1059,8 @@ Settings:
       (list
        '("^\\(.*(MESSAGE WAITING.+\\)$"   1 tnt-buddy-list-message-waiting-face)
        '("^\\(.*(pounce.+\\)$"   1 tnt-buddy-list-pounce-face)
-       '("^\\(.*(idle .+\\)$"    1 tnt-buddy-list-idle-face)
-       '("^\\(.*(v idle .+\\)$"  1 tnt-buddy-list-away-face)
+       '("^\\(.*(idle .+\\)$"   1 tnt-buddy-list-idle-face)
+       '("^\\(.*(v idle .+\\)$" 1 tnt-buddy-list-away-face)
        '("^\\(.*(away.+\\)$"     1 tnt-buddy-list-away-face)
        '("^\\(.*(offline.+\\)$"  1 tnt-buddy-list-inactive-face)
        '("^\\(\\S-+.+\\)$"       1 tnt-buddy-list-group-face)
@@ -1013,25 +1080,6 @@ Settings:
 ;; ---------------------------------------------------------------------------
 (defvar tnt-use-idle-timer tnt-timers-available
   "If non-nil, tells TOC server when emacs has been idle for 10 minutes.")
-
-(defvar tnt-archive-conversations nil
-  "*If non-nil, tnt will archive all conversations.
-
-Defaults to nil.
-")
-
-(defvar tnt-archive-file-roll-over-frequency 'monthly
-  "*How often archive files should roll over.
-
-Available options are:
-
- 'daily    roll over each day
- 'monthly  roll over each month
- 'yearly   roll over each year
- nil       never roll over
-
-Defaults to 'monthly.
-")
 
 ;;; ***************************************************************************
 ;;; ***** keybindings
@@ -1057,10 +1105,11 @@ Defaults to 'monthly.
   (global-set-key "\C-xtq" 'tnt-kill)
   (global-set-key "\C-xtr" 'tnt-reject)
   (global-set-key "\C-xts" 'tnt-switch-user)
+  (global-set-key "\C-xtv" 'tnt-archive-view-current-archive)
   )
 
 ;;; ***************************************************************************
-;;; ***** Pounce Package - jnwhiteh@syr.edu
+;;; ***** Pounce Package
 ;;; ***************************************************************************
 (defvar tnt-pounce-alist nil)
 
@@ -1251,9 +1300,9 @@ unless PREFIX arg is given."
   )
 
 ;;; ***************************************************************************
-
 (defvar tnt-away-msg-history nil)
 
+;;; ---------------------------------------------------------------------------
 (defun tnt-get-away-msg (prefix)
   "Gets the away message.  If PREFIX is non-nil, prompt for message."
   (if (or prefix (not tnt-default-away-message))
@@ -1401,7 +1450,7 @@ unless PREFIX arg is given."
   (interactive)
 
   (let ((user tnt-current-user))
-    
+
     (toc-close)
     (tnt-shutdown)
 
@@ -1409,7 +1458,7 @@ unless PREFIX arg is given."
 
     (message "Signed off")
     (tnt-beep tnt-beep-on-signoff)
-    
+
     (when tnt-kill-window-on-shutdown
       (kill-buffer tnt-buddy-list-buffer-name))
     ))
@@ -1484,20 +1533,6 @@ Special commands:
   "Returns the archive file filename (not full path) for IMs with USER."
   (format "im-%s" (toc-normalize user)))
 
-
-;;; ***************************************************************************
-(defun tnt-archive-directory ()
-  "Returns the directory into which conversations should be archived."
-  (format "%s/%s%s" tnt-directory tnt-current-user
-          (format-time-string
-           (let ((freq tnt-archive-file-roll-over-frequency))
-             (cond ((eq freq 'daily) "/%Y/%m/%d")
-                   ((eq freq 'monthly) "/%Y/%m")
-                   ((eq freq 'yearly) "/%Y")
-                   ((null freq) "")
-                   (t ""))))))
-
-
 ;;; ***************************************************************************
 (defun tnt-im-buffer (user)
   "Returns the IM buffer for USER."
@@ -1506,12 +1541,12 @@ Special commands:
         (let ((buffer (get-buffer-create buffer-name)))
           (with-current-buffer buffer
             (tnt-im-mode)
+            (setq tnt-archive-filename (tnt-im-archive-filename user))
             (setq tnt-im-user user)
             (setq tnt-last-datestamp "")
-            (setq tnt-archive-filename (tnt-im-archive-filename user))
             (setq tnt-message-marker (make-marker))
             (insert (format "[Conversation with %s]%s"
-                            (tnt-buddy-official-name user)
+                            (tnt-get-fullname-and-nick (tnt-buddy-official-name user))
                             tnt-separator))
             (set-marker tnt-message-marker (point))
             buffer)))))
@@ -1654,7 +1689,6 @@ Special commands:
   "Returns the archive file filename (not full path) for ROOM."
   (format "chat-%s" (toc-normalize room)))
 
-
 ;;; ***************************************************************************
 (defun tnt-chat-buffer (room)
   "Returns the chat buffer for ROOM."
@@ -1663,12 +1697,12 @@ Special commands:
         (let ((buffer (get-buffer-create buffer-name)))
           (with-current-buffer buffer
             (tnt-chat-mode)
+            (setq tnt-archive-filename (tnt-chat-archive-filename room))
             (make-local-hook 'kill-buffer-hook)
             (add-hook 'kill-buffer-hook 'tnt-chat-buffer-killed nil t)
             (setq tnt-chat-room room)
             (setq tnt-chat-participants nil)
             (setq tnt-last-datestamp "")
-            (setq tnt-archive-filename (tnt-chat-archive-filename room))
             (setq tnt-message-marker (make-marker))
             (insert (format "[Chat room \"%s\"]%s" room tnt-separator))
             (set-marker tnt-message-marker (point))
@@ -1756,7 +1790,7 @@ Special commands:
 (defun tnt-show-chat-participants ()
   "Append a list of chat room participants to a chat buffer."
   (interactive)
-  (let ((string (mapconcat 'identity tnt-chat-participants ", ")))
+  (let ((string (mapconcat 'tnt-get-fullname-and-nick tnt-chat-participants ", ")))
     (tnt-append-message (format "Participants: %s" string))))
 
 ;;; ***************************************************************************
@@ -1804,6 +1838,18 @@ Special commands:
             (select-window old-window))))))
 
 ;;; ***************************************************************************
+(defun tnt-get-fullname-and-nick (nick)
+  ""
+  (tnt-get-fullname-or-nick nick t))
+
+;;; ---------------------------------------------------------------------------
+(defun tnt-get-fullname-or-nick (nick &optional append)
+  ""
+  (let* ((fullname (tnt-fullname-for-nick nick))
+         (rc (if fullname (if append (concat fullname " [" nick "]") fullname) nick)))
+    rc))
+
+;;; ***************************************************************************
 (defun tnt-append-message (message &optional user modified)
   "Prepends USER (MODIFIED) to MESSAGE and appends the result to the buffer."
   (save-excursion
@@ -1826,7 +1872,7 @@ Special commands:
           (insert-before-markers "[" (tnt-replace-me-statement message) "]")
 
         (let ((start (point)))
-          (insert-before-markers user)
+          (insert-before-markers (tnt-get-fullname-or-nick user))
           (if modified
               (insert-before-markers " (" modified ")"))
           (insert-before-markers ":")
@@ -1860,13 +1906,40 @@ Special commands:
             (setq inhibit-read-only old-inhibit)))
 
       ;; save to archive file
-      (let ((dir (tnt-archive-directory)))
-        (if (and dir tnt-archive-filename tnt-archive-conversations)
-            (progn
-              (make-directory dir t)
-              (append-to-file old-point (point)
-                              (format "%s/%s" dir tnt-archive-filename))
-              (message ""))))
+      (when tnt-archive-conversations
+        (let* ((dir (tnt-archive-directory))
+			   (full-path (format "%s/%s" dir tnt-archive-filename)))
+          (when (and dir tnt-archive-filename tnt-archive-conversations)
+            (make-directory dir t)
+            (append-to-file old-point (point) full-path)
+            (message "")
+
+            ;; see if we need to truncate the file
+            (when (and (not tnt-archive-directory-hierarchy)
+                       (> tnt-archive-max-single-file-size 0))
+              (save-excursion
+                ;; open archive file
+				(with-temp-buffer
+				  (insert-file-contents full-path t)
+
+				  ;; determine size
+				  (when (> (point-max) tnt-archive-max-single-file-size)
+					;; go to N bytes from end
+					(goto-char (- (point-max) tnt-archive-max-single-file-size))
+
+					;; goto beg of line
+					(backward-paragraph)
+;;					(beginning-of-line -1)
+
+					;; delete from there back
+					(delete-region (point-min) (point))
+
+					;; save
+					(save-buffer)
+					(message "")
+					)))
+			  ))))
+
       )))
 
 ;;; ***************************************************************************
@@ -1884,6 +1957,102 @@ Special commands:
     (if tnt-recenter-windows (recenter -1))
     (tnt-replace-me-statement
      (tnt-neliminate-newlines message))))
+
+;;; ***************************************************************************
+;;; Archive file functions
+;;; ***************************************************************************
+(defun tnt-archive-directory ()
+  "Returns the directory into which conversations should be archived."
+  (format "%s/%s%s" tnt-directory tnt-current-user
+          (format-time-string
+           (let ((freq tnt-archive-directory-hierarchy))
+             (cond ((eq freq 'daily) "/%Y/%m/%d")
+                   ((eq freq 'monthly) "/%Y/%m")
+                   ((eq freq 'yearly) "/%Y")
+                   ((null freq) "")
+                   (t ""))))))
+
+;;; ***************************************************************************
+(defun tnt-archive-view-current-archive ()
+  "Open the current archive (if any) in View mode.
+
+Must be in an IM/Chat buffer."
+  (interactive)
+
+  (unless (or (eq major-mode 'tnt-im-mode)
+              (eq major-mode 'tnt-chat-mode))
+    (error "Not a TNT IM/Chat buffer"))
+
+  (let* ((dir (tnt-archive-directory))
+		 (full-path (format "%s/%s" dir tnt-archive-filename)))
+	(when (and dir full-path)
+      (unless (file-exists-p full-path)
+        (error "No current archive file found"))
+	  (view-file-other-window full-path))))
+
+;;; ***************************************************************************
+(defun tnt-archive-view-buddy-archive ()
+  "Open the archive of the Buddy at point.
+
+Must be in Buddy List mode."
+  (interactive)
+  (unless (eq major-mode 'tnt-buddy-list-mode)
+    (error "Not in TNT Buddy List buffer"))
+
+  (let* ((buddy-at-point (tnt-get-buddy-at-point))
+         (type (car buddy-at-point))
+         (nick (cdr buddy-at-point)))
+	(tnt-archive-view-archive-file nick (string= type "chat"))))
+
+;;; ***************************************************************************
+(defun tnt-archive-view-archive-file (&optional user-or-room room)
+  "Open the archive file for USER-OR-ROOM.
+
+If ROOM is non-nil, assume it's a chat room.  If USER-OR-ROOM is nil,
+prompt for nickname."
+  (interactive "sNickname:")
+
+  (let* ((dir (tnt-archive-directory))
+		 (full-path (format "%s/%s" dir
+                            (or tnt-archive-filename
+                                (if room
+                                    (tnt-chat-archive-filename user-or-room)
+                                  (tnt-im-archive-filename user-or-room))))))
+	(when (and dir full-path)
+      (unless (file-exists-p full-path)
+        (error "No current archive file found"))
+	  (view-file-other-window full-path))))
+
+;;; ***************************************************************************
+(defun tnt-archive-delete-buddy-archive-file ()
+  ""
+  (interactive)
+  (unless (eq major-mode 'tnt-buddy-list-mode)
+    (error "Not in TNT Buddy List buffer"))
+
+  (let* ((buddy-at-point (tnt-get-buddy-at-point))
+         (type (car buddy-at-point))
+         (nick (cdr buddy-at-point))
+         (dir (tnt-archive-directory))
+		 (full-path (format "%s/%s" dir
+                            (if (string= type "chat")
+                                (tnt-chat-archive-filename nick)
+                              (tnt-im-archive-filename nick)))))
+    ;; file may not exist
+    (unless (file-exists-p full-path)
+      (error "No current archive file found"))
+
+    ;; confirm
+    (if (yes-or-no-p (concat "Delete archive file for '"
+                             (tnt-get-fullname-or-nick nick) "'? "))
+        (progn
+          (delete-file full-path)
+          (let ((buf (get-file-buffer full-path)))
+            (when (and buf
+                       (y-or-n-p "Kill buffer, too? "))
+               (save-excursion
+                 (kill-buffer buf)))))
+      (error "Action canceled by user"))))
 
 ;;; ***************************************************************************
 ;;; ***** Buddy list mode
@@ -1914,11 +2083,12 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "b"    'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "B"    'tnt-edit-buddies)
   (define-key tnt-buddy-list-mode-map "c"    'tnt-customize)
+  (define-key tnt-buddy-list-mode-map "d"    'tnt-archive-delete-buddy-archive-file)
   (define-key tnt-buddy-list-mode-map "f"    'tnt-set-info)
-  (define-key tnt-buddy-list-mode-map "i"    'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map "ga"   'tnt-toggle-group-away-buddies)
   (define-key tnt-buddy-list-mode-map "gi"   'tnt-toggle-group-idle-buddies)
   (define-key tnt-buddy-list-mode-map "go"   'tnt-toggle-group-offline-buddies)
+  (define-key tnt-buddy-list-mode-map "i"    'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map "I"    'tnt-fetch-info)
   (define-key tnt-buddy-list-mode-map "j"    'tnt-join-chat)
   (define-key tnt-buddy-list-mode-map "l"    'tnt-leave-chat)
@@ -1937,6 +2107,7 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "s"    'tnt-switch-user)
   (define-key tnt-buddy-list-mode-map "S"    'tnt-cycle-buddies-sort)
   (define-key tnt-buddy-list-mode-map "u"    'tnt-next-menu)
+  (define-key tnt-buddy-list-mode-map "v"    'tnt-archive-view-buddy-archive)
   (define-key tnt-buddy-list-mode-map " "    'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "\C-m" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse-down)
@@ -2075,7 +2246,7 @@ and tnt-group-*-buddies settings."
                         ((and away (not idle-desc))
                          (format " (away)"))
                         ((and (not away) idle-desc)
-                         (if (and tnt-very-idle-minimum
+                         (if (and (> tnt-very-idle-minimum 0)
                                   (> idle-secs tnt-very-idle-minimum))
                              (format " (v idle %s)" idle-desc)
                            (format " (idle %s)" idle-desc)))
@@ -2257,10 +2428,10 @@ Sorts/groups buddies according to tnt-sort-buddies, tnt-group-*-buddies."
             (< nick1-nickcount nick2-nickcount)))
 
     ;; Check for "very idle".
-    (setq nick1-vidle (and tnt-very-idle-minimum
+    (setq nick1-vidle (and (> tnt-very-idle-minimum 0)
                            nick1-idle-secs
                            (> nick1-idle-secs tnt-very-idle-minimum)))
-    (setq nick2-vidle (and tnt-very-idle-minimum
+    (setq nick2-vidle (and (> tnt-very-idle-minimum 0)
                            nick2-idle-secs
                            (> nick2-idle-secs tnt-very-idle-minimum)))
 
@@ -2406,8 +2577,8 @@ Sorts/groups buddies according to tnt-sort-buddies, tnt-group-*-buddies."
                          "turn on e[M]ail      ")
                        "next men[u]"
                        "\n"
-                       "                     "
-                       "                     "
+                       "[v]iew archive file  "
+                       "[d]el archive file   "
                        "                     "
                        "[?] help"
                        "\n"
@@ -2552,25 +2723,20 @@ No sort -> Buddy name -> Fullname"
   (save-excursion
     (save-match-data
       (beginning-of-line)
-      (if (or (null (re-search-forward "^ +\\([^[(\n]*\\)" nil t))
+      (if (or (null (or (re-search-forward "\\[\\([^]]+\\)\\]" (line-end-position) t)
+                        (re-search-forward "^ +\\([^(]+\\)" (line-end-position) t)))
               (> (match-beginning 1) (tnt-buddy-list-menu-line)))
           (error "Position cursor on a buddy name")
         (let* ((match-b (match-beginning 1))
                (match-e (match-end 1))
-               (nick-or-name (buffer-substring-no-properties match-b match-e))
-               (nick-or-name (substring nick-or-name 0
-                                        (or (string-match "\\s-+$"
-                                                          nick-or-name)
-                                            (length nick-or-name))))
-               (element (rassoc (list nick-or-name)
-                                tnt-buddy-fullname-alist)))
-          (when element
-            (setq nick-or-name (or (car-safe element) nick-or-name)))
-
+               (nick (buffer-substring-no-properties match-b match-e))
+               (nick (substring nick 0
+                                (or (string-match "\\s-+$" nick)
+                                    (length nick)))))
           (goto-char match-b)
           (if (re-search-backward "^chat rooms$" nil t)
-              (cons "chat" nick-or-name)
-            (cons "im" nick-or-name))))
+              (cons "chat" nick)
+            (cons "im" nick))))
       )))
 
 ;;; ***************************************************************************
@@ -3493,7 +3659,7 @@ nil otherwise."
 ;;; ***************************************************************************
 (defun tnt-handle-chat-update-buddy (roomid inside users)
   (with-current-buffer (tnt-chat-buffer (cdr (assoc roomid tnt-chat-alist)))
-    (let ((user-string (mapconcat 'identity users ", ")))
+    (let ((user-string (mapconcat 'tnt-get-fullname-and-nick users ", ")))
       (tnt-append-message (if tnt-chat-participants
                               (format "%s %s"
                                       user-string (if inside "joined" "left"))
@@ -3713,13 +3879,13 @@ of the list, delimited by commas."
    '("<BR>\\|<br>" "\n")
    '("</?[Ii]>"    "_")
    '("</?[Bb]>"    "*")
-   ;; these must be after any html tags (which have "<" and ">"):
-   '("&lt;"      "<")
-   '("&gt;"      ">")
-   '("&quot;"    "\"")
-   ;; and this must be after any escape sequences which have "&":
-   '("&amp;"     "&")
-   ))
+        ;; these must be after any html tags (which have "<" and ">"):
+        '("&lt;" "<")
+        '("&gt;" ">")
+        '("&quot;" "\"")
+        ;; and this must be after any escape sequences which have "&":
+        '("&amp;" "&")
+        ))
 
 ;;; ***************************************************************************
 ;; for example, you might put in your .emacs (or wherever):
