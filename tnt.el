@@ -1143,6 +1143,18 @@ Special commands:
           (if tnt-timers-available (tnt-set-just-signedonoff nnick onlinep))
           ))
 
+    (let ((just-onoff (assoc nick tnt-just-signedonoff-alist))
+          (buffer (get-buffer (tnt-im-buffer-name nick)))
+          (was-away (assoc nick tnt-away-alist)))
+        (if (and away (not just-onoff))
+            (if buffer 
+                (with-current-buffer buffer
+                  (tnt-append-message (format "%s has gone away." nick)))))
+        (if (and was-away (not away))
+            (if buffer
+                (with-current-buffer buffer
+                  (tnt-append-message (format "%s has returned from being away." nick))))))
+
     (if onlinep
         (tnt-send-pounce nnick))
     (setq tnt-buddy-alist (tnt-addassoc nnick status tnt-buddy-alist))

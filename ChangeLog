@@ -1,3 +1,8 @@
+2001-01-16    <tntdevel@brokendreams.net>
+
+	* tnt.el (tnt-set-buddy-status): Added messages when a user sets
+	themselves as away, and returns (for convenience).  
+
 2001-01-10    <tntdevel@brokendreams.net>
 
 	* tnt.el (tnt-shutdown): Removed clearing of pounce msgs.. They should 
