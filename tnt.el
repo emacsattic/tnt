@@ -849,6 +849,9 @@ Special commands:
 (defvar tnt-just-signedonoff-alist nil)
 (defvar tnt-just-signedonoff-delay 60)
 
+(defvar tnt-login-flag-unset-after 3)
+(defvar tnt-login-flag nil)
+
 (defvar tnt-buddy-update-timer nil)
 (defvar tnt-buddy-update-interval 60)
 
@@ -1025,7 +1028,8 @@ Special commands:
                       (- (cadr (current-time))
                          (* 60 idle))))
         (state (if onlinep "online" "offline")))
-    (if (not (equal status (tnt-buddy-status nick)))
+    (if (and (not tnt-login-flag)
+             (not (string= status (tnt-buddy-status nick))))
         (progn
           (tnt-beep tnt-beep-on-buddy-signonoff)
           (let ((buffer (get-buffer (tnt-im-buffer-name nick))))
@@ -1103,6 +1107,11 @@ Special commands:
     (if (null just-onoff) nil
       (format " (just signed %s)"
               (if (caddr just-onoff) "on" "off")))))
+
+
+(defun tnt-unset-login-flag ()
+  (setq tnt-login-flag nil))
+
 
 
 ;;;----------------------------------------------------------------------------
@@ -1411,6 +1420,11 @@ Special commands:
   (if tnt-use-buddy-update-timer
       (setq tnt-buddy-update-timer
             (tnt-repeat tnt-buddy-update-interval 'tnt-build-buddy-buffer)))
+  (if tnt-timers-available
+      (progn
+        (setq tnt-login-flag t)
+        (run-at-time tnt-login-flag-unset-after nil
+                     'tnt-unset-login-flag)))
   (if tnt-use-idle-timer
       (progn
         (setq tnt-idle-timer (run-with-idle-timer tnt-send-idle-after t

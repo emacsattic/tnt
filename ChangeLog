@@ -1,5 +1,17 @@
 2000-05-16  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-login-flag-unset-after): added.
+	(tnt-login-flag): added.
+	(tnt-set-buddy-status): now checks the login flag.  for the first
+	three seconds we're logged in, changes in buddy status are not
+	reported to the user, since mostly they're not really "changes".
+	(tnt-unset-login-flag): added.  called by the timer.  unsets the
+	login flag.
+	(tnt-handle-sign-on): now sets the login flag, and creates a timer
+	to call the unset function.
+
+2000-05-16  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-set-buddy-status): moved the call to
 	set-just-signedonoff to within the check to see whether status
 	just changed.  this fixes the bug where before it would say
