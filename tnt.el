@@ -886,7 +886,7 @@ Special commands:
               (insert-before-markers " (" modified ")"))
           (insert-before-markers ":")
           ;; Change color of user text.
-          (if (string-equal (toc-normalize user) tnt-current-user)
+          (if (string-equal (toc-normalize user) (toc-normalize tnt-current-user))
               (add-text-properties start (point) '(face tnt-my-name-face))
             (add-text-properties start (point) '(face tnt-other-name-face)))
           (insert-before-markers " " (tnt-replace-me-statement message))))

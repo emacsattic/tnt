@@ -23,6 +23,11 @@
 	(tnt-replace-me-statement): added
 	(tnt-append-message): added support for tnt-replace-me-statement
 	(tnt-me-statement-format): added
+	(tnt-append-message): changed to normalizing tnt-current-user as
+	well as user when comparing to see which face to use.  the reason
+	for this is that when you want custom formatting of your nick,
+	you'll use "J A m E s" as your user name which will be in
+	tnt-current-user and thus not match user once normalized.
 
 2001-03-09  NeilFred Picciotto  <fred@guido.derf.net>
 
