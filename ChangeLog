@@ -1,3 +1,10 @@
+2000-07-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-backslashify-string): added.  given a string, adds
+	backslashes to make a regexp that matches the original string.
+	(tnt-strip-a-href): now calls backslashify, so that when a url
+	comes in that has a ? in it, we still don't see it twice.
+
 2000-07-27  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-restore-buddy-list): made interactive.

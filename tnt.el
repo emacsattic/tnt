@@ -1855,14 +1855,33 @@ of the list, delimited by commas."
       ;; if the link url is the same as the link text,
       ;; we don't need to see it twice
       (if (or (and the-url
-                   (string-match the-url str start-index))
+                   (string-match (tnt-backslashify-string the-url)
+                                 str start-index))
               (and the-url-no-scheme
-                   (string-match the-url-no-scheme str start-index)))
+                   (string-match (tnt-backslashify-string the-url-no-scheme)
+                                 str start-index)))
           nil
         (setq segs (cons (format "( %s ) " the-url) segs)))
       )
     (setq segs (cons (substring str start-index) segs))
     (apply 'concat (nreverse segs))))
+
+(defun tnt-backslashify-string (str)
+  ;; adds "\" chars as necessary to enable matching the given string
+  ;; exactly.
+  (let ((chars-regexp "[.?]")
+        (start-index 0)
+        end-index
+        (segs nil))
+    (while (setq end-index (string-match chars-regexp str start-index))
+      (setq segs (cons (substring str start-index end-index) segs))
+      (setq segs (cons "\\" segs))
+      (setq start-index (match-end 0))
+      (setq segs (cons (substring str end-index start-index) segs))
+      )
+    (setq segs (cons (substring str start-index) segs))
+    (apply 'concat (nreverse segs))))
+    
 
 (defun tnt-strip-html (str)
   ;; Strips all HTML tags out of STR.
