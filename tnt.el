@@ -748,16 +748,16 @@ Special commands:
             (let ((unick (tnt-buddy-status nick))
                   (idle (tnt-buddy-idle nick))
                   (away (tnt-buddy-away nick)))
-              (if unick (format "  %s%s%s" 
+              (if unick (format "  %s%s" 
                                 unick 
-                                (if away
-                                    (if (and idle (> idle 0))
-                                        (format " (away - %d)" idle)
-                                      (format " (away)")) "")
-                                
-                                (if (and idle (> idle 0) (not away))
-                                    (format " (idle - %d)" idle) "")
-                                )))))
+                                (cond ((and away idle)
+                                       (format " (away - %s)" idle))
+                                      ((and away (not idle))
+                                       (format " (away)"))
+                                      ((and (not away) idle)
+                                       (format " (idle - %s)" idle))
+                                      (t ""))
+                                      )))))
         
         (set-buffer-modified-p nil))))
 
@@ -865,13 +865,17 @@ Special commands:
   ;; actually idle for more than 65536 seconds (about 18 hours), then
   ;; it'll reset...
   (let ((idle-since (cdr (assoc (toc-normalize nick) tnt-idle-alist))))
-    (and idle-since
-         (let* ((now (cadr (current-time)))
-                (diff (- now idle-since)))
-           (/ (if (< diff 0)
-                  (+ diff 65536)
-                diff)
-              60)))))
+    (if (null idle-since) nil
+      (let* ((now (cadr (current-time)))
+             (diff (- now idle-since))
+             (idle-secs (if (< diff 0)
+                               (+ diff 65536)
+                             diff))
+             (idle-mins (/ idle-secs 60)))
+        (cond ((= 0 idle-mins) nil)
+              ((< idle-mins 60) (format "%dm" idle-mins))
+              (t (format "%dh%dm" (/ idle-mins 60) (mod idle-mins 60))))))))
+
     
 (defun tnt-buddy-official-name (buddy)
   ;; Return official screen name of buddy if known, otherwise
