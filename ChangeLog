@@ -28,6 +28,10 @@
 	for this is that when you want custom formatting of your nick,
 	you'll use "J A m E s" as your user name which will be in
 	tnt-current-user and thus not match user once normalized.
+	(TODO): noticed the processed read-only im todo entry and removed
+	it.
+	(custom): moved a few of the variables that I had added before
+	into the custom support section.
 
 2001-03-09  NeilFred Picciotto  <fred@guido.derf.net>
 

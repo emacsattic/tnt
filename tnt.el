@@ -34,7 +34,6 @@
 ;;;;   implement permit/deny
 ;;;;   point reset by erase-buffer to beginning of buddy buffer during update
 ;;;;   consider using use-hard-newlines variable
-;;;;   make processed im messages read-only
 
 (provide 'tnt)
 (require 'toc)
@@ -115,35 +114,12 @@ from your computer, so then when you come back, you can see how
 long ago it was that your friend said \"hi\" while you were gone.
 ")
 
-(defvar tnt-timestamp-format "%T "
-  "*String used a timestamp format.
-
-This string will be passed to format-time-string and the result
-prepended to messages.  \"%r \" gives a 12 hour format while the
-default of \"%T \" gives a 24 hour format")
-
 (defvar tnt-default-chatroom '(format "%s Chat%03d" tnt-current-user (random 1000))
   "*Expression used to generate the default chat room to join when using C-x t j
 
 This can be an expression such as the default somewhat how one would
 bind a function to a key or it may be a string.  Note that the function
 must return a string.")
-
-(defvar tnt-persistent-timeout 5
-  "*Timeout between redisplays of persistent messages.
-
-This number is the time between redisplays of messages created with 
-tnt-persistent-message.  It should not be too small as you'd never see anything
-else in the minibuffer but it should be sufficiently small to allow you to see
-the message now and then until you notice it.")
-
-(defvar tnt-me-statement-format "* %s *"
-  "*Format variable to replace any messages starting with \"/me \"
-
-This variable holds the format string containing exactly one %s to
-be replaced with the message sans the \"/me \" which will replace
-the message and be sent.  This will also be done on incoming messages.
-This value may be nil to prevent any such action.")
 
 (defvar tnt-beep-on-message-available-event 'current
   "*If non-nil, beeps when giving the \"Message from ... available\" message.
@@ -237,16 +213,54 @@ Note that you only need to set this if you're using the pipe-to-email
 feature.  defaults to /bin/mail
 ")
 
+;;;---------------------------------------------------------------------------
+;;;  Custom support - james@ja.ath.cx
+;;;---------------------------------------------------------------------------
+;;;  This code adds support for using the custom package when configuring TNT.
+;;;  The end result should be a transparent switch to the custom package that
+;;;  allows the old methods of configuration, as well.
+
 (require 'custom)
 (defgroup tnt nil "The TNT AIM Client" :group 'comm)
 (defface tnt-my-name-face '((((class color)) (:foreground "red")) 
                             (t (:bold t)))
   "The face used for my name on messages sent by this user"
   :group 'tnt)
+
 (defface tnt-other-name-face '((((class color)) (:foreground "blue"))
                                (t (:bold t)))
   "The face used for my name on messages sent by another user"
   :group 'tnt)
+
+(defcustom tnt-me-statement-format "* %s *"
+  "*Format variable to replace any messages starting with \"/me \"
+
+This variable holds the format string containing exactly one %s to
+be replaced with the message sans the \"/me \" which will replace
+the message and be sent.  This will also be done on incoming messages.
+This value may be nil to prevent any such action." 
+  :type 'string 
+  :group 'tnt)
+
+(defcustom tnt-timestamp-format "%T "
+  "*String used a timestamp format.
+
+This string will be passed to format-time-string and the result
+prepended to messages.  \"%r \" gives a 12 hour format while the
+default of \"%T \" gives a 24 hour format"
+  :type 'string
+  :group 'tnt)
+
+(defcustom tnt-persistent-timeout 5
+  "*Timeout between redisplays of persistent messages.
+
+This number is the time between redisplays of messages created with 
+tnt-persistent-message.  It should not be too small as you'd never see anything
+else in the minibuffer but it should be sufficiently small to allow you to see
+the message now and then until you notice it."
+  :type 'integer
+  :group 'tnt)
+
 
 ;;; Key bindings
 
