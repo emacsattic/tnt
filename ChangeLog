@@ -1,3 +1,13 @@
+2000-04-18  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-completing-read-list): added &optional
+	initial-input, which gets passed through to completing-read.
+	(tnt-expand-groups-for-chat-invitation): needed to make it apply
+	'append, rather than simply append, since what we have is a list
+	of lists.
+	(tnt-send-text-as-chat-invitation): now using a while loop to keep
+	prompting the user until expanding groups does not change the list.
+
 2000-04-16  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-expand-groups-for-chat-invitation): oops.

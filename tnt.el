@@ -657,20 +657,35 @@ Special commands:
 
 (defun tnt-send-text-as-chat-invitation (users)
   (interactive "p")
-  (let* ((completion-ignore-case t)
-         (user-list (or (and (listp users) users)
-                       (tnt-completing-read-list
-                        "Users to invite: "
-                        (tnt-online-buddies-and-groups-collection)))))
-    (if user-list
 
-        ;; replace (buddy-list) groups in the user-list with the
-        ;; members of those groups who are online, and not already in
-        ;; the chat
-        (let* ((user-list
-                (tnt-expand-groups-for-chat-invitation user-list
-                                                       tnt-chat-participants))
-               (msg (tnt-get-input-message)))
+  (let ((user-list
+         (if (and (listp users) users)
+             users
+           
+           ;; replace (buddy-list) groups in the user-list with the
+           ;; members of those groups who are online, and not already
+           ;; in the chat, then prompt again to confirm.
+           
+           (let ((completion-ignore-case t)
+                 (user-list-typed '(""))
+                 (user-list-processed nil))
+             
+             (while (not (equal user-list-typed user-list-processed))
+               (setq user-list-typed (tnt-completing-read-list
+                                      "Users to invite: "
+                                      (tnt-online-buddies-and-groups-collection)
+                                      user-list-processed))
+               (setq user-list-processed (tnt-expand-groups-for-chat-invitation
+                                          user-list-typed
+                                          tnt-chat-participants))
+               )
+             user-list-processed)
+           )
+         ))
+    
+    (if user-list
+        
+        (let (msg (tnt-get-input-message))
           (if (= (length msg) 0)
               (setq msg (read-from-minibuffer "Message: "
                                               "Join me in this Buddy Chat.")))
@@ -680,7 +695,10 @@ Special commands:
                                                  user-list ", ")))
           (if tnt-recenter-windows (recenter -1))
           (toc-chat-invite tnt-chat-roomid msg user-list)
-          ))))
+          )
+      )
+    )
+  )
 
 
 (defun tnt-show-chat-participants ()
@@ -698,7 +716,7 @@ Special commands:
 
 (defun tnt-expand-groups-for-chat-invitation (user-list exclude-list)
   (remove-duplicates 
-   (append
+   (apply 'append
     (mapcar (lambda (name)
               (let ((group (assoc name tnt-buddy-blist)))
                 (if (null group) (list name)
@@ -1453,9 +1471,12 @@ Special commands:
       str)))
 
 
-(defun tnt-completing-read-list (prompt collection)
-  "Reads a list from the minibuffer with completion."
-  (let ((str (completing-read prompt 'tnt-completion-func)))
+(defun tnt-completing-read-list (prompt collection &optional initial-input)
+  "Reads a list from the minibuffer with completion for each element
+of the list, delimited by commas."
+  (let* ((initial-input-str (mapconcat 'identity initial-input ", "))
+         (str (completing-read prompt 'tnt-completion-func
+                               nil nil initial-input-str)))
     (split-string str ",")))
 
 (defun tnt-persistent-message (&optional fmt &rest args)
