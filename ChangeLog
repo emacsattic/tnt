@@ -1,3 +1,14 @@
+2002-09-26  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
+	* tnt.el (tnt-unset-login-flag): now works in xemacs.  basically
+	we just set the timer to run right away, the same way it wrongly
+	does anyway in xemacs; and the trick is we also set it as a
+	repeating timer, but the second time it runs, it actually does
+	what it needs to do and then disables itself.
+	(tnt-login-flag-unset-ran-once): added.
+	(tnt-shutdown): reset the vars related to the login-flag.
+	(tnt-handle-sign-on): set timer repeating.
+
 2002-09-25  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
 	* tnt.el -- toggle inactive (offline) buddies

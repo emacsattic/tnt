@@ -1795,11 +1795,11 @@ Special commands:
 
 (defvar tnt-login-flag-unset-after 10)
 (defvar tnt-login-flag nil)
+(defvar tnt-login-flag-timer nil)
+(defvar tnt-login-flag-unset-ran-once nil)
 
 (defvar tnt-buddy-update-timer nil)
 (defvar tnt-buddy-update-interval 60)
-
-(defvar tnt-login-flag-timer nil)
 
 (unless tnt-buddy-list-mode-map
   (setq tnt-buddy-list-mode-map (make-sparse-keymap))
@@ -2109,6 +2109,8 @@ Special commands:
   (setq tnt-idle-timer nil)
   (if tnt-login-flag-timer (cancel-timer tnt-login-flag-timer))
   (setq tnt-login-flag-timer nil)
+  (setq tnt-login-flag nil)
+  (setq tnt-login-flag-unset-ran-once nil)
 
   (setq tnt-current-user nil
         tnt-buddy-alist nil
@@ -2255,7 +2257,12 @@ Special commands:
 
 ;;; ***************************************************************************
 (defun tnt-unset-login-flag ()
-  (setq tnt-login-flag nil))
+  (if tnt-login-flag-unset-ran-once
+      (progn (cancel-timer tnt-login-flag-timer)
+             (setq tnt-login-flag-timer nil
+                   tnt-login-flag nil
+                   tnt-login-flag-unset-ran-once nil))
+    (setq tnt-login-flag-unset-ran-once t)))
 
 ;;; ***************************************************************************
 ;;; ***** Buddy-list edit mode
@@ -2708,7 +2715,7 @@ Special commands:
   (if tnt-timers-available
       (progn
         (setq tnt-login-flag t)
-        (setq tnt-login-flag-timer (run-at-time tnt-login-flag-unset-after nil
+        (setq tnt-login-flag-timer (run-at-time 0 tnt-login-flag-unset-after
                                                 'tnt-unset-login-flag))))
   (if tnt-use-idle-timer
       (setq tnt-idle-timer (run-with-idle-timer tnt-send-idle-after t
