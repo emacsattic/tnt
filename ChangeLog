@@ -15,6 +15,11 @@
 	to see if the bug exists.  For now, to override it, you must set
 	it to nil *before* loading tnt.el since it controls the default
 	setting of a later variable.
+	(tnt-im-mode): Use syntax-table and abbrev-table from text-mode.
+	(tnt-chat-mode): Use syntax-table and abbrev-table from text-mode.
+	(tnt-buddy-list-mode): Use syntax-table from text-mode.
+	(tnt-buddy-edit-mode): Use syntax-table from text-mode.
+	
 
 2000-04-10  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 

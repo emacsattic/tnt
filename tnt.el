@@ -46,11 +46,11 @@
 ;;; Config variables
 
 ; these generally should not be changed
-(defvar tnt-toc-host    "toc.oscar.aol.com")
-(defvar tnt-toc-port    5190)
-(defvar tnt-login-host  "login.oscar.aol.com")
-(defvar tnt-login-port  5190)
-(defvar tnt-language    "english")
+(defvar tnt-toc-host "toc.oscar.aol.com")
+(defvar tnt-toc-port 5190)
+(defvar tnt-login-host "login.oscar.aol.com")
+(defvar tnt-login-port 5190)
+(defvar tnt-language "english")
 
 
 ; check whether this version of emacs has the "run-at-time" function
@@ -349,23 +349,11 @@ receives any message from the toc server.
 ;;; Instant message mode
 ;;;----------------------------------------------------------------------------
 
-(defvar tnt-im-mode-syntax-table nil)
-(defvar tnt-im-mode-abbrev-table nil)
 (defvar tnt-im-mode-map nil)
 (defvar tnt-im-user)
 (defvar tnt-message-marker)
 
 (make-variable-buffer-local 'tnt-im-user)
-
-
-(define-abbrev-table 'tnt-im-mode-abbrev-table ())
-
-(if tnt-im-mode-syntax-table
-    ()
-  (setq tnt-im-mode-syntax-table (make-syntax-table))
-  (modify-syntax-entry ?\" ".   " tnt-im-mode-syntax-table)
-  (modify-syntax-entry ?\\ ".   " tnt-im-mode-syntax-table)
-  (modify-syntax-entry ?'  "w   " tnt-im-mode-syntax-table))
 
 (if tnt-im-mode-map
     ()
@@ -382,8 +370,8 @@ Special commands:
   (use-local-map tnt-im-mode-map)
   (setq mode-name "IM")
   (setq major-mode 'tnt-im-mode)
-  (setq local-abbrev-table tnt-im-mode-abbrev-table)
-  (set-syntax-table tnt-im-mode-syntax-table)
+  (setq local-abbrev-table text-mode-abbrev-table)
+  (set-syntax-table text-mode-syntax-table)
   (auto-fill-mode)
   (run-hooks 'tnt-im-mode-hook))
 
@@ -476,8 +464,6 @@ Special commands:
 ;;; Chat mode
 ;;;----------------------------------------------------------------------------
 
-(defvar tnt-chat-mode-syntax-table nil)
-(defvar tnt-chat-mode-abbrev-table nil)
 (defvar tnt-chat-mode-map nil)
 (defvar tnt-chat-alist nil)         ; room id to room name
 
@@ -489,15 +475,6 @@ Special commands:
 (make-variable-buffer-local 'tnt-chat-roomid)
 (make-variable-buffer-local 'tnt-chat-participants)
 
-
-(define-abbrev-table 'tnt-chat-mode-abbrev-table ())
-
-(if tnt-chat-mode-syntax-table
-    ()
-  (setq tnt-chat-mode-syntax-table (make-syntax-table))
-  (modify-syntax-entry ?\" ".   " tnt-chat-mode-syntax-table)
-  (modify-syntax-entry ?\\ ".   " tnt-chat-mode-syntax-table)
-  (modify-syntax-entry ?'  "w   " tnt-chat-mode-syntax-table))
 
 (if tnt-chat-mode-map
     ()
@@ -517,8 +494,8 @@ Special commands:
   (use-local-map tnt-chat-mode-map)
   (setq mode-name "Chat")
   (setq major-mode 'tnt-chat-mode)
-  (setq local-abbrev-table tnt-chat-mode-abbrev-table)
-  (set-syntax-table tnt-chat-mode-syntax-table)
+  (setq local-abbrev-table text-mode-abbrev-table)
+  (set-syntax-table text-mode-syntax-table)
   (auto-fill-mode)
   (run-hooks 'tnt-chat-mode-hook))
 
@@ -708,8 +685,6 @@ Special commands:
 ;;; Buddy list mode
 ;;;----------------------------------------------------------------------------
 
-(defvar tnt-buddy-list-mode-syntax-table nil)
-(defvar tnt-buddy-list-mode-abbrev-table nil)
 (defvar tnt-buddy-list-mode-map nil)
 
 (defvar tnt-buddy-alist nil)
@@ -718,16 +693,6 @@ Special commands:
 
 (defvar tnt-buddy-update-timer nil)
 (defvar tnt-buddy-update-interval 60)
-
-
-(define-abbrev-table 'tnt-buddy-list-mode-abbrev-table ())
-
-(if tnt-buddy-list-mode-syntax-table
-    ()
-  (setq tnt-buddy-list-mode-syntax-table (make-syntax-table))
-  (modify-syntax-entry ?\" ".   " tnt-buddy-list-mode-syntax-table)
-  (modify-syntax-entry ?\\ ".   " tnt-buddy-list-mode-syntax-table)
-  (modify-syntax-entry ?'  "w   " tnt-buddy-list-mode-syntax-table))
 
 
 (if tnt-buddy-list-mode-map
@@ -753,8 +718,7 @@ Special commands:
   (use-local-map tnt-buddy-list-mode-map)
   (setq mode-name "Buddy List")
   (setq major-mode 'tnt-buddy-list-mode)
-  (setq local-abbrev-table tnt-buddy-list-mode-abbrev-table)
-  (set-syntax-table tnt-buddy-list-mode-syntax-table)
+  (set-syntax-table text-mode-syntax-table)
   (run-hooks 'tnt-buddy-list-mode-hook))
 
 
@@ -949,20 +913,7 @@ Special commands:
 ;;; Buddy-list edit mode
 ;;;----------------------------------------------------------------------------
 
-(defvar tnt-buddy-edit-mode-syntax-table nil)
-(defvar tnt-buddy-edit-mode-abbrev-table nil)
 (defvar tnt-buddy-edit-mode-map nil)
-
-(define-abbrev-table 'tnt-buddy-edit-mode-abbrev-table ())
-
-
-(if tnt-buddy-edit-mode-syntax-table
-    ()
-  (setq tnt-buddy-edit-mode-syntax-table (make-syntax-table))
-  (modify-syntax-entry ?\" ".   " tnt-buddy-edit-mode-syntax-table)
-  (modify-syntax-entry ?\\ ".   " tnt-buddy-edit-mode-syntax-table)
-  (modify-syntax-entry ?'  "w   " tnt-buddy-edit-mode-syntax-table))
-
 
 (if tnt-buddy-edit-mode-map
     ()
@@ -980,8 +931,7 @@ Special commands:
   (use-local-map tnt-buddy-edit-mode-map)
   (setq mode-name "Buddy Edit")
   (setq major-mode 'tnt-buddy-edit-mode)
-  (setq local-abbrev-table tnt-buddy-edit-mode-abbrev-table)
-  (set-syntax-table tnt-buddy-edit-mode-syntax-table)
+  (set-syntax-table text-mode-syntax-table)
   (run-hooks 'tnt-buddy-edit-mode-hook))
 
 
