@@ -1,3 +1,22 @@
+2001-02-19   <jdaniel@mit.edu>
+
+	* tnt.el (tnt-send-idle): Added a call to 
+	(add-hook 'pre-command-hook 'tnt-send-unidle).  pre-command-hook is 
+	called before every user-command which makes the unidle-timer
+	unnecessary.  I think buggy emacs versions still keep tnt-send-idle 
+	from being called when it should, but no longer cause spurious calls 
+	to tnt-send-unidle.
+	(tnt-send-unidle): Added call to remove-hook the hook added by 
+	tnt-send-idle
+	(tnt-use-idle-timer): Removed check for tnt-buggy-idle and the note 
+	about buggy emacs versions
+	(tnt-buggy-idle): Removed
+	(tnt-unidle-timer): Removed
+	(tnt-send-unidle-after): Removed
+	(tnt-shutdown): Swapped unidle-timer stuff with a call to remove-hook
+	(tnt-handle-sign-on): Removed call to start tnt-unidle-timer
+	(tnt-test-for-buggy-idle): Removed
+
 2001-02-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-html-regexps): now stripping out <PRE> tags 
