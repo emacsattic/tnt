@@ -1,4 +1,4 @@
-gone a; -*- indent-tabs-mode: nil -*-
+; -*- indent-tabs-mode: nil -*-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; TNT
@@ -1937,6 +1937,7 @@ of the list, delimited by commas."
   (list (list (concat "<HTML>\\|</HTML>\\|"
                       "<BODY[^>]*>\\|</BODY>\\|"
                       "<FONT[^>]*>\\|</FONT>\\|"
+                      "<PRE>\\|</PRE>\\|"
                       "</A>")
               "")
         '("<BR>" "\n")
