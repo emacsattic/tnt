@@ -1,3 +1,17 @@
+2000-05-14  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-buddy-list-backup-filename): added.
+	(tnt-restore-buddy-list-if-necessary): added.
+	(tnt-buddy-list-is-empty-p): added.
+	(tnt-restore-buddy-list): added.
+	(tnt-handle-nick): now calls the restore from backup function.
+	also calls (tnt-show-buddies), since if we are restoring from
+	backup, we want to go to the buddy list buffer after we're done
+	restoring it.
+	(tnt-handle-sign-on): removed (tnt-show-buddies).  now doing that
+	in tnt-handle-nick, so that it happens after we restore the buddy
+	list.
+
 2000-05-11  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* Makefile (VERSION_PATTERN): made version pattern more general

@@ -76,7 +76,8 @@
   "*Should be nil or a string containing your username.
 
 If you set this, you will not have to type in your username every
-time you want to log in.")
+time you want to log in.
+")
 
 (defvar tnt-default-password nil
   "*Should be nil or your password.
@@ -86,7 +87,8 @@ you want to log in.  However, if the file you set this in is readable
 by other users on your system, they could log in as you, so if you set
 this, be careful.  Also note that if you use multiple usernames, you
 should not set the tnt-default-password (unless all your usernames use
-the same password).")
+the same password).
+")
 
 (defvar tnt-username-alist nil
   "*Should be nil or a list of associations of usernames with
@@ -102,14 +104,16 @@ next time you connect.  Any number of usernames can be listed in this
 way, but note that each element of the list MUST be either of the form
 (\"UserName\") or of the form (\"UserName\" . \"Password\"), and note the
 apostrophe.  When you log in as a username for which the password is
-not stored here, you will be prompted.")
+not stored here, you will be prompted.
+")
 
 (defvar tnt-separator "\n\n"
   "*String printed between IMs.
 
 This controls what is printed between message.  One newline is pretty
 much required in order separate messages.  Two newlines is the default,
-but other strings, suchs as \"\n-\n\" may be desirable.")
+but other strings, suchs as \"\n-\n\" may be desirable.
+")
 
 (defvar tnt-use-timestamps nil
   "*If t, shows timestamps in TNT conversations.
@@ -118,7 +122,8 @@ This will add a timestamp for each message you receive or send.
 This is useful for logging, and for people who are on very often.
 It's also convenient if you leave yourself logged in while away
 from your computer, so then when you come back, you can see how
-long ago it was that your friend said \"hi\" while you were gone.")
+long ago it was that your friend said \"hi\" while you were gone.
+")
 
 (defvar tnt-beep-beep-beep 'sometimes
   "*Controls beeping for incoming messages and chat invitations.
@@ -131,18 +136,22 @@ Possible values are:
 
   'never      No beeping.
 
-Chat invitations always beep unless this variable is set to 'never.")
+Chat invitations always beep unless this variable is set to 'never.
+")
 
 (defvar tnt-beep-on-buddy-signonoff nil
   "*If t, beeps when buddies sign on or off.
 
 Note that whether or not you set this, you will still get messages
-in your minibuffer saying \"MyBuddy online\" and \"MyBuddy offline\".")
+in your minibuffer saying \"MyBuddy online\" and \"MyBuddy offline\".
+")
 
 (defvar tnt-use-split-buddy nil
-  "*If t, forces tnt to split the window horizontally whenever the
-    buddy list command is invoked.  This rule does not apply when in
-    in the *scratch* buffer, or when already in the *buddies* buffer.")
+  "*If t, tnt will split the window when going to the buddy list.
+
+Note that this rule does not apply when in in the *scratch* buffer, or
+when already in the *buddies* buffer.
+")
 
 (defvar tnt-use-keepalive tnt-timers-available
   "*If t, sends a keepalive packet once a minute")
@@ -152,8 +161,21 @@ in your minibuffer saying \"MyBuddy online\" and \"MyBuddy offline\".")
 
 (defvar tnt-use-idle-timer (and tnt-timers-available (not tnt-buggy-idle))
   "*If t, tells TOC server when emacs has been idle for 10 minutes.
+
 NOTE: under certain versions of emacs, you become unidle any time tnt
-receives any message from the toc server.
+receives any message from the toc server.  Try \"M-x
+tnt-test-for-buggy-idle\", and if it tells you that your idle timers
+are correct, you should set tnt-buggy-idle to nil.
+")
+
+(defvar tnt-buddy-list-backup-filename "~/.tnt-%s-buddies"
+  "*If non-nil, tnt will backup buddy list into this file.
+
+Occasionally, the toc server loses people's buddy lists.  If a
+(non-nil) filename is given, tnt will backup your buddy list to a
+file, and if the server loses it, tnt will restore from the backup.
+If the given filename includes \"%s\", then your username will be
+substituted.
 ")
 
 (defvar tnt-recenter-windows t
@@ -166,11 +188,15 @@ Setting this allows you to toggle forwarding of all incoming IMs to
 the specified address.  This might be useful if you have an email
 address which goes to an alphanumeric pager, and you want to be able
 to receive IMs anywhere!  Once the email address is specified, turn
-forwarding on and off with \"C-x t M\".")
+forwarding on and off with \"C-x t M\".
+")
 
 (defvar tnt-email-binary "/bin/mail"
-  "*Should be set to the executable of your mail binary, if you're
-   using the pipe-to-email feature.  defaults to /bin/mail")
+  "*Should be set to the executable of your mail binary.
+
+Note that you only need to set this if you're using the pipe-to-email
+feature.  defaults to /bin/mail
+")
 
 
 ;; Faces for color highlighting of screen names.
@@ -1089,7 +1115,40 @@ Special commands:
     (set-buffer-modified-p nil)
     (tnt-build-buddy-buffer)))
 
+(defun tnt-restore-buddy-list-if-necessary ()
+  "If buddy list is empty and backup file exists, restore."
+  (interactive)
+  (if (tnt-buddy-list-is-empty-p)
+      (tnt-restore-buddy-list)
+    tnt-buddy-blist))
 
+(defun tnt-buddy-list-is-empty-p ()
+  "Checks whether buddy list should be considered \"empty\"."
+  (let ((num-groups (length tnt-buddy-blist)))
+    (or (= num-groups 0)
+        (and (= num-groups 1)
+             (let ((len (length (car tnt-buddy-blist))))
+               (or (<= len 1)
+                   (and (= len 2)
+                        (string= (caar tnt-buddy-blist) "Buddies")
+                        (string= (toc-normalize tnt-username)
+                                 (toc-normalize (cadar tnt-buddy-blist)))
+                        )))
+             ))))
+
+(defun tnt-restore-buddy-list ()
+  "Restores the buddy list from the backup file."
+  (and tnt-buddy-list-backup-filename
+       (let ((filename (format tnt-buddy-list-backup-filename
+                               (toc-normalize tnt-username))))
+         (if (file-readable-p filename)
+             (progn
+               (tnt-edit-buddies)
+               (insert-file-contents filename nil nil nil t)
+               (tnt-save-buddy-list)
+               tnt-buddy-blist)))))
+
+ 
 
 ;;;----------------------------------------------------------------------------
 ;;; Buddy utilities
@@ -1288,7 +1347,6 @@ Special commands:
 
 (defun tnt-handle-sign-on (version)
   (message "Signed on")
-  (tnt-show-buddies)
   (if tnt-use-keepalive
       (setq tnt-keepalive-timer
             (tnt-repeat tnt-keepalive-interval 'toc-keepalive)))
@@ -1315,9 +1373,10 @@ Special commands:
 
 (defun tnt-handle-nick (nick)
   (setq tnt-current-user nick)
-  (or tnt-buddy-blist
+  (or (tnt-restore-buddy-list-if-necessary)
       (setq tnt-buddy-blist (list (list "Buddies" nick))))
-  (tnt-set-online-state t))
+  (tnt-set-online-state t)
+  (tnt-show-buddies))
 
 (defun tnt-handle-im-in (user auto message)
   (let ((buffer (tnt-im-buffer user)))
