@@ -809,7 +809,7 @@ Special commands:
 (defun tnt-append-message-and-adjust-window (buffer message &optional user mod)
   (let ((window (get-buffer-window buffer)))
     (with-current-buffer buffer
-      (tnt-append-message (tnt-strip-html message) user mod)
+      (tnt-append-message (tnt-reformat-text message) user mod)
       (if (and window tnt-recenter-windows)
           (let ((old-window (selected-window)))
             (select-window window)
@@ -834,7 +834,7 @@ Special commands:
               (insert-before-markers " (" modified ")"))
           (insert-before-markers ":")
           ;; Change color of user text.
-          (if (string-equal user tnt-current-user)
+          (if (string-equal (toc-normalize user) tnt-current-user)
               (add-text-properties start (point) '(face tnt-my-name-face))
             (add-text-properties start (point) '(face tnt-other-name-face)))
           (insert-before-markers " " message)))
@@ -1598,7 +1598,7 @@ Special commands:
     ;; then what gets piped in
     (process-send-string proc-name
                          (format "%s: %s\n" user
-                                 (tnt-strip-html message)))
+                                 (tnt-reformat-text message)))
     (process-send-eof proc-name))
   (message "Reminder: IMs are being forwarded to %s" tnt-email-to-pipe-to))
 
@@ -1674,7 +1674,7 @@ Special commands:
   (tnt-handle-chat-join roomid room)    ; associate roomid with room
   (let ((buffer (tnt-chat-buffer room)))
     (with-current-buffer buffer
-      (tnt-append-message (tnt-strip-html message) sender "invitation"))
+      (tnt-append-message (tnt-reformat-text message) sender "invitation"))
     (tnt-push-event (format "Chat invitation from %s arrived" sender)
                     buffer 'tnt-chat-event-pop-function)
     (tnt-beep tnt-beep-on-message-available-event)
@@ -1810,6 +1810,20 @@ of the list, delimited by commas."
 ;;; String utilities
 ;;;----------------------------------------------------------------------------
 
+(defvar tnt-html-regexps
+  (list (list (concat "<HTML>\\|</HTML>\\|"
+                      "<BODY[^>]*>\\|</BODY>\\|"
+                      "<FONT[^>]*>\\|</FONT>\\|"
+                      "</A>")
+              "")
+        '("<BR>" "\n")
+        '("&lt;" "<")
+        '("&gt;" ">")
+        ;; and this one must be last:
+        '("&amp;" "&")
+        ))
+
+
 (defun tnt-strip-a-href (str)
   ;; Replaces the substring
   ;; <a href="http://www.derf.net/">derf!
@@ -1854,22 +1868,47 @@ of the list, delimited by commas."
   (let ((start-index 0)
         end-index
         (segs nil))
-    (setq str (tnt-strip-a-href str))
     (while (setq end-index (string-match "<[^ ][^>]*>" str start-index))
       (setq segs (cons (substring str start-index end-index) segs))
       (setq start-index (match-end 0)))
     (setq segs (cons (substring str start-index) segs))
     (apply 'concat (nreverse segs))))
 
+(defun tnt-strip-some-html (str regexp-and-replace)
+  ;; strips out all occurrances of the given regexp, and replaces with
+  ;; the given replace string.  the regexp and replace strings are two
+  ;; elements of a list (rather than being two separate params) so
+  ;; that we can use "reduce" in tnt-reformat-text, below.
+  (let ((start-index 0)
+        end-index
+        (segs nil)
+        (replace-regexp (car regexp-and-replace))
+        (replace-with (cadr regexp-and-replace))
+        )
+    (while (setq end-index (string-match replace-regexp str start-index))
+      (setq segs (cons replace-with
+                       (cons (substring str start-index end-index)
+                             segs)))
+      (setq start-index (match-end 0)))
+    (setq segs (cons (substring str start-index) segs))
+    (apply 'concat (nreverse segs))))
+
 (defun tnt-neliminate-newlines (str)
-  ;; Converts newlines in STR to spaces.  Modifies STR.
+  ;; Converts newlines and carriage returns to spaces.  Modifies STR.
   (let ((pos 0)
         (len (length str)))
     (while (< pos len)
-      (if (= (aref str pos) ?\n)
+      (if (or (= (aref str pos) ?\n)
+              (= (aref str pos) ?\r))
           (aset str pos ? ))
       (setq pos (1+ pos)))
     str))
+
+(defun tnt-reformat-text (str)
+  ;; calls tnt-strip-some-html repeatedly with different substitutions
+  (reduce 'tnt-strip-some-html tnt-html-regexps
+          :initial-value (tnt-strip-a-href str)))
+
 
 
 (defun tnt-repeat (interval function)

@@ -1,3 +1,26 @@
+2000-07-24  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-neliminate-newlines): now replacing newlines *and*
+	carriage returns with spaces.  not entirely sure whether this is
+	necessary, but it can't hurt.
+	(tnt-append-message): now calling toc-normalize.  there was some
+	situation where a name was not getting colored properly because of
+	this.
+	(tnt-append-message-and-adjust-window): now calling
+	tnt-reformat-text instead of tnt-strip-html.
+	(tnt-pipe-message-to-program): now calling tnt-reformat-text
+	instead of tnt-strip-html.
+	(tnt-handle-chat-invite): now calling tnt-reformat-text instead of
+	tnt-strip-html.
+	(tnt-strip-some-html): added.  similar to tnt-strip-html, but
+	takes the regexp and replacement string as input.
+	(tnt-html-regexps): added.  a list of regexp-and-replacement
+	pairs.
+	(tnt-strip-html): removed the call to strip-a-href, since
+	reformat-text now takes care of that.
+	(tnt-reformat-text): added.  just calls tnt-strip-some-html
+	repeatedly, with all the regexps in tnt-html-regexps.
+
 2000-07-11  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-get-buddy-at-point): added.  pulled part of
