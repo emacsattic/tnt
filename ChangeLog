@@ -1,10 +1,11 @@
 2000-04-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (cl): now doing (require 'cl).  maybe later we'll
+	implement those few functions we're using...
+
 	* Makefile (RELEASE): Changelog changed to ChangeLog
 	(release): now specifying filename in cmd line to tar rather than
 	redirecting into file
-
-2000-04-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-version): updated version to 2.2
 

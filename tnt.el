@@ -39,6 +39,11 @@
 (provide 'tnt)
 (require 'toc)
 
+;; only using cl functions in one place...  maybe we should just
+;; implement those functions locally?
+(require 'cl)
+
+
 (defconst tnt-version "TNT 2.2")
 
 
