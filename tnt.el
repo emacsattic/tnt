@@ -444,6 +444,12 @@ have been sent, you can't change them."
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
+(defcustom tnt-kill-window-on-shutdown nil
+  "If non-nil, kill the Buddy list window whenshutting down."
+  :type 'boolean
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
 (defcustom tnt-supress-pounce-when-away nil
   "If non-nil, don't pounce if you're away."
   :type 'boolean
@@ -1237,6 +1243,14 @@ if nil)"
 (defvar tnt-password)
 
 ;;; ***************************************************************************
+(defun tnt-open-or-show-buddies ()
+  "Sign on (if not already) or show Buddies buffer."
+  (interactive)
+  (if tnt-current-user
+      (tnt-show-buddies)
+    (call-interactively 'tnt-open)))
+
+;;; ***************************************************************************
 (defun tnt-open (username password)
   "Starts a new TNT session."
   (interactive "p\np") ;; gag!
@@ -1286,8 +1300,10 @@ if nil)"
   (tnt-shutdown)
   (message "Signed off")
   (tnt-beep tnt-beep-on-signoff)
-  )
 
+  (when tnt-kill-window-on-shutdown
+    (kill-buffer tnt-buddy-list-buffer-name))
+  )
 
 ;;; ***************************************************************************
 (defun tnt-switch-user ()
