@@ -1,5 +1,23 @@
 2002-09-08  Joe Casadonte  <jcasadonte@northbound-train.com>
 
+	* tnt.el (propertize): added source comment
+	* tnt.el (main): moved global variables up considerably
+	* tnt.el (tnt-customize-mode-line-setting): new function to set mode line vars
+	* tnt.el (tnt-mode-indicator): added new customization option
+	* tnt.el (tnt-show-events-in-mode): added new customization option
+	* tnt.el (tnt-show-away-in-mode): added new customization option
+	* tnt.el (tnt-show-email-in-mode): added new customization option
+	* tnt.el (tnt-beep-on-persistent-messages): added new customization option
+	* tnt.el (tnt-shutdown): moved call to `tnt-set-online-state'
+	* tnt.el (tnt-show-top-event): added call to `tnt-set-mode-string'
+	* tnt.el (tnt-set-online-state): replaced logic with call to `tnt-set-mode-string'
+	* tnt.el (tnt-set-mode-string): new function to control mode indicator
+	* tnt.el (tnt-toggle-email): added call to `tnt-set-mode-string'
+	* tnt.el (tnt-persistent-message-persist): added logic to maybe beep
+	* tnt.el (tnt-persistent-message): added explicit clearing of disable-id
+
+2002-09-08  Joe Casadonte  <jcasadonte@northbound-train.com>
+
 	* tnt.el (main): added definition of `propertize' if not already bound
 	* tnt.el (tnt-show-inactive-buddies): added new customization option
 	* tnt.el (tnt-buddy-fullname-alist): added new customization option

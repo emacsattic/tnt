@@ -62,18 +62,35 @@
 
 ;; ---------------------------------------------------------------------------
 (unless (fboundp 'propertize)
-        ;; built-in to GNU Emacs 21, soon to be included into XEmacs
-        (defun propertize (string &rest properties)
-          "Return a copy of STRING with text properties added.
+  ;; built-in to GNU Emacs 21, soon to be included into XEmacs
+  (defun propertize (string &rest properties)
+    "Return a copy of STRING with text properties added.
 First argument is the string to copy.
 Remaining arguments form a sequence of PROPERTY VALUE pairs for text
-properties to add to the result."
-          (let ((str (copy-sequence string)))
+properties to add to the result.
+
+\[Taken from XEmacs source 21.5.9]"
+    (let ((str (copy-sequence string)))
             (add-text-properties 0 (length str)
                                  properties
                                  str)
             str))
-        )
+  )
+
+;;; ***************************************************************************
+;;; ***** global variables
+;;; ***************************************************************************
+(defvar tnt-current-user nil)
+(defvar tnt-pipe-to-email-now nil)
+
+(defvar tnt-buddy-alist nil)
+(defvar tnt-buddy-blist nil)
+
+(defvar tnt-permit-mode 1)
+(defvar tnt-permit-list nil)
+(defvar tnt-deny-list nil)
+
+(defvar tnt-event-ring nil)  ; (buffer-name . (message . callback))
 
 ;;; **************************************************************************
 ;;; ***** Custom support - james@ja.ath.cx
@@ -148,6 +165,56 @@ not stored here, you will be prompted."
 
   :group 'tnt)
 
+;; ---------------------------------------------------------------------------
+;; ----- mode line
+;; ---------------------------------------------------------------------------
+ (defun tnt-customize-mode-line-setting (symbol newval)
+   (set-default symbol newval)
+
+   (when tnt-current-user
+     (tnt-set-mode-string)
+     (force-mode-line-update)))
+
+;; ...........................................................................
+(defcustom tnt-mode-indicator 'nick
+  "Indicator used to show you're online.
+
+nick - you're nickname
+string - some arbitrary string
+none - no indicator"
+  :type '(choice :tag "Mode indicator options"
+                 (const :tag "Nickname" nick)
+                 (string :tag "Arbitrary string" "TNT")
+                 (const :tag "None (no indicator)" nil))
+  :set 'tnt-customize-mode-line-setting
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-show-events-in-mode nil
+  "If non-nil, pre-pend '*' to mode indicator when events are pending."
+  :type 'boolean
+  :set 'tnt-customize-mode-line-setting
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-show-away-in-mode ":away"
+  "If non-nil, append string to mode indicator when you're away."
+  :type '(choice :tag "Away indicator options"
+                 (const :tag "None (no indicator)" nil)
+                 (string :tag "String indicator" ":away"))
+  :set 'tnt-customize-mode-line-setting
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-show-email-in-mode nil
+  "If non-nil, append string to mode indicator when you're away.
+
+When piping to email, use ':email' instead (see `tnt-email-to-pipe-to')."
+  :type '(choice :tag "Email indicator options"
+                 (const :tag "None (no indicator)" nil)
+                 (string :tag "String indicator" ":email"))
+  :set 'tnt-customize-mode-line-setting
+  :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
 ;; ----- notifications
@@ -218,8 +285,8 @@ Buddies
   Mom and Dad [kww64nnh72]"
   :type '(repeat
           (list
-			(string :tag "Buddy Name")
-			(string :tag "Full Name")))
+           (string :tag "Buddy Name")
+           (string :tag "Full Name")))
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
@@ -751,6 +818,27 @@ Settings:
   :group 'tnt-sound)
 
 ;; ---------------------------------------------------------------------------
+(defcustom tnt-beep-on-persistent-messages nil
+  "If non-nil, beeps when a persistent message is displayed.
+
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec."
+  :type '(choice
+          (const :tag "No beep/bell" nil)
+          (const :tag "Visible bell" visible)
+          (const :tag "Audible bell" audible)
+          (const :tag "Current Emacs default (visible or audible)" current)
+          (file :must-match t :tag "Filename"))
+
+  :group 'tnt-sound)
+
+;; ---------------------------------------------------------------------------
 ;; ----- advanced TNT options group
 ;; ---------------------------------------------------------------------------
 (defgroup tnt-advanced nil
@@ -818,14 +906,14 @@ Settings:
 
 ;; ---------------------------------------------------------------------------
 (setq tnt-buddy-list-font-lock-keywords
-  (list
-   '("^\\(.*(pounce.+\\)$" 1 tnt-buddy-list-pounce-face)
-   '("^\\(.*(idle -.+\\)$" 1 tnt-buddy-list-idle-face)
-   '("^\\(.*(away.+\\)$" 1 tnt-buddy-list-away-face)
-   '("^\\(.*(offline.+\\)$" 1 tnt-buddy-list-inactive-face)
-   '("^\\(\\S-+.+\\)$" 1 tnt-buddy-list-group-face)
-   '("^\\(.+\\)$" 1 tnt-buddy-list-active-face)
-   ))
+      (list
+       '("^\\(.*(pounce.+\\)$" 1 tnt-buddy-list-pounce-face)
+       '("^\\(.*(idle -.+\\)$" 1 tnt-buddy-list-idle-face)
+       '("^\\(.*(away.+\\)$" 1 tnt-buddy-list-away-face)
+       '("^\\(.*(offline.+\\)$" 1 tnt-buddy-list-inactive-face)
+       '("^\\(\\S-+.+\\)$" 1 tnt-buddy-list-group-face)
+       '("^\\(.+\\)$" 1 tnt-buddy-list-active-face)
+       ))
 
 ;; ---------------------------------------------------------------------------
 ;; ----- what to do with these?
@@ -883,22 +971,6 @@ Defaults to 'monthly.
   (global-set-key "\C-xtM" 'tnt-toggle-email)
   (global-set-key "\C-xtm" 'tnt-mute)
   )
-
-;;; ***************************************************************************
-;;; ***** global variables
-;;; ***************************************************************************
-(defvar tnt-current-user nil)
-(defvar tnt-pipe-to-email-now nil)
-
-(defvar tnt-buddy-alist nil)
-(defvar tnt-buddy-blist nil)
-
-(defvar tnt-permit-mode 1)
-(defvar tnt-permit-list nil)
-(defvar tnt-deny-list nil)
-
-(defvar tnt-event-ring nil)     ; (buffer-name . (message . callback))
-
 
 ;;; ***************************************************************************
 ;;; ***** Pounce Package - jnwhiteh@syr.edu
@@ -1094,7 +1166,7 @@ if nil)"
                                (read-passwd (format "Password for %s: " tnt-username))
                              (tnt-read-from-minibuffer-no-echo
                               (format "Password for %s: " tnt-username)))
-                             ))
+                           ))
     (if (string-equal tnt-password "")
         (error "No password given")
       (message "Attempting to sign on...")
@@ -1722,8 +1794,8 @@ Special commands:
          )
 
     (when (or status just-onoff tnt-show-inactive-buddies)
-;;       (put-text-property 0 (length first)
-;;                          'mouse-face 'highlight first)
+      ;;       (put-text-property 0 (length first)
+      ;;                          'mouse-face 'highlight first)
       (concat first
               (when fullname
                 (concat " [" unick "]"))
@@ -1732,13 +1804,13 @@ Special commands:
                     ((not status)
                      (format " (offline)"))
                     ((and away idle)
-                         (format " (away - %s)" idle))
-                        ((and away (not idle))
-                         (format " (away)"))
-                        ((and (not away) idle)
-                         (format " (idle - %s)" idle))
-                        (t ""))
-                  just-onoff
+                     (format " (away - %s)" idle))
+                    ((and away (not idle))
+                     (format " (away)"))
+                    ((and (not away) idle)
+                     (format " (idle - %s)" idle))
+                    (t ""))
+              just-onoff
               (when event " (MESSAGE WAITING)")
               ))))
 
@@ -1857,8 +1929,6 @@ Special commands:
 
 ;;; ***************************************************************************
 (defun tnt-shutdown ()
-  (tnt-set-online-state nil)
-
   ;; cancel timers
   (if tnt-keepalive-timer (cancel-timer tnt-keepalive-timer))
   (setq tnt-keepalive-timer nil)
@@ -1885,6 +1955,7 @@ Special commands:
   ;; knows we're no longer online
   (if tnt-currently-idle (tnt-send-unidle))
 
+  (tnt-set-online-state nil)
   (tnt-build-buddy-buffer))
 
 ;;; ***************************************************************************
@@ -2361,7 +2432,8 @@ Special commands:
                                   (if (= len 1)
                                       ""
                                     (format "[%d more]" (1- len))))))
-    (tnt-persistent-message "")))
+    (tnt-persistent-message ""))
+  (tnt-set-mode-string))
 
 ;;; ***************************************************************************
 ;;; ***** Mode line
@@ -2371,12 +2443,8 @@ Special commands:
 ;;; ---------------------------------------------------------------------------
 (defun tnt-set-online-state (is-online)
   ;; Sets or clears the mode-line online indicator.
-  (setq tnt-mode-string (if is-online
-                            (concat " ["
-                                    (format "%s" tnt-current-user)
-                                    (if tnt-away ":away" "")
-                                    "]")
-                          ""))
+  (tnt-set-mode-string)
+
   (or global-mode-string
       (setq global-mode-string '("")))
 
@@ -2384,6 +2452,26 @@ Special commands:
       (setq global-mode-string (append global-mode-string '(tnt-mode-string))))
 
   (force-mode-line-update))
+
+;;; ***************************************************************************
+(defun tnt-set-mode-string ()
+  ""
+  (interactive)
+  (setq tnt-mode-string
+        (if (and tnt-current-user tnt-mode-indicator)
+			(format "  [%s%s%s%s]"
+                    (if (and tnt-show-events-in-mode
+                             (> (length tnt-event-ring) 0)) "*" "")
+
+                    (if (eq tnt-mode-indicator 'nick)
+                        tnt-current-user
+                      tnt-mode-indicator)
+
+                    (if (and tnt-away tnt-show-away-in-mode)
+                        tnt-show-away-in-mode "")
+                    (if (and tnt-pipe-to-email-now tnt-show-email-in-mode)
+                        tnt-show-email-in-mode ""))
+		  "")))
 
 ;;; ***************************************************************************
 ;;; ***** Handlers for TOC events
@@ -2546,6 +2634,8 @@ Special commands:
       (message (format "Now forwarding any incoming IMs to %s"
                        tnt-email-to-pipe-to))
     (message (format "No longer forwarding incoming IMs")))
+
+  (tnt-set-online-state t)
   )
 
 ;;; ***************************************************************************
@@ -2744,6 +2834,9 @@ of the list, delimited by commas."
 ;;; ---------------------------------------------------------------------------
 (defun tnt-persistent-message-persist (m)
   (when (and tnt-persistent-timeout (> tnt-persistent-timeout 0))
+    (when (and tnt-beep-on-persistent-messages
+               tnt-persistent-message-disable-id)
+      (tnt-beep tnt-beep-on-persistent-messages))
     (setq tnt-persistent-message-disable-id
           (add-timeout tnt-persistent-timeout 'tnt-persistent-message-persist m)))
   (message m))
@@ -2751,7 +2844,8 @@ of the list, delimited by commas."
 ;;; ***************************************************************************
 (defun tnt-persistent-message (&optional fmt &rest args)
   (when tnt-persistent-message-disable-id
-    (disable-timeout tnt-persistent-message-disable-id))
+    (disable-timeout tnt-persistent-message-disable-id)
+    (setq tnt-persistent-message-disable-id nil))
                                         ;never more than one!
   (when (and fmt (not (equal fmt "")))
     (tnt-persistent-message-persist (apply 'format fmt args))))
