@@ -990,6 +990,7 @@ Special commands:
   (interactive)
   (tnt-switch-to-buffer (tnt-buddy-buffer))
   (tnt-build-buddy-buffer)
+  (tnt-show-top-event)
   )
 
 (defun tnt-switch-to-buffer (buffer)

@@ -1,3 +1,14 @@
+2001-05-16  NeilFred Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-show-buddies): added call to tnt-show-top-event.
+	this makes it so that events in the ring get displayed when user
+	goes to the buddy list buffer, or presses space in the buddy list
+	buffer (pressing space already calls tnt-show-buddies, to
+	regenerate the contents of the buddy list buffer).  with the old
+	implementation of persistent messages, i would often press space
+	to check whether i had any messages waiting, so this is just
+	restoring that functionality...
+
 2001-04-18  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el (tnt-handle-chat-in): Updated to be more like
