@@ -696,7 +696,9 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "P" 'tnt-prev-group)
   (define-key tnt-buddy-list-mode-map "i" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map "\C-m" 'tnt-im-buddy)
-  (define-key tnt-buddy-list-mode-map [mouse-2] 'tnt-im-buddy-mouse))
+  (define-key tnt-buddy-list-mode-map [mouse-2] 'tnt-im-buddy-mouse)
+  (define-key tnt-buddy-list-mode-map " " 'tnt-show-buddies)
+  )
 
 
 (defun tnt-buddy-list-mode ()

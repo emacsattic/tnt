@@ -1,4 +1,4 @@
-2000-04-07  Neil Picciotto  <neilp@orion.infoseek.com>
+2000-04-07  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-buddy-idle): now returning a string of the form
 	"1h12m" or "34m".  
@@ -6,6 +6,8 @@
 	compare it to 0, but if it's not nil, it should always be a string
 	to display.  also, changed a complicated nesting of ifs into an
 	equivalent but simpler cond.
+	(tnt-buddy-list-mode-map): hitting space in the *buddies* buffer
+	now causes it to refresh idle times.
 
 2000-04-07  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
