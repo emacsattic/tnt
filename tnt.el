@@ -280,25 +280,25 @@ feature.  defaults to /bin/mail
 ;;;  IM's you, when you IM a user, etc.  Eventully I will add signon sounds
 ;;;  as well.  This will be disabled by default.
 
-(defvar sound-exec nil)     ;; Set this to the executable to play sounds
-(defvar inwav nil)          ;; This is the IM sound to receive IM's
-(defvar outwav nil)         ;; This is the IM sound when you send IM's
-(defvar firstwav nil)       ;; This is the Sound when you FIRST receive an IM
+(defvar tnt-sound-exec nil) ;; Set this to the executable to play sounds
+(defvar tnt-inwav nil)      ;; This is the IM sound to receive IM's
+(defvar tnt-outwav nil)     ;; This is the IM sound when you send IM's
+(defvar tnt-firstwav nil)   ;; This is the Sound when you FIRST receive an IM
                             ;; from a user (meaning their buffer doesn't exist)
 
 (defun tnt-play-sound (event)
   (let ((proc-name "sound-process")
         (proc-out-buf "*sound-output*")
         (process-connection-type nil)
-        (wavfile (if (string= event 'incoming) inwav 
-                   (if (string= event 'outgoing) outwav 
-                     (if (string= event 'first) firstwav nil)))))
-    (if (and wavfile sound-exec)
+        (wavfile (if (string= event 'incoming) tnt-inwav 
+                   (if (string= event 'outgoing) tnt-outwav 
+                     (if (string= event 'first) tnt-firstwav nil)))))
+    (if (and wavfile tnt-sound-exec)
         ;; similar code to this could be used to pipe to something else
         (progn
           (start-process proc-name proc-out-buf
                          ;; put executable here:
-                         sound-exec
+                         tnt-sound-exec
                          ;; and now any cmd-line args:
                          wavfile)
           (process-send-eof proc-name)))))
