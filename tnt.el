@@ -56,7 +56,6 @@
 (defvar tnt-login-port 5190)
 (defvar tnt-language "english")
 
-
 ; check whether this version of emacs has the "run-at-time" function
 (defvar tnt-timers-available (fboundp 'run-at-time))
 
@@ -230,6 +229,13 @@ Note that you only need to set this if you're using the pipe-to-email
 feature.  defaults to /bin/mail
 ")
 
+(setq tnt-using-xemacs (string= (substring (emacs-version) 0 6) "XEmacs"))
+;; This is necessary to be able to distinguish between XEmacs and GNU Emacs
+;; to know whether to use extents to make parts read only or not.  Extents
+;; do not appear to be in GNU Emacs at all but I would imagine that there
+;; is something similar so this will be a very useful variable to make the
+;; functionality exactly the same but have it work in both GNU and XEmacs!
+
 ;; Faces for color highlighting of screen names.
 ;; if they already exist, we don't want to change the colors.
 ;(if (not (member 'tnt-other-name-face (face-list)))
@@ -288,6 +294,8 @@ feature.  defaults to /bin/mail
 (defvar tnt-permit-list nil)
 (defvar tnt-deny-list nil)
 
+(setq tnt-extent-read-only nil) ;;This will always be nil if we're not in XEmacs
+(make-variable-buffer-local 'tnt-extent-read-only)
 
 ;;;---------------------------------------------------------------------------
 ;;;  Sound Package - jnwhiteh@syr.edu
@@ -600,7 +608,12 @@ Special commands:
                             (tnt-buddy-official-name user)
                             (current-time-string)
                             tnt-separator))
-            (set-marker tnt-message-marker (point)))
+            (set-marker tnt-message-marker (point))
+            (if (functionp 'make-extent)
+                (set-extent-property
+                 (setq tnt-extent-read-only (make-extent 1 (point)))
+                 'read-only t)
+              (setq tnt-extent-read-only nil)))
           buffer))))
 
 (defun tnt-send-text-as-instant-message ()
@@ -670,7 +683,6 @@ Special commands:
 (make-variable-buffer-local 'tnt-chat-roomid)
 (make-variable-buffer-local 'tnt-chat-participants)
 
-
 (if tnt-chat-mode-map
     ()
   (setq tnt-chat-mode-map (make-sparse-keymap))
@@ -691,6 +703,7 @@ Special commands:
   (setq mode-name "Chat")
   (setq major-mode 'tnt-chat-mode)
   (setq local-abbrev-table text-mode-abbrev-table)
+  (make-local-variable 'before-change-function)
   (set-syntax-table text-mode-syntax-table)
   (auto-fill-mode 1)
   (run-hooks 'tnt-chat-mode-hook))
@@ -743,7 +756,12 @@ Special commands:
             (setq tnt-message-marker (make-marker))
             (insert (format "[Chat room \"%s\" on %s]%s"
                             room (current-time-string) tnt-separator))
-            (set-marker tnt-message-marker (point)))
+            (set-marker tnt-message-marker (point))
+            (if (functionp 'make-extent)
+                (set-extent-property
+                 (setq tnt-extent-read-only (make-extent 1 (point)))
+                 'read-only t)
+              (setq tnt-extent-read-only nil)))
           buffer))))
 
 
@@ -904,9 +922,12 @@ Special commands:
               (add-text-properties start (point) '(face tnt-my-name-face))
             (add-text-properties start (point) '(face tnt-other-name-face)))
           (insert-before-markers " " (tnt-replace-me-statement message))))
-
+      
       (insert-before-markers tnt-separator)
-      (fill-region old-point (point)))))
+      (fill-region old-point (point))
+      (when tnt-extent-read-only
+        (set-extent-endpoints tnt-extent-read-only 
+                              (extent-start-position tnt-extent-read-only) (point))))))
 
 (defun tnt-replace-me-statement (message)
   (if (and (>= (length message) 4) (string= (substring message 0 4) "/me "))
