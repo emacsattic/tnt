@@ -1,3 +1,10 @@
+2001-01-02  Neil Picciotto  <neilp@orion.infoseek.com>
+
+	* tnt.el (tnt-login-flag-unset-after): now defaulting to 10 rather
+	than 3, since login seems to take a little longer.  this means
+	that it will less often happen that after logging in, all your
+	buddies appear with the "just logged on" message.
+
 2001-01-02  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-handle-sign-on): removed call to toc-init-done

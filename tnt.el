@@ -870,7 +870,7 @@ Special commands:
 (defvar tnt-just-signedonoff-alist nil)
 (defvar tnt-just-signedonoff-delay 60)
 
-(defvar tnt-login-flag-unset-after 3)
+(defvar tnt-login-flag-unset-after 10)
 (defvar tnt-login-flag nil)
 
 (defvar tnt-buddy-update-timer nil)
