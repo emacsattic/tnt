@@ -1113,7 +1113,7 @@ Settings:
   (global-set-key "\C-xtq" 'tnt-kill)
   (global-set-key "\C-xtr" 'tnt-reject)
   (global-set-key "\C-xts" 'tnt-switch-user)
-  (global-set-key "\C-xtv" 'tnt-archive-view-current-archive)
+  (global-set-key "\C-xtv" 'tnt-archive-view-archive-dwim)
   )
 
 ;;; ***************************************************************************
@@ -1502,7 +1502,11 @@ unless PREFIX arg is given."
 
 (unless tnt-im-mode-map
   (setq tnt-im-mode-map (make-sparse-keymap))
-  (define-key tnt-im-mode-map "\r" 'tnt-send-text-as-instant-message))
+  (define-key tnt-im-mode-map "\r" 'tnt-send-text-as-instant-message)
+  (define-key tnt-im-mode-map (read-kbd-macro "C-<return>") 'tnt-send-text-as-instant-message-no-format)
+  (define-key tnt-im-mode-map (read-kbd-macro "M-RET") (function (lambda () "" (interactive) (insert "
+"))))
+  )
 
 ;;; ***************************************************************************
 (defun tnt-im-mode ()
@@ -1566,13 +1570,13 @@ Special commands:
             buffer)))))
 
 ;;; ***************************************************************************
-(defun tnt-send-text-as-instant-message ()
+(defun tnt-send-text-as-instant-message (&optional no-reformat)
   "Sends text at end of buffer as an IM."
   (interactive)
-  (let* ((message (tnt-get-input-message)))
+  (let* ((message (tnt-get-input-message no-reformat)))
     (if (string= message "")
         (message "Please enter a message to send")
-      (tnt-append-message message tnt-current-user))
+      (tnt-append-message message tnt-current-user nil no-reformat))
     (tnt-remove-im-event tnt-im-user)
     (if tnt-away (message "Reminder: You are still set as away"))
     (if tnt-recenter-windows (recenter -1))
@@ -1580,6 +1584,12 @@ Special commands:
       (progn
         (toc-send-im tnt-im-user message)
         (tnt-beep tnt-beep-on-outgoing-message)))))
+
+;;; ***************************************************************************
+(defun tnt-send-text-as-instant-message-no-format ()
+  "Sends text at end of buffer as an IM without any formating."
+  (interactive)
+  (tnt-send-text-as-instant-message t))
 
 ;;; ***************************************************************************
 (defun tnt-show-help ()
@@ -1735,20 +1745,20 @@ Special commands:
       (tnt-leave-chat tnt-chat-room)))
 
 ;;; ***************************************************************************
-(defun tnt-send-text-as-chat-message ()
+(defun tnt-send-text-as-chat-message (&optional no-reformat)
   (interactive)
-  (let ((message (tnt-get-input-message)))
+  (let ((message (tnt-get-input-message no-reformat)))
     (tnt-remove-chat-event tnt-chat-room)
     (toc-chat-send tnt-chat-roomid message)))
 
 ;;; ***************************************************************************
-(defun tnt-send-text-as-chat-whisper (user)
+(defun tnt-send-text-as-chat-whisper (user &optional no-reformat)
   (interactive "p")
   (let* ((completion-ignore-case t)
          (user (or (and (stringp user) user)
                    (completing-read "Whisper to user: "
                                     (tnt-participant-collection))))
-         (message (tnt-get-input-message)))
+         (message (tnt-get-input-message no-reformat)))
     (if (= (length message) 0)
         (setq message (read-from-minibuffer "Message: ")))
     (tnt-append-message
@@ -1762,7 +1772,7 @@ Special commands:
   (mapcar 'list tnt-chat-participants))
 
 ;;; ***************************************************************************
-(defun tnt-send-text-as-chat-invitation (users)
+(defun tnt-send-text-as-chat-invitation (users &optional no-reformat)
   (interactive "p")
 
   (let ((user-list
@@ -1792,7 +1802,7 @@ Special commands:
 
     (if user-list
 
-        (let (msg (tnt-get-input-message))
+        (let (msg (tnt-get-input-message no-reformat))
           (if (= (length msg) 0)
               (setq msg (read-from-minibuffer "Message: "
                                               "Join me in this Buddy Chat.")))
@@ -1871,7 +1881,7 @@ Special commands:
     rc))
 
 ;;; ***************************************************************************
-(defun tnt-append-message (message &optional user modified)
+(defun tnt-append-message (message &optional user modified no-reformat)
   "Prepends USER (MODIFIED) to MESSAGE and appends the result to the buffer."
   (save-excursion
     (let ((old-point (marker-position tnt-message-marker))
@@ -1917,7 +1927,9 @@ Special commands:
 
 	  ;; formatting
       (insert-before-markers tnt-separator)
-      (fill-region old-point (point))
+
+	  (unless no-reformat
+		(fill-region old-point (point)))
 
       ;; Make inserted text read-only.  I'm not really sure why we
       ;; need the inhibit-read-only code; IM buffers should never be
@@ -1988,13 +2000,13 @@ Special commands:
       message)))
 
 ;;; ***************************************************************************
-(defun tnt-get-input-message ()
+(defun tnt-get-input-message (&optional no-reformat)
   (let ((message (buffer-substring-no-properties tnt-message-marker (point-max))))
     (delete-region tnt-message-marker (point-max))
     (goto-char (point-max))
     (if tnt-recenter-windows (recenter -1))
     (tnt-replace-me-statement
-     (tnt-neliminate-newlines message))))
+     (if no-reformat message (tnt-neliminate-newlines message)))))
 
 ;;; ***************************************************************************
 ;;; Archive file functions
@@ -2011,55 +2023,62 @@ Special commands:
                    (t ""))))))
 
 ;;; ***************************************************************************
-(defun tnt-archive-view-current-archive ()
-  "Open the current archive (if any) in View mode.
-
-Must be in an IM/Chat buffer."
+(defun tnt-archive-view-archive-dwim (&optional user)
+  ""
   (interactive)
+  (let (filename)
+	;; no user name given
+	(if (not user)
+		(cond
+		 ;; IM or Chat mode?
+		 ((or (eq major-mode 'tnt-im-mode)
+			  (eq major-mode 'tnt-chat-mode))
+		  (setq filename tnt-archive-filename))
 
-  (unless (or (eq major-mode 'tnt-im-mode)
-              (eq major-mode 'tnt-chat-mode))
-    (error "Not a TNT IM/Chat buffer"))
+		 ;; Buddy list mode?
+		 ((eq major-mode 'tnt-buddy-list-mode)
+		  (let* ((buddy-at-point (tnt-get-buddy-at-point))
+				 (type (car buddy-at-point))
+				 (nick (cdr buddy-at-point)))
+			(setq filename
+				  (if (string= type "chat")
+					  (tnt-chat-archive-filename nick)
+					(tnt-im-archive-filename nick)))))
 
-  (let* ((dir (tnt-archive-directory))
-		 (full-path (format "%s/%s" dir tnt-archive-filename)))
-	(when (and dir full-path)
-      (unless (file-exists-p full-path)
-        (error "No current archive file found"))
-	  (view-file-other-window full-path))))
+		 ;; prompt for buddy or chat room
+		 (t (let ((buddies-and-chats (nconc (mapcar 'list (tnt-extract-normalized-buddies tnt-buddy-blist))
+											(mapcar 'list (mapcar 'cdr tnt-chat-alist))
+											(mapcar 'cdr tnt-buddy-fullname-alist))))
+			  (setq user (completing-read "Name of archive to view: " buddies-and-chats nil nil))
+			  ;; was it a user, chat room or fullname?
+			  (let (elem)
+				(setq elem (member user (mapcar 'cdr tnt-chat-alist)))
+				(if elem
+					(setq filename (tnt-chat-archive-filename user))
+				  (setq elem (rassoc (list user) tnt-buddy-fullname-alist))
+				  (if elem
+					  (setq filename (tnt-im-archive-filename (car elem)))
+					(setq filename (tnt-im-archive-filename user)))))
+			  )))
 
-;;; ***************************************************************************
-(defun tnt-archive-view-buddy-archive ()
-  "Open the archive of the Buddy at point.
+	  ;; user was known
+	  (let (elem)
+		(setq elem (assoc-ignore-case user tnt-chat-alist))
+		(if elem
+			(setq filename (tnt-chat-archive-filename (cdr elem)))
+		  (setq filename (tnt-im-archive-filename user)))))
 
-Must be in Buddy List mode."
-  (interactive)
-  (unless (eq major-mode 'tnt-buddy-list-mode)
-    (error "Not in TNT Buddy List buffer"))
+	  ;; check for fname and open if possible
+	  (unless filename
+		(error "Unknown filename"))
 
-  (let* ((buddy-at-point (tnt-get-buddy-at-point))
-         (type (car buddy-at-point))
-         (nick (cdr buddy-at-point)))
-	(tnt-archive-view-archive-file nick (string= type "chat"))))
-
-;;; ***************************************************************************
-(defun tnt-archive-view-archive-file (&optional user-or-room room)
-  "Open the archive file for USER-OR-ROOM.
-
-If ROOM is non-nil, assume it's a chat room.  If USER-OR-ROOM is nil,
-prompt for nickname."
-  (interactive "sNickname:")
-
-  (let* ((dir (tnt-archive-directory))
-		 (full-path (format "%s/%s" dir
-                            (or tnt-archive-filename
-                                (if room
-                                    (tnt-chat-archive-filename user-or-room)
-                                  (tnt-im-archive-filename user-or-room))))))
-	(when (and dir full-path)
-      (unless (file-exists-p full-path)
-        (error "No current archive file found"))
-	  (view-file-other-window full-path))))
+	  (let* ((dir (tnt-archive-directory))
+			 (full-path (format "%s/%s" dir filename)))
+		(when (and dir full-path)
+		  (unless (file-exists-p full-path)
+			(error (concat "No current archive file found [" filename "]")))
+		  (view-file-other-window full-path)))
+	  ))
 
 ;;; ***************************************************************************
 (defun tnt-archive-delete-buddy-archive-file ()
@@ -2082,7 +2101,7 @@ prompt for nickname."
 
     ;; confirm
     (if (yes-or-no-p (concat "Delete archive file for '"
-                             (tnt-get-fullname-or-nick nick) "'? "))
+                             (tnt-get-fullname-and-nick nick) "'? "))
         (progn
           (delete-file full-path)
           (let ((buf (get-file-buffer full-path)))
@@ -2145,7 +2164,7 @@ prompt for nickname."
   (define-key tnt-buddy-list-mode-map "s"    'tnt-switch-user)
   (define-key tnt-buddy-list-mode-map "S"    'tnt-cycle-buddies-sort)
   (define-key tnt-buddy-list-mode-map "u"    'tnt-next-menu)
-  (define-key tnt-buddy-list-mode-map "v"    'tnt-archive-view-buddy-archive)
+  (define-key tnt-buddy-list-mode-map "v"    'tnt-archive-view-archive-dwim)
   (define-key tnt-buddy-list-mode-map " "    'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "\C-m" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse-down)
@@ -2427,31 +2446,31 @@ Sorts/groups buddies according to tnt-sort-buddies, tnt-group-*-buddies."
 ;;---------------------------------------------------------------------------
 
 (defun tnt-nick-less-than (arg1 arg2)
-  (let* ((nick1-props      (cdr arg1))
-         (nick2-props      (cdr arg2))
+  (let* ((nick1-props (cdr arg1))
+         (nick2-props (cdr arg2))
          (nick1-blist-name (car arg1))
          (nick2-blist-name (car arg2))
          (nick1-nnick      (tnt-downcase (plist-get nick1-props 'nnick)))
          (nick2-nnick      (tnt-downcase (plist-get nick2-props 'nnick)))
          (nick1-fullname   (tnt-downcase (plist-get nick1-props 'fullname)))
          (nick2-fullname   (tnt-downcase (plist-get nick2-props 'fullname)))
-         (nick1-idle-secs  (plist-get nick1-props 'idle-secs))
-         (nick2-idle-secs  (plist-get nick2-props 'idle-secs))
-         (nick1-away       (plist-get nick1-props 'away))
-         (nick2-away       (plist-get nick2-props 'away))
-         (nick1-online     (plist-get nick1-props 'online))
-         (nick2-online     (plist-get nick2-props 'online))
-         (nick1-offline    (not nick1-online))
-         (nick2-offline    (not nick2-online))
-         (nick1-nickcount  (plist-get nick1-props 'nickcount))
-         (nick2-nickcount  (plist-get nick2-props 'nickcount))
-         (nick1-sortname   nick1-nnick)
-         (nick2-sortname   nick2-nnick)
-         (nick1-vidle      nil)
-         (nick2-vidle      nil)
-         (nick1-score      0)
-         (nick2-score      0)
-         (name-less-than   nil)
+         (nick1-idle-secs (plist-get nick1-props 'idle-secs))
+         (nick2-idle-secs (plist-get nick2-props 'idle-secs))
+         (nick1-away      (plist-get nick1-props 'away))
+         (nick2-away      (plist-get nick2-props 'away))
+         (nick1-online    (plist-get nick1-props 'online))
+         (nick2-online    (plist-get nick2-props 'online))
+         (nick1-offline   (not nick1-online))
+         (nick2-offline   (not nick2-online))
+         (nick1-nickcount (plist-get nick1-props 'nickcount))
+         (nick2-nickcount (plist-get nick2-props 'nickcount))
+         (nick1-sortname nick1-nnick)
+         (nick2-sortname nick2-nnick)
+         (nick1-vidle nil)
+         (nick2-vidle nil)
+         (nick1-score 0)
+         (nick2-score 0)
+         (name-less-than nil)
          )
 
     ;; Compare names and stow the result so we can use it as
@@ -2773,21 +2792,21 @@ No sort -> Buddy name -> Fullname"
     (save-match-data
       (end-of-line)
       (let ((eol-point (point)))
-        (beginning-of-line)
+      (beginning-of-line)
         (if (or (null (or (re-search-forward "\\[\\([^]]+\\)\\]" eol-point t)
                           (re-search-forward "^ +\\([^(]+\\)" eol-point t)))
-                (> (match-beginning 1) (tnt-buddy-list-menu-line)))
-            (error "Position cursor on a buddy name")
-          (let* ((match-b (match-beginning 1))
-                 (match-e (match-end 1))
-                 (nick (buffer-substring-no-properties match-b match-e))
-                 (nick (substring nick 0
-                                  (or (string-match "\\s-+$" nick)
-                                      (length nick)))))
-            (goto-char match-b)
-            (if (re-search-backward "^chat rooms$" nil t)
-                (cons "chat" nick)
-              (cons "im" nick))))
+              (> (match-beginning 1) (tnt-buddy-list-menu-line)))
+          (error "Position cursor on a buddy name")
+        (let* ((match-b (match-beginning 1))
+               (match-e (match-end 1))
+               (nick (buffer-substring-no-properties match-b match-e))
+               (nick (substring nick 0
+                                (or (string-match "\\s-+$" nick)
+                                    (length nick)))))
+          (goto-char match-b)
+          (if (re-search-backward "^chat rooms$" nil t)
+              (cons "chat" nick)
+            (cons "im" nick))))
         ))))
 
 ;;; ***************************************************************************
@@ -2904,7 +2923,8 @@ No sort -> Buddy name -> Fullname"
                       ;; see NOTE below about (current-time)
                       (- (cadr (current-time))
                          (* 60 idle))))
-        (state (if onlinep "online" "offline")))
+        (state (if onlinep "online" "offline"))
+        (fullname (tnt-get-fullname-or-nick nick)))
 
     (if (and (not tnt-login-flag)
              (not (string= status (tnt-buddy-status nick))))
@@ -2916,10 +2936,10 @@ No sort -> Buddy name -> Fullname"
           (let ((buffer (get-buffer (tnt-im-buffer-name nick))))
             (if buffer
                 (with-current-buffer buffer
-                  (tnt-append-message (format "%s %s" nick state)))))
+                  (tnt-append-message (format "%s %s" fullname state)))))
 
           (if tnt-message-on-buddy-signonoff
-              (message "%s %s" nick state))
+              (message "%s %s" fullname state))
 
           (if tnt-timers-available (tnt-set-just-signedonoff nnick onlinep))
           ))
@@ -2929,10 +2949,10 @@ No sort -> Buddy name -> Fullname"
       (if (and (not just-onoff) buffer)
           (if (and away (not prevaway))
               (with-current-buffer buffer
-                (tnt-append-message (format "%s has gone away." nick)))
+                (tnt-append-message (format "%s has gone away." fullname)))
             (if (and (not away) prevaway)
                 (with-current-buffer buffer
-                  (tnt-append-message (format "%s has returned." nick))))
+                  (tnt-append-message (format "%s has returned." fullname))))
             )))
 
     (if onlinep
@@ -3535,7 +3555,8 @@ nil otherwise."
 ;;; ***************************************************************************
 (defun tnt-handle-im-in (user auto message)
   (let* ((buffer-exists (get-buffer (tnt-im-buffer-name user)))
-         (buffer (tnt-im-buffer user)))
+         (buffer (tnt-im-buffer user))
+         (fullname (tnt-get-fullname-or-nick user)))
 
     (tnt-append-message-and-adjust-window
      buffer message user (if auto "(Auto-response)"))
@@ -3556,7 +3577,7 @@ nil otherwise."
           (tnt-beep tnt-beep-on-first-incoming-message)
         (tnt-beep tnt-beep-on-incoming-message))
 
-      (tnt-push-event (format "Message from %s available" user)
+      (tnt-push-event (format "Message from %s available" fullname)
                       (tnt-im-buffer-name user) nil))
 
     (if tnt-away (tnt-send-away-msg user))))
@@ -3763,7 +3784,7 @@ nil otherwise."
 (defun tnt-completing-read-list (prompt collection &optional initial-input)
   "Reads a list from the minibuffer with completion for each element
 of the list, delimited by commas."
-  (let* ((initial-input-str (mapconcat 'identity initial-input ","))
+  (let* ((initial-input-str (mapconcat 'identity initial-input ", "))
          (str (completing-read prompt 'tnt-completion-func
                                nil nil initial-input-str)))
     (split-string str ",")))
