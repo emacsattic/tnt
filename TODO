@@ -8,3 +8,6 @@ List of things to be done
  - Improve interface for editing buddy list.
 
  - Allow logging of all IM conversations.
+
+ - Add chat rooms to be listed in the buddy buffer, as well as IM
+   messages from non-buddies, and offline buddies.

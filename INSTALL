@@ -31,5 +31,11 @@ loaded, use the describe-function command (invoked by C-h f) to
 describe the function tnt-open.  If it works, you should be able to
 run TNT.
 
-Please also read the README file before installing.
+You'll probably also want to add some additional variable bindings in
+the .emacs file, after the above two lines, to further customize or
+simplify use of TNT.  The README file gives details on all the
+user-definable variables.  You almost certainly want to define either
+tnt-default-username or tnt-username-alist.  
+
+Have fun!
 

@@ -39,10 +39,6 @@
 ;;;;   http://tnt.sourceforge.net/
 ;;;; ----------------------------------------------------------------------
 ;;;;
-;;;; todo:
-;;;;   implement permit/deny
-;;;;   point reset by erase-buffer to beginning of buddy buffer during update
-;;;;   consider using use-hard-newlines variable
 
 (require 'toc)
 
@@ -106,24 +102,6 @@ way, but note that each element of the list MUST be either of the form
 (\"UserName\") or of the form (\"UserName\" . \"Password\"), and note the
 apostrophe.  When you log in as a username for which the password is
 not stored here, you will be prompted.
-")
-
-(defvar tnt-separator "\n\n"
-  "*String printed between IMs.
-
-This controls what is printed between message.  One newline is pretty
-much required in order separate messages.  Two newlines is the default,
-but other strings, suchs as \"\n-\n\" may be desirable.
-")
-
-(defvar tnt-use-timestamps nil
-  "*If non-nil, shows timestamps in TNT conversations.
-
-This will add a timestamp for each message you receive or send.
-This is useful for logging, and for people who are on very often.
-It's also convenient if you leave yourself logged in while away
-from your computer, so then when you come back, you can see how
-long ago it was that your friend said \"hi\" while you were gone.
 ")
 
 (defvar tnt-default-chatroom '(format "%s Chat%03d" tnt-current-user (random 1000))
@@ -216,6 +194,45 @@ Settings:
             you'll need to set tnt-sound-exec.
 ")
 
+(defvar tnt-beep-on-chat-invitation 'current
+  "*If non-nil, beeps when you are invited to a chatroom.
+
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
+")
+
+(defvar tnt-beep-on-chat-message 'current
+  "*If non-nil, beeps when there is activity in a hidden chat buffer.
+
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
+")
+
+(defvar tnt-beep-on-visible-chat-message nil
+  "*If non-nil, beeps when there is activity in a visible chat buffer.
+
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
+")
+
 (defvar tnt-beep-on-buddy-signon nil
   "*If non-nil, beeps when buddies sign on.
 
@@ -229,8 +246,8 @@ Settings:
             you'll need to set tnt-sound-exec.
 
 Note that whatever value this variable has, you will still get
-messages in your minibuffer saying \"MyBuddy online\" and \"MyBuddy
-offline\".
+messages in your minibuffer saying \"MyBuddy online\" (provided that
+the tnt-message-on-buddy-signonoff variable is non-nil).
 ")
 
 (defvar tnt-beep-on-buddy-signoff nil
@@ -246,8 +263,8 @@ Settings:
             you'll need to set tnt-sound-exec.
 
 Note that whatever value this variable has, you will still get
-messages in your minibuffer saying \"MyBuddy online\" and \"MyBuddy
-offline\".
+messages in your minibuffer saying \"MyBuddy offline\" (provided that
+the tnt-message-on-buddy-signonoff variable is non-nil).
 ")
 
 (defvar tnt-beep-on-signon nil
@@ -290,19 +307,6 @@ Settings:
             you'll need to set tnt-sound-exec.
 ")
 
-(defvar tnt-beep-on-chat-invitation 'current
-  "*If non-nil, beeps when you are invited to a chatroom.
-
-Settings:
- nil        Do not beep.
- 'visible   Visible bell.
- 'audible   Audible bell.
- 'current   Current emacs setting (visible or audible).
- filename   You can also set this value to a string, which is the
-            filename of a soundfile to play.  On non-XEmacs systems,
-            you'll need to set tnt-sound-exec.
-")
-
 ;;; end sound settings
 
 ;;;---------------------------------------------------------------------------
@@ -314,6 +318,18 @@ Settings:
 (defvar tnt-message-on-chatroom-message t
   "*If non-nil, a minibuffer message (and a beep, depending on your 'beep'
 settings) appears when you have messages pending in a chatroom buffer.
+")
+
+(defvar tnt-use-timestamps nil
+  "*If non-nil, shows timestamps in TNT conversations.
+
+This will add a timestamp for each message you receive or send.
+This is useful for logging, and for people who are on very often.
+It's also convenient if you leave yourself logged in while away
+from your computer, so then when you come back, you can see how
+long ago it was that your friend said \"hi\" while you were gone.
+
+Defaults to nil.
 ")
 
 (defvar tnt-use-split-buddy nil
@@ -332,8 +348,27 @@ when already in the *buddies* buffer.
 (defvar tnt-use-idle-timer tnt-timers-available
   "*If non-nil, tells TOC server when emacs has been idle for 10 minutes.")
 
+(defvar tnt-separator "\n\n"
+  "*String printed between IMs.
+
+This controls what is printed between message.  One newline is pretty
+much required in order separate messages.  Two newlines is the default,
+but other strings, suchs as \"\n---\n\" may be desirable.
+")
+
+(defvar tnt-recenter-windows t
+  "*If non-nil, recenters text to bottom of window when messages are printed.
+
+Defaults to t.
+")
+
 (defvar tnt-directory "~/.tnt"
   "*The directory tnt will use to store data.
+
+Note that this should NOT be the same place that the elisp files, the
+README, and so on are.
+
+Defaults to \"~/.tnt\".
 ")
 
 (defvar tnt-buddy-list-backup-filename "%s-buddies"
@@ -344,11 +379,10 @@ Occasionally, the toc server loses people's buddy lists.  If a
 file, and if the server loses it, tnt will restore from the backup.
 If the given filename includes \"%s\", then your username will be
 substituted.
+
+Defaults to \"%s-buddies\".
 ")
-
-(defvar tnt-recenter-windows t
-  "*If non-nil, recenters text to bottom of window when messages are printed.")
-
+ 
 (defvar tnt-email-to-pipe-to nil
   "*Should be nil or a string containing an email address.
 
@@ -519,10 +553,13 @@ messages are disabled."
           (ourmsg (if (string= msg "")
                       (format "<POUNCE MSG> %s is now available" user) msg)))
      (if msg
-         (let ((buffer (tnt-im-buffer user)))
+         (let ((buffer (tnt-im-buffer user))
+               (buffer-name (tnt-im-buffer-name user)))
            (toc-send-im user msg)
-           (tnt-append-message-and-adjust-window buffer ourmsg tnt-current-user)
-           (tnt-push-event (format "You have pounced on %s" user) buffer nil)
+           (tnt-append-message-and-adjust-window buffer ourmsg
+                                                 tnt-current-user)
+           (tnt-push-event (format "You have pounced on %s" user)
+                           buffer-name nil)
            (tnt-pounce-delete user))
      )))
 
@@ -869,6 +906,7 @@ Special commands:
                       (and (boundp 'tnt-chat-room) tnt-chat-room)
                       (tnt-read-string-with-default "Join chat room"
                                             (eval tnt-default-chatroom)))))
+      (tnt-remove-chat-event input)
       (toc-chat-join input)
       (switch-to-buffer (tnt-chat-buffer input)))))
 
@@ -919,6 +957,7 @@ Special commands:
 (defun tnt-send-text-as-chat-message ()
   (interactive)
   (let ((message (tnt-get-input-message)))
+    (tnt-remove-chat-event tnt-chat-room)
     (toc-chat-send tnt-chat-roomid message)))
 
 
@@ -1050,7 +1089,8 @@ Special commands:
                (not (string-equal tnt-last-datestamp today-datestamp)))
           (progn
             (setq tnt-last-datestamp today-datestamp)
-            (insert-before-markers "[--- " today-datestamp " ---]"
+            (insert-before-markers tnt-separator
+                                   "[--- " today-datestamp " ---]"
                                    tnt-separator)))
 
       (if tnt-use-timestamps
@@ -1720,7 +1760,14 @@ Special commands:
 (defun tnt-remove-im-event (nick)
   "Removes an instant message event from the event-ring."
   (interactive)
-  (let ((event (assoc (format "*im-%s*" (toc-normalize nick)) tnt-event-ring)))
+  (let ((event (assoc (tnt-im-buffer-name nick) tnt-event-ring)))
+    (if event (setq tnt-event-ring (delete event tnt-event-ring)))
+    (tnt-show-top-event)))
+
+(defun tnt-remove-chat-event (room)
+  "Removes a chat event from the event-ring."
+  (interactive)
+  (let ((event (assoc (tnt-chat-buffer-name room) tnt-event-ring)))
     (if event (setq tnt-event-ring (delete event tnt-event-ring)))
     (tnt-show-top-event)))
 
@@ -2083,7 +2130,9 @@ Special commands:
   (setq tnt-chat-alist (tnt-addassoc roomid room tnt-chat-alist)))
 
 (defun tnt-handle-chat-in (roomid user whisperp message)
-  (let ((buffer (tnt-chat-buffer (cdr (assoc roomid tnt-chat-alist)))))
+  (let* ((room-name (cdr (assoc roomid tnt-chat-alist)))
+         (buffer (tnt-chat-buffer room-name))
+         (buffer-name (tnt-chat-buffer-name room-name)))
     (tnt-append-message-and-adjust-window
      buffer message user (if whisperp "whispers"))
 
@@ -2092,12 +2141,12 @@ Special commands:
              (not (string-equal user tnt-current-user)))
         (if (get-buffer-window buffer 'visible)
             (progn
-              (tnt-beep tnt-beep-on-visible-incoming-message)
-              (tnt-remove-im-event user))
+              (tnt-beep tnt-beep-on-visible-chat-message)
+              (tnt-remove-chat-event room-name))
           (progn
-            (tnt-beep tnt-beep-on-incoming-message)
+            (tnt-beep tnt-beep-on-chat-message)
             (tnt-push-event (format "Chat message from %s available" user)
-                            buffer nil))))))
+                            buffer-name nil))))))
 
 (defun tnt-handle-chat-update-buddy (roomid inside users)
   (with-current-buffer (tnt-chat-buffer (cdr (assoc roomid tnt-chat-alist)))
@@ -2116,11 +2165,12 @@ Special commands:
 
 (defun tnt-handle-chat-invite (room roomid sender message)
   (tnt-handle-chat-join roomid room)    ; associate roomid with room
-  (let ((buffer (tnt-chat-buffer room)))
+  (let ((buffer (tnt-chat-buffer room))
+        (buffer-name (tnt-chat-buffer-name room)))
     (with-current-buffer buffer
       (tnt-append-message (tnt-reformat-text message) sender "invitation"))
     (tnt-push-event (format "Chat invitation from %s arrived" sender)
-                    buffer 'tnt-chat-event-pop-function)
+                    buffer-name 'tnt-chat-event-pop-function)
     (tnt-beep tnt-beep-on-chat-invitation)
     ))
 
@@ -2317,9 +2367,10 @@ of the list, delimited by commas."
 
 (defvar tnt-html-regexps-to-replace
   (list '("<BR>" "\n")
+        ;; these must be after any html tags (which have "<" and ">"):
         '("&lt;" "<")
         '("&gt;" ">")
-        ;; and this one must be last:
+        ;; and this must be after any escape sequences which have "&":
         '("&amp;" "&")
         ))
 

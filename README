@@ -344,55 +344,110 @@ tnt-mute (C-x t m)
   as opposed to beeps (see below) and they start to get annoying.
 
 
-How do I further customize TNT?
--------------------------------
+How can I simplify logging in?
+------------------------------
 
 Any of the following options can also be included in your .emacs file,
 immediately _after_ the "(setq load-path ...)" and "(load "tnt")"
 lines.
 
+In order to not have to type your username (and optionally your
+password), you can use these variables:
+    
     (setq tnt-default-username "MyUserName")
     (setq tnt-default-password "MyPassword")
-    (setq tnt-username-alist '(("UserName1" . "Password1")
-                               ("UserName2" . "Password2")
-                               ("UserName3")))
 
-    (setq tnt-separator "\n\n")
-    (setq tnt-use-timestamps t)
+If you have more than one username that you sometimes log in as, you
+can switch between them using "C-x t s" between logins, but you should
+use this variable instead of the above:
+    
+    (setq tnt-username-alist '(("DefaultUserName" . "Password1")
+                               ("AltUserName1" . "Password2")
+                               ("AltUserName2")))
 
-    ;; You can also set these to soundfiles (see below)
-    (setq tnt-beep-on-incoming-message 'audible)
-    (setq tnt-beep-on-visible-incoming-message 'visible)
-    (setq tnt-beep-on-buddy-signonoff 'current)
-    (setq tnt-beep-on-error nil)
+IMPORTANT SECURITY NOTE:
+If you are including your password in your .emacs file, you probably
+want to be sure that your .emacs file is only readable by you.  If
+someone gains access to that file, they will be able to log into AIM
+as you.  If the tnt-default-password is not set, or if the password is
+left out for the current username in the tnt-username-alist, tnt will
+prompt you for your password each time you log in.
+
+
+
+How can I customize beeping and other sounds?
+---------------------------------------------
+
+There are several different events which can have beeps/sounds
+associated.  Each "tnt-beep-on-..." variable can be set to any of the
+following:
+
+    nil        no beep
+    'audible   audible beep
+    'visible   visible beep
+    'current   whatever emacs is currently set to (audible or visible)
+    "/full/path/to/some/sound.wav"
+               play a sound file; under XEmacs, built-in sound support
+               is used, but under GNU Emacs, you must also define the
+               tnt-sound-exec variable.
+
+These are the variables, with their defaults:
+
+    (setq tnt-beep-on-incoming-message 'current)
+    (setq tnt-beep-on-first-incoming-message nil)    ;; see below
+    (setq tnt-beep-on-visible-incoming-message nil)
+    (setq tnt-beep-on-outgoing-message nil)
+    (setq tnt-beep-on-chat-invitation 'current)
+    (setq tnt-beep-on-chat-message 'current)
+    (setq tnt-beep-on-visible-chat-message nil)
+    (setq tnt-beep-on-buddy-signon nil)
+    (setq tnt-beep-on-buddy-signoff nil)
+    (setq tnt-beep-on-signon nil)
+    (setq tnt-beep-on-signoff nil)
+    (setq tnt-beep-on-error 'current)
+    
+Note that tnt-beep-on-first-incoming-message is slightly different
+from the others in that if it is set to nil, it will use the value of
+tnt-beep-on-incoming-message, so it only does nothing if that one is
+*also* set to nil.
+
+Under XEmacs, playing sound files should just work, but to use sound
+files under GNU Emacs, you'll need to set these variables:
+
+    (setq tnt-sound-exec "/path/to/executable")
+    (setq tnt-sound-exec-args '("any args" "to pass" "before the filename"))
+
+    
+The following variables determine whether a message appears in the
+minibuffer to notify of particular happenings.  Note that these are
+independent from the above sound/beep settings.
+
     (setq tnt-message-on-buddy-signonoff nil)
+    (setq tnt-message-on-chatroom-message t)
 
+Following are a few miscellaneous other variables that can be set:
+    
+    (setq tnt-use-timestamps t)
     (setq tnt-use-split-buddy t)
     (setq tnt-use-keepalive nil)
     (setq tnt-use-buddy-update-timer nil)
     (setq tnt-use-idle-timer nil)
+    
+    (setq tnt-separator "\n---\n")
+    (setq tnt-recenter-windows nil)
 
     (setq tnt-directory "/some/tnt/directory")
     (setq tnt-buddy-list-backup-filename nil)
-    (setq tnt-recenter-windows nil)
+    
     (setq tnt-email-to-pipe-to "someone@example.com")
     (setq tnt-email-binary "/some/other/bin/mail")
 
-All the "tnt-beep-on-..." variables can be set to any of: 'audible,
-'visible, 'current, nil, or a string containing a filename.
-This determines whether it will use the audible or visible beep, or
-whatever the current default beep is for emacs, or no beep at all.
-If any "beep" variable is a filename of a sound file, that file will
-be played when that event occurs.  Note that while XEmacs has built-in
-sound support, Emacs does not, so you'll need to set tnt-sound-exec
-and possibly tnt-sound-exec-args.
 
-
-NOTE: More information about all the options is available using emacs'
-built-in "apropos" function -- hit "M-x apropos", then type the
-variable name (e.g. "tnt-default-username").  It will give you the
-possible values the variable can be set to, what those do, and what
-the default is.
+NOTE: More information about all of the above variables is available
+using emacs' built-in "apropos" function -- hit "M-x apropos", then
+type the variable name (e.g. "tnt-default-username").  It will give
+you the possible values the variable can be set to, what those do, and
+what the default is.
 
 
 Also these two lines can optionally be included in your .emacs file:

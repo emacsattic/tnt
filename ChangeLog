@@ -1,3 +1,22 @@
+2001-06-27  NeilFred Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-beep-on-chat-message): added.  may as well separate
+	this setting from the one for IMs, because hey, why not.
+	(tnt-beep-on-visible-chat-message): added.  ditto.
+	(tnt-send-pounce): tnt-push-event was being called with the buffer
+	rather than the buffer-name.  fixed.
+	(tnt-join-chat): now calls tnt-remove-chat-event.
+	(tnt-send-text-as-chat-message): now calls tnt-remove-chat-event.
+	(tnt-append-message): added an extra tnt-separator.
+	(tnt-remove-im-event): now calling tnt-im-buffer-name, rather than
+	doing it itself.
+	(tnt-remove-chat-event): added.
+	(tnt-handle-chat-in): now calling tnt-remove-chat-event rather
+	than the incorrect call to tnt-remove-im-event.  also correctly
+	calling tnt-push-event.  and finally, also using the new
+	tnt-beep-on-chat-message variables.
+	(tnt-handle-chat-invite): now correctly calling tnt-push-event.  
+
 2001-06-25  NeilFred Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-backup-buddy-list): now only saves a backup if the
