@@ -973,24 +973,23 @@ Defaults to 'monthly.
 ;;; ***************************************************************************
 (unless tnt-inhibit-key-bindings
   (global-set-key "\C-xt?" 'tnt-show-help)
-  (global-set-key "\C-xto" 'tnt-open)
-  (global-set-key "\C-xtk" 'tnt-kill)
+  (global-set-key "\C-xta" 'tnt-accept)
+  (global-set-key "\C-xtA" 'tnt-toggle-away)
+  (global-set-key "\C-xtb" 'tnt-show-buddies)
+  (global-set-key "\C-xtB" 'tnt-edit-buddies)
   (global-set-key "\C-xti" 'tnt-im)
   (global-set-key "\C-xtj" 'tnt-join-chat)
   (global-set-key "\C-xtl" 'tnt-leave-chat)
-  (global-set-key "\C-xtb" 'tnt-show-buddies)
-  (global-set-key "\C-xta" 'tnt-accept)
-  (global-set-key "\C-xtr" 'tnt-reject)
-  (global-set-key "\C-xtp" 'tnt-prev-event)
-  (global-set-key "\C-xtn" 'tnt-next-event)
-  (global-set-key "\C-xtB" 'tnt-edit-buddies)
-  (global-set-key "\C-xts" 'tnt-switch-user)
-  (global-set-key "\C-xtA" 'tnt-away-toggle)
-  (global-set-key "\C-xtP" 'tnt-pounce-add)
   (global-set-key "\C-xtL" 'tnt-pounce-list)
-  (global-set-key "\C-xtD" 'tnt-pounce-delete)
+  (global-set-key "\C-xtm" 'tnt-toggle-mute)
   (global-set-key "\C-xtM" 'tnt-toggle-email)
-  (global-set-key "\C-xtm" 'tnt-mute)
+  (global-set-key "\C-xtn" 'tnt-next-event)
+  (global-set-key "\C-xto" 'tnt-open)
+  (global-set-key "\C-xtp" 'tnt-prev-event)
+  (global-set-key "\C-xtP" 'tnt-toggle-pounce)
+  (global-set-key "\C-xtq" 'tnt-kill)
+  (global-set-key "\C-xtr" 'tnt-reject)
+  (global-set-key "\C-xts" 'tnt-switch-user)
   )
 
 ;;; ***************************************************************************
@@ -999,8 +998,8 @@ Defaults to 'monthly.
 (defvar tnt-pounce-alist nil)
 
 ;;; ***************************************************************************
-(defun tnt-pounce-dwim (&optional pnick)
-  "Pounce do-what-I-mean.
+(defun tnt-toggle-pounce (&optional pnick)
+  "Toggle pounce.
 
 Pounce if I have no pounce message currently for that Buddy, or delete
 the current pounce message if I do have one.
@@ -1157,7 +1156,7 @@ if nil)"
   (cdr (assoc (toc-normalize nick) tnt-away-alist)))
 
 ;;; ***************************************************************************
-(defun tnt-away-toggle (prefix)
+(defun tnt-toggle-away (prefix)
   "Toggles current away status.
 
 The value of `tnt-default-away-message' is used as the away message,
@@ -1462,11 +1461,11 @@ Special commands:
 | tnt-next-event    |   C-x t n   | Shows next event in notification ring     |
 | tnt-prev-event    |   C-x t p   | Shows previous event in notification ring |
 | tnt-switch-user   |   C-x t s   | Switches between usernames for next login |
-| tnt-away-toggle   |   C-x t A   | Toggles away status, sets away message    |
+| tnt-toggle-away   |   C-x t A   | Toggles away status, sets away message    |
 | tnt-pounce-add    |   C-x t P   | Adds a user to your pounce list           |
 | tnt-pounce-delete |   C-x t D   | Removes a user from your pounce list      |
 | tnt-toggle-email  |   C-x t M   | Toggles forwarding incoming IMs to email  |
-| tnt-mute          |   C-x t m   | Toggles sounds on/off                     |
+| tnt-toggle-mute   |   C-x t m   | Toggles sounds on/off                     |
 +-------------------+-------------+-------------------------------------------+
 ;; use built-in keybinding cariable \[[whatever]]
 
@@ -1802,20 +1801,27 @@ Special commands:
 
 (unless tnt-buddy-list-mode-map
   (setq tnt-buddy-list-mode-map (make-sparse-keymap))
+  (define-key tnt-buddy-list-mode-map "?" 'tnt-show-help)
   (define-key tnt-buddy-list-mode-map "a" 'tnt-accept)
-  (define-key tnt-buddy-list-mode-map "A" 'tnt-away-toggle)
-  (define-key tnt-buddy-list-mode-map "E" 'tnt-edit-buddies)
-  (define-key tnt-buddy-list-mode-map "g" 'tnt-show-buddies)
+  (define-key tnt-buddy-list-mode-map "A" 'tnt-toggle-away)
+  (define-key tnt-buddy-list-mode-map "b" 'tnt-show-buddies)
+  (define-key tnt-buddy-list-mode-map "B" 'tnt-edit-buddies)
   (define-key tnt-buddy-list-mode-map "i" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map "I" 'tnt-fetch-info)
-  (define-key tnt-buddy-list-mode-map "J" 'tnt-join-chat)
-  (define-key tnt-buddy-list-mode-map "l" 'tnt-pounce-dwim)
+  (define-key tnt-buddy-list-mode-map "j" 'tnt-join-chat)
+  ;;(define-key tnt-buddy-list-mode-map "l" 'tnt-leave-chat)
   (define-key tnt-buddy-list-mode-map "L" 'tnt-pounce-list)
+  (define-key tnt-buddy-list-mode-map "m" 'tnt-toggle-mute)
+  (define-key tnt-buddy-list-mode-map "M" 'tnt-toggle-email)
   (define-key tnt-buddy-list-mode-map "n" 'tnt-next-buddy)
-  (define-key tnt-buddy-list-mode-map "N" 'tnt-next-group)
+  (define-key tnt-buddy-list-mode-map "\M-n" 'tnt-next-group)
+  (define-key tnt-buddy-list-mode-map "o" 'tnt-open)
   (define-key tnt-buddy-list-mode-map "p" 'tnt-prev-buddy)
-  (define-key tnt-buddy-list-mode-map "P" 'tnt-prev-group)
+  (define-key tnt-buddy-list-mode-map "P" 'tnt-toggle-pounce)
+  (define-key tnt-buddy-list-mode-map "\M-p" 'tnt-prev-group)
   (define-key tnt-buddy-list-mode-map "q" 'tnt-kill)
+  (define-key tnt-buddy-list-mode-map "r" 'tnt-reject)
+  (define-key tnt-buddy-list-mode-map "s" 'tnt-switch-user)
   (define-key tnt-buddy-list-mode-map " " 'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "\C-m" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse-down)
@@ -3038,7 +3044,7 @@ of the list, delimited by commas."
         (tnt-play-sound beep-type)))))
 
 ;;; ***************************************************************************
-(defun tnt-mute ()
+(defun tnt-toggle-mute ()
   "Toggles muting of all TNT sounds."
   (interactive)
   (setq tnt-muted (not tnt-muted))

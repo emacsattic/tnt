@@ -1,3 +1,17 @@
+2002-09-25  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
+	* tnt.el (tnt-toggle-mute): rename from tnt-mute.
+	(tnt-toggle-away): rename from tnt-away-toggle.
+	(tnt-toggle-pounce): rename from tnt-pounce-dwim.
+	(tnt-inhibit-key-bindings): change tnt-mute to tnt-toggle-mute and
+	tnt-away-toggle to tnt-toggle-away; sort the list of bindings;
+	also several changes to make bindings more consistent with buddy
+	list mode bindings.
+	(tnt-buddy-list-mode-map): change tnt-away-toggle to
+	tnt-toggle-away and tnt-pounce-dwim to tnt-toggle-pounce.  also
+	several changes to make bindings more consistent with the global
+	"C-x t" bindings.
+
 2002-09-24  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
 	* tnt.el (tnt-buddy-list-filter): also include an offline buddy if
