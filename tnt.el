@@ -3707,14 +3707,17 @@ of the list, delimited by commas."
 ;;; ***************************************************************************
 (defvar tnt-html-regexps-to-replace
   ;; could be defcustom??
-  (list '("<BR>" "\n")
-        ;; these must be after any html tags (which have "<" and ">"):
-        '("&lt;" "<")
-        '("&gt;" ">")
-        '("&quot;" "\"")
-        ;; and this must be after any escape sequences which have "&":
-        '("&amp;" "&")
-        ))
+  tnt-html-regexps-to-replace
+  (list
+   '("<BR>"      "\n")
+   '("</?[bui]>" "")
+   ;; these must be after any html tags (which have "<" and ">"):
+   '("&lt;"      "<")
+   '("&gt;"      ">")
+   '("&quot;"    "\"")
+   ;; and this must be after any escape sequences which have "&":
+   '("&amp;"     "&")
+   ))
 
 ;;; ***************************************************************************
 ;; for example, you might put in your .emacs (or wherever):

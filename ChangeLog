@@ -2,6 +2,7 @@
 
 	* tnt.el (tnt-buddy-list-message-waiting-face): Add.
 	(tnt-buddy-list-font-lock-keywords): Add MESSAGE WAITING keyword.
+	(tnt-html-regexps-to-replace): Add regexps for bold/italic/underline.
 
 2003-10-25  Scott Evans  <gse@antisleep.com>
 
