@@ -1916,19 +1916,35 @@ of the list, delimited by commas."
 ;;; String utilities
 ;;;----------------------------------------------------------------------------
 
-(defvar tnt-html-regexps
-  (list (list (concat "<HTML>\\|</HTML>\\|"
-                      "<BODY[^>]*>\\|</BODY>\\|"
-                      "<FONT[^>]*>\\|</FONT>\\|"
-                      "<PRE>\\|</PRE>\\|"
-                      "</A>")
-              "")
-        '("<BR>" "\n")
+(defvar tnt-html-tags-to-strip
+  (concat "<HTML>\\|</HTML>\\|"
+          "<BODY[^>]*>\\|</BODY>\\|"
+          "<FONT[^>]*>\\|</FONT>\\|"
+          "<PRE>\\|</PRE>\\|"
+          "</A>"))
+
+(defvar tnt-html-regexps-to-replace
+  (list '("<BR>" "\n")
         '("&lt;" "<")
         '("&gt;" ">")
         ;; and this one must be last:
         '("&amp;" "&")
         ))
+
+
+;; for example, you might put in your .emacs (or wherever):
+;;    (tnt-add-html-tag-to-strip "<B>\\|</B>")
+(defun tnt-add-html-tag-to-strip (str)
+  (setq tnt-html-tags-to-strip
+        (concat tnt-html-tags-to-strip "\\|" str)))
+
+;; for example, you might put in your .emacs (or wherever):
+;;    (tnt-add-html-regexp-to-replace "<I>\\|</I>" "_")
+(defun tnt-add-html-regexp-to-replace (replace-regexp replace-with)
+  (setq tnt-html-regexps-to-replace
+        (cons (list replace-regexp replace-with)
+              tnt-html-regexps-to-replace)))
+
 
 
 (defun tnt-strip-a-href (str)
@@ -2032,9 +2048,12 @@ of the list, delimited by commas."
 
 (defun tnt-reformat-text (str)
   ;; calls tnt-strip-some-html repeatedly with different substitutions
-  (reduce 'tnt-strip-some-html tnt-html-regexps
-          :initial-value (tnt-strip-a-href str)))
-
+  (reduce 'tnt-strip-some-html tnt-html-regexps-to-replace
+          :initial-value
+          (tnt-strip-some-html (tnt-strip-a-href str)
+                               (list tnt-html-tags-to-strip "")
+                               )))
+  
 
 
 (defun tnt-repeat (interval function)

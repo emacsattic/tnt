@@ -1,3 +1,14 @@
+2001-03-09  NeilFred Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-html-tags-to-strip): added.
+	(tnt-html-regexps-to-replace): renamed, removed the part that got
+	moved into tags-to-strip.
+	(tnt-add-html-tag-to-strip): added.
+	(tnt-add-html-regexp-to-replace): added.
+	(tnt-reformat-text): calling strip-some-html once for the
+	tags-to-strip, and then doing the old call to reduce for
+	regexps-to-replace.  
+
 2001-02-19   <jdaniel@mit.edu>
 
 	* tnt.el (tnt-send-idle): Added a call to 
