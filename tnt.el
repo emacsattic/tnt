@@ -125,26 +125,36 @@ from your computer, so then when you come back, you can see how
 long ago it was that your friend said \"hi\" while you were gone.
 ")
 
-(defvar tnt-beep-beep-beep 'sometimes
-  "*Controls beeping for incoming messages and chat invitations.
+(defvar tnt-beep-on-message-available-event 'audible
+  "*If non-nil, beeps when giving the \"Message from ... available\" message.
 
-Possible values are:
-  'sometimes  Beep when a new message comes in, but its message window is
-              not in a currently visible window.
+If set to 'visible, uses a visible bell.  If nil, no beep.
 
-  'always     Beep every time a new message comes in.
+Note that the value here will also be used for the 
+")
 
-  'never      No beeping.
+(defvar tnt-beep-on-message-in-visible-buffer nil
+  "*If non-nil, beeps every time a message comes into a visible IM buffer.
 
-Chat invitations always beep unless this variable is set to 'never.
+If set to 'visible, uses a visible bell.  If nil, no beep.
 ")
 
 (defvar tnt-beep-on-buddy-signonoff nil
-  "*If t, beeps when buddies sign on or off.
+  "*If non-nil, beeps when buddies sign on or off.
 
-Note that whether or not you set this, you will still get messages
-in your minibuffer saying \"MyBuddy online\" and \"MyBuddy offline\".
+If set to 'visible, uses a visible bell.  If nil, no beep.
+
+Note that whatever value this variable has, you will still get
+messages in your minibuffer saying \"MyBuddy online\" and \"MyBuddy
+offline\".
 ")
+
+(defvar tnt-beep-on-error 'audible
+  "*If non-nil, beeps when an error occurs.
+
+If set to 'visible, uses a visible.  If nil, no beep.
+")
+  
 
 (defvar tnt-use-split-buddy nil
   "*If t, tnt will split the window when going to the buddy list.
@@ -996,7 +1006,7 @@ Special commands:
         (state (if onlinep "online" "offline")))
     (if (not (equal status (tnt-buddy-status nick)))
         (progn
-          (if tnt-beep-on-buddy-signonoff (beep))
+          (tnt-beep tnt-beep-on-buddy-signonoff)
           (let ((buffer (get-buffer (tnt-im-buffer-name nick))))
             (if buffer
                 (with-current-buffer buffer
@@ -1386,16 +1396,15 @@ Special commands:
     (if (and tnt-email-to-pipe-to
              tnt-pipe-to-email-now)
         (tnt-pipe-message-to-program user message))
+    
+    (if (get-buffer-window buffer 'visible)
 
-    (if (eq tnt-beep-beep-beep 'always)
-        (beep))
-
-    (if (null (get-buffer-window buffer 'visible))
-        (progn
-          (if (eq tnt-beep-beep-beep 'sometimes)
-              (beep))
-          (tnt-push-event (format "Message from %s available" user)
-                          (tnt-im-buffer-name user) nil)))
+        (tnt-beep tnt-beep-on-message-in-visible-buffer)
+      
+      (tnt-beep tnt-beep-on-message-available-event)
+      (tnt-push-event (format "Message from %s available" user)
+                      (tnt-im-buffer-name user) nil))
+    
     (if tnt-away (tnt-send-away-msg user))))
 
 (defun tnt-toggle-email ()
@@ -1507,7 +1516,8 @@ Special commands:
       (tnt-append-message (tnt-strip-html message) sender "invitation"))
     (tnt-push-event (format "Chat invitation from %s arrived" sender)
                     buffer 'tnt-chat-event-pop-function)
-    (if (not (eq tnt-beep-beep-beep 'never)) (beep))))
+    (tnt-beep tnt-beep-on-message-available-event)
+    ))
 
 (defun tnt-handle-goto-url (windowid url)
   (setq url (concat "http://" tnt-toc-host "/" url))
@@ -1555,7 +1565,7 @@ of the list, delimited by commas."
   ;; Displays message in echo area and beeps.  Use this instead
   ;; of (error) for asynchronous errors.
   (apply 'message args)
-  (beep))
+  (tnt-beep tnt-beep-on-error))
 
 
 (defvar collection) ; to shut up byte compiler
@@ -1575,6 +1585,21 @@ of the list, delimited by commas."
         (if (stringp completion) (concat first-part completion) completion)))
      ((eq flag t)
       (all-completions last-word collection pred)))))
+
+(defun tnt-beep (beep-type)
+  ;; beep-type      action
+  ;; ---------      ------
+  ;; nil            no beep
+  ;; 'visible       visible beep
+  ;; other non-nil  audible beep
+  (if beep-type
+      (let ((orig-visible visible-bell))
+        (if (eq beep-type 'visible)
+            (setq visible-bell t)
+          (setq visible-bell nil))
+        (beep)
+        (setq visible-bell orig-visible))))
+
 
 
 

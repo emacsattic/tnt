@@ -1,5 +1,19 @@
 2000-05-14  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-beep): added.  beeps visibly, audibly, or not at
+	all, according to the argument.
+	(tnt-beep-on-message-available-event): added.
+	(tnt-beep-on-message-in-visible-buffer): added.
+	(tnt-beep-on-error): added.
+	(tnt-beep-beep-beep): removed.  (its functionality is now covered
+	by the message-available-event and message-in-visible-buffer
+	variables above.)
+	(tnt-handle-im-in): now uses the new beep variables.
+	(tnt-handle-chat-invite): now uses the new beep variable.
+	(tnt-error): now uses the new beep variable.
+
+2000-05-14  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-buddy-list-backup-filename): added.
 	(tnt-restore-buddy-list-if-necessary): added.
 	(tnt-buddy-list-is-empty-p): added.
