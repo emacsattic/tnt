@@ -1,6 +1,6 @@
 2000-05-01  John Jannotti  <jj@lcs.mit.edu>
 
-	* toc.el (toc-permit-mode): Added (keeps track of server side mode
+	* toc.el (toc-permit-mode): Added (keeps track of server side mode)
 	(toc-permit-list): Added (keeps track of server side list)
 	(toc-add-permit): Keep track of server info
 	(toc-add-deny): Keep track of server info
