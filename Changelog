@@ -6,6 +6,8 @@ March 31, 2000 - Jim Whitehead
 
 March 31, 2000 - John Jannotti
 ------------------------------
+ - Simplified a lot of code by adding tnt-addassoc and using it.
+ - renamed tnt-pounce-list to tnt-pounce-alist for consistency
  - Made tnt-away and tnt-away-alist use t/nil instead of 1/0.  This
    simplifies a lot of code that uses them.
  - Fixed toc-set-away so that tnt.el doesn't need to call tocstr-send

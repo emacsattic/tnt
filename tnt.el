@@ -125,69 +125,59 @@
 ;;;  Pounce Package - jnwhiteh@syr.edu
 ;;;---------------------------------------------------------------------------
 
-(defvar tnt-pounce-list nil)
+(defvar tnt-pounce-alist nil)
 
 
 ;;; Pounce Code
 (defun pounce-rm-from-sequence (nick sequence result)
   (if (string= (car (car sequence)) nick)
       (if (eq nil result)
-	  (setq tnt-pounce-list (cdr sequence))
-	(setq tnt-pounce-list (list result (car (cdr sequence)))))
+	  (setq tnt-pounce-alist (cdr sequence))
+	(setq tnt-pounce-alist (list result (car (cdr sequence)))))
     (pounce-rm-from-sequence nick (cdr sequence) (car sequence))))
 
 (defun tnt-pounce-add ()
   "Allows a user to store a pounce message for a buddy"
   (interactive)
   (let* ((completion-ignore-case t)
-         (nick_tmp (format "%s"
-                           (completing-read "Buddy to Pounce on: " 
-                                            (mapcar 'list
-                                                    (tnt-extract-normalized-buddies tnt-buddy-blist)))))
-         (nick (toc-normalize nick_tmp))
-         (msg_tmp (format "%s" 
-                          (read-from-minibuffer "Msg to send (enter for none): ")))
-         (msg (if (string= msg_tmp "") "none" msg_tmp))
-         (pair (assoc nick tnt-pounce-list)))
-    
-    ;; They use (cons (cons )) list
-    
-    (if pair (setcdr pair msg)
-      (setq tnt-pounce-list (cons (list nick msg) tnt-pounce-list)))
-    (message "%s has been added to your pounce list" nick)
-    )
-  )
+         (nick (completing-read "Buddy to Pounce on: " 
+                                (mapcar 'list
+                                        (tnt-extract-normalized-buddies
+                                         tnt-buddy-blist))))
+         (msg_tmp (read-from-minibuffer "Message to send (enter for none): "))
+         (msg (if (string= msg_tmp "") "none" msg_tmp)))
+    (setq tnt-pounce-alist (tnt-addassoc nick msg tnt-pounce-alist))
+    (message "%s has been added to your pounce list" nick)))
 
 (defun tnt-pounce-del ()
   "Deletes a stored pounce message"
   (interactive)
-  (if (null tnt-pounce-list)
+  (if (null tnt-pounce-alist)
       (message "No pounce messages to delete")
     (let* ((completion-ignore-case t)
            (nick (format "%s" (completing-read "Delete pounce for user: "
-                                               tnt-pounce-list))))
+                                               tnt-pounce-alist))))
       (tnt-pounce-delete
        (toc-normalize nick))))
   )
 
 
 (defun tnt-pounce-delete (nick)
-  (let* ((pair (assoc nick tnt-pounce-list)))
+  (let* ((pair (assoc nick tnt-pounce-alist)))
     (if pair
-	  (pounce-rm-from-sequence nick tnt-pounce-list nil))
+	  (pounce-rm-from-sequence nick tnt-pounce-alist nil))
     (if pair
 	   (message "The pounce for %s has been deleted." nick)
       (message "There is no pounce stored for %s" nick)))
   )
 
 (defun tnt-send-pounce (user)
-   (let* ((pair (assoc user tnt-pounce-list)))
-     (if pair
+   (let* ((msg (cdr (assoc user tnt-pounce-alist))))
+     (if msg
 	 (let ((buffer (tnt-im-buffer user)))
- 	  (toc-send-im user (car (cdr pair)))
- 	  (tnt-append-message-and-adjust-window buffer tnt-current-user (car (cdr pair)))
- 	  (tnt-push-event (format "You have pounced on %s" user)
-			  buffer nil)
+ 	  (toc-send-im user msg)
+ 	  (tnt-append-message-and-adjust-window buffer tnt-current-user msg)
+ 	  (tnt-push-event (format "You have pounced on %s" user) buffer nil)
  	  (tnt-pounce-delete user))
        )))
 
@@ -817,46 +807,29 @@ Special commands:
         tnt-buddy-alist nil
 	tnt-away-alist nil
 	tnt-idle-alist nil
-	tnt-pounce-list nil
+	tnt-pounce-alist nil
         tnt-away nil
         tnt-last-away-sent nil)
   (tnt-build-buddy-buffer))
 
 
 (defun tnt-set-buddy-status (nick onlinep idle away)
-  (let* ((nnick (toc-normalize nick))
-         (pair (assoc nnick tnt-buddy-alist))
-         (pair2 (assoc nnick tnt-idle-alist))
-         (pair3 (assoc nnick tnt-away-alist))
-         (status (if onlinep nick))	 
-         (idletime (if onlinep idle))
-         (old-status (and pair (cdr pair))))
-    (if pair
-        (setcdr pair status)
-      (setq tnt-buddy-alist (cons (cons nnick status)
-                                  tnt-buddy-alist)))
-    (if pair2
-        (setcdr pair2 idletime)
-      (setq tnt-idle-alist (cons (cons nnick idletime) tnt-idle-alist)))
-    
-    (if pair3
-        (setcdr pair3 away)
-      (setq tnt-away-alist (cons (cons nnick away) tnt-away-alist)))
-    
-    ;; Online or not?
-    (if (not (string= status old-status))
+  (let ((nnick (toc-normalize nick))
+	(status (if onlinep nick))
+	(idletime (if onlinep idle)))
+    (if (not (equal status (tnt-buddy-status nick)))
         (progn
           ;; Beep (if set to)
           (if tnt-beep-on-buddy-signonoff (beep))
           ;; Message
           ;; I think I prefer vanilla messages to tnt-events for this,
           ;; but just in case, here's the code for a tnt-event:
-          ;;   (tnt-push-event (format "%s online" nick) nil nil)
-          (if onlinep
-              (message "%s online" nick)
-            (message "%s offline" nick))))
+          ;; (tnt-push-event (format "%s online" nick) nil nil)
+          (message "%s %s" nick (if onlinep "online" "offline"))))
+    (setq tnt-buddy-alist (tnt-addassoc nnick status tnt-buddy-alist))
+    (setq tnt-idle-alist (tnt-addassoc nnick idletime tnt-idle-alist))
 	
-	(tnt-build-buddy-buffer)))
+    (tnt-build-buddy-buffer)))
 
 (defun tnt-buddy-status (nick)
   (cdr (assoc (toc-normalize nick) tnt-buddy-alist)))
@@ -1263,18 +1236,12 @@ Special commands:
   (message "Reminder: IMs are being forwarded to %s" tnt-email-to-pipe-to))
 
 
-
-
 (defun tnt-handle-chat-join (roomid room)
   (let ((buffer (tnt-chat-buffer room)))
     (save-excursion
       (set-buffer buffer)
       (setq tnt-chat-roomid roomid)))
-  (let ((assoc (assoc roomid tnt-chat-alist)))
-    (if assoc
-        ()
-      (setq tnt-chat-alist (cons (cons roomid room) tnt-chat-alist)))))
-
+  (setq tnt-chat-alist (tnt-addassoc roomid room tnt-chat-alist)))
 
 (defun tnt-handle-chat-in (roomid user whisperp message)
   (let ((buffer (tnt-chat-buffer (cdr (assoc roomid tnt-chat-alist)))))
@@ -1474,6 +1441,11 @@ Special commands:
 (defun tnt-rotate-right (l)
   "Moves the last element of L to the front destructively."
   (nreverse (tnt-rotate-left (nreverse l))))
-      
 
-
+(defun tnt-addassoc (key value alist)
+  "Add an association between KEY and VALUE to ALIST and return the new alist."
+  (let ((pair (assoc key alist)))
+    (if (null pair)
+	(cons (cons key value) alist)
+      (setcdr pair value)
+      alist)))
