@@ -1,3 +1,10 @@
+2000-05-26  Neil Picciotto  <neilp@orion.infoseek.com>
+
+	* tnt.el (tnt-open): added "Attempting to sign on..." message
+	(tnt-buddy-list-mode-map): added tnt-fetch-info binding
+	(tnt-fetch-info): added
+	(tnt-handle-closed): now tries to auto-reconnect
+
 2000-05-24  TNT Development  <tntdevel@brokendreams.net>
 
 	* tnt.el (tnt-show-buddy-signonoff): added.

@@ -429,6 +429,7 @@ buddy signs on or off.  Set to true by default.")
                             (format "Password for %s: " tnt-username))))
     (if (string-equal tnt-password "")
         (error "No password given")
+      (message "Attempting to sign on...")
       (add-hook 'toc-opened-hooks 'tnt-handle-opened)
       (add-hook 'toc-closed-hooks 'tnt-handle-closed)
       (add-hook 'toc-sign-on-hooks 'tnt-handle-sign-on)
@@ -870,6 +871,7 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "\C-m" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse)
   (define-key tnt-buddy-list-mode-map [mouse-2] 'ignore)
+  (define-key tnt-buddy-list-mode-map "I" 'tnt-fetch-info)
   (define-key tnt-buddy-list-mode-map " " 'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "q" 'tnt-kill)
   )
@@ -940,6 +942,17 @@ Special commands:
                         (t ""))
                   just-onoff
                   )))))
+
+
+(defun tnt-fetch-info ()
+  "Requests the user info of a buddy (and launches browser with browse-url)."
+  (interactive)
+  (save-excursion
+    (beginning-of-line)
+    (if (null (re-search-forward "^ +\([^(]*\)" nil t))
+        (error "Position cursor on a buddy name")
+      (toc-get-info (buffer-substring (match-beginning 1) (match-end 1))))))
+
 
 (defun tnt-im-buddy ()
   "Initiates an IM conversation with the selected buddy."
@@ -1418,7 +1431,11 @@ Special commands:
   (if (and tnt-email-to-pipe-to tnt-pipe-to-email-now)
       (tnt-pipe-message-to-program "TOC-server"
                                    "TNT connection closed by server"))
-  (tnt-error "TNT connection closed"))
+  (tnt-error "TNT connection closed")
+  ;; auto-reconnect
+  (message "Trying to reconnect...")
+  (tnt-open tnt-username tnt-password)
+  )
 
 (defun tnt-handle-sign-on (version)
   (message "Signed on")
