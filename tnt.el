@@ -3194,7 +3194,7 @@ of the list, delimited by commas."
         (with-output-to-string
           (call-process shell-file-name nil t nil shell-command-switch (concat tnt-sound-exec " " tnt-sound-exec-args " " sound-file))))
        (tnt-running-xemacs (play-sound-file sound-file))
-       (t (message "Warning: tnt-sound-exec is not set"))))
+       (t (message "Warning: tnt-sound-exec is not set")))
   (message "Warning: %s is not a readable file" sound-file)))
 
 ;;; ***************************************************************************
