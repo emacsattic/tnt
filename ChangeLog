@@ -1,3 +1,13 @@
+2000-04-07  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-show-buddies): changed apply to funcall
+	(tnt-set-buddy-status): now storing the time the buddy became
+	idle, rather than the amount of time they've been idle.
+	(tnt-buddy-idle): now computing the time they've been idle based
+	on when they became idle.
+	(tnt-build-buddy-buffer): now making sure idle is non-nil before
+	comparing it to 0.
+
 2000-04-06  John Jannotti  <jj@lcs.mit.edu>
 
 	* toc.el (toc-handle-receive): Fix some indentation.  Sorry I'm so 

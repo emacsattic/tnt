@@ -717,7 +717,7 @@ Special commands:
   "Shows the buddy list in the selected window."
   (interactive)
   (tnt-build-buddy-buffer)
-  (apply (tnt-switch-to-buffer-function) (list (tnt-buddy-buffer))))
+  (funcall (tnt-switch-to-buffer-function) (tnt-buddy-buffer)))
 
 (defun tnt-switch-to-buffer-function ()
  (if (and tnt-use-split-buddy
@@ -751,10 +751,11 @@ Special commands:
               (if unick (format "  %s%s%s" 
                                 unick 
                                 (if away
-                                    (if (> idle 0) (format " (away - %d)" idle)
+                                    (if (and idle (> idle 0))
+                                        (format " (away - %d)" idle)
                                       (format " (away)")) "")
                                 
-                                (if (and (> idle 0) (not away))
+                                (if (and idle (> idle 0) (not away))
                                     (format " (idle - %d)" idle) "")
                                 )))))
         
@@ -831,7 +832,10 @@ Special commands:
 (defun tnt-set-buddy-status (nick onlinep idle away)
   (let ((nnick (toc-normalize nick))
         (status (if onlinep nick))
-        (idletime (if onlinep idle)))
+        (idletime (if (and onlinep idle (> idle 0))
+                      ;; see NOTE below about (current-time)
+                      (- (cadr (current-time))
+                         (* 60 idle)))))
     (if (not (equal status (tnt-buddy-status nick)))
         (progn
           ;; Beep (if set to)
@@ -851,8 +855,24 @@ Special commands:
   (cdr (assoc (toc-normalize nick) tnt-buddy-alist)))
 
 (defun tnt-buddy-idle (nick)
-  (cdr (assoc (toc-normalize nick) tnt-idle-alist)))
-
+  ;; NOTE: (current-time) doesn't actually give seconds since the
+  ;; epoch, because elisp only allocates 28 bits for an integer (i
+  ;; believe the remaining four bits are used to store what type that
+  ;; word is storing, in this case, an int).  so current-time instead
+  ;; gives a list containing the upper 16 bits and then the lower 16
+  ;; bits.  so i'm just using the lower 16 bits, and assuming it won't
+  ;; wrap around more than once.  which means that if someone is
+  ;; actually idle for more than 65536 seconds (about 18 hours), then
+  ;; it'll reset...
+  (let ((idle-since (cdr (assoc (toc-normalize nick) tnt-idle-alist))))
+    (and idle-since
+         (let* ((now (cadr (current-time)))
+                (diff (- now idle-since)))
+           (/ (if (< diff 0)
+                  (+ diff 65536)
+                diff)
+              60)))))
+    
 (defun tnt-buddy-official-name (buddy)
   ;; Return official screen name of buddy if known, otherwise
   ;; just return buddy.
@@ -1501,3 +1521,7 @@ Special commands:
 (defun tnt-remassoc (key alist)
   "Remove an association KEY from ALIST, and return the new ALIST."
   (delete (assoc key alist) alist))
+
+
+
+
