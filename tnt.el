@@ -1740,6 +1740,9 @@ Special commands:
 
 (defun tnt-buffer-to-blist ()
   (save-excursion
+      (goto-char (point-max))
+      (insert "\n")
+
     (goto-char (point-min))
     (let ((blist nil))
       (while (re-search-forward "\\([ \t]*\\)\\([^\n]*\\)\n" nil t)
@@ -2270,7 +2273,7 @@ of the list, delimited by commas."
 (defvar tnt-persistent-message-disable-id nil)
 
 (defun tnt-persistent-message-persist (m)
-  (when (and tnt-persistent-timeout (> 0 tnt-persistent-timeout))
+  (when (and tnt-persistent-timeout (> tnt-persistent-timeout 0))
     (setq tnt-persistent-message-disable-id
           (add-timeout tnt-persistent-timeout 'tnt-persistent-message-persist m)))
   (message m))
