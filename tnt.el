@@ -361,20 +361,20 @@ forwarding on and off with \"C-x t M\".")
                             (format "Password for %s: " tnt-username))))
     (if (string-equal tnt-password "")
         (error "No password given")
-      (setq toc-opened-hooks            'tnt-handle-opened
-            toc-closed-hooks            'tnt-handle-closed
-            toc-sign-on-hooks           'tnt-handle-sign-on
-            toc-config-hooks            'tnt-handle-config
-            toc-nick-hooks              'tnt-handle-nick
-            toc-im-in-hooks             'tnt-handle-im-in
-            toc-update-buddy-hooks      'tnt-handle-update-buddy
-            toc-error-hooks             'tnt-handle-error
-            toc-eviled-hooks            'tnt-handle-eviled
-            toc-chat-join-hooks         'tnt-handle-chat-join
-            toc-chat-in-hooks           'tnt-handle-chat-in
-            toc-chat-update-buddy-hooks 'tnt-handle-chat-update-buddy
-            toc-chat-invite-hooks       'tnt-handle-chat-invite
-            toc-goto-url-hooks          'tnt-handle-goto-url)
+      (add-hook 'toc-opened-hooks 'tnt-handle-opened)
+      (add-hook 'toc-closed-hooks 'tnt-handle-closed)
+      (add-hook 'toc-sign-on-hooks 'tnt-handle-sign-on)
+      (add-hook 'toc-config-hooks 'tnt-handle-config)
+      (add-hook 'toc-nick-hooks 'tnt-handle-nick)
+      (add-hook 'toc-im-in-hooks 'tnt-handle-im-in)
+      (add-hook 'toc-update-buddy-hooks 'tnt-handle-update-buddy)
+      (add-hook 'toc-error-hooks 'tnt-handle-error)
+      (add-hook 'toc-eviled-hooks 'tnt-handle-eviled)
+      (add-hook 'toc-chat-join-hooks 'tnt-handle-chat-join)
+      (add-hook 'toc-chat-in-hooks 'tnt-handle-chat-in)
+      (add-hook 'toc-chat-update-buddy-hooks 'tnt-handle-chat-update-buddy)
+      (add-hook 'toc-chat-invite-hooks 'tnt-handle-chat-invite)
+      (add-hook 'toc-goto-url-hooks 'tnt-handle-goto-url)
       (toc-open tnt-toc-host tnt-toc-port tnt-username))))
 
 

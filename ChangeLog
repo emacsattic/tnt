@@ -1,9 +1,13 @@
 2000-04-11  John Jannotti  <jj@lcs.mit.edu>
 
+	* tnt.el (tnt-open): Use add-hook instead of setq.
+
 	* toc.el (toc-handle-opened, toc-handle-closed,
  	toc-handle-receive): Use toc-run-hooks instead of apply.
 	(toc-run-hooks): Added.  Using this allows multiple "subscribers"
 	to the various toc "events".
+	(toc-run-hooks): Use mapcar not mapc.  Creates more garbage, but
+	Emacs doesn't have mapc.
 
 	* tnt.el (tnt-shutdown): Changed name from tnt-buddy-shutdown as
 	it has become a catchall for all shutdown realted stuff.  tnt-kill 

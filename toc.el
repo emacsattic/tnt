@@ -271,7 +271,7 @@
   "Run each function in HOOKS with ARGS."
   (if (symbolp hooks)
       (if hooks (apply hooks args))
-    (mapc '(lambda (f) (apply f args)) hooks)))
+    (mapcar '(lambda (f) (apply f args)) hooks)))
 
 
 ;;;----------------------------------------------------------------------------
