@@ -417,6 +417,10 @@ files under GNU Emacs, you'll need to set these variables:
     (setq tnt-sound-exec "/path/to/executable")
     (setq tnt-sound-exec-args '("any args" "to pass" "before the filename"))
 
+
+
+What else can I customize about TNT?
+------------------------------------
     
 The following variables determine whether a message appears in the
 minibuffer to notify of particular happenings.  Note that these are
