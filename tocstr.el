@@ -166,9 +166,9 @@
       (setq tocstr-flap-timer nil))
     (if tocstr-flap-parsing
         (setq tocstr-flap-packet
-              (concat tocstr-flap-packet (string-make-unibyte str)))
+              (concat tocstr-flap-packet (string-as-unibyte str)))
       (setq tocstr-flap-parsing t
-            str (concat tocstr-flap-packet (string-make-unibyte str))
+            str (concat tocstr-flap-packet (string-as-unibyte str))
             tocstr-flap-packet nil)
       (unwind-protect
           (while str

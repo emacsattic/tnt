@@ -1,3 +1,9 @@
+2000-11-07    <tntdevel@brokendreams.net>
+
+	* tocstr.el (tnt-timers-available): Changed occurances of 
+	string-make-unibyte to string-as-unibyte.  This should solve
+	the compat problems.
+
 2000-11-06    <tntdevel@brokendreams.net>
 
 	* tocstr.el: (tocstr-init-receiver): the logic here was reversed and 
