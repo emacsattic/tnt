@@ -137,6 +137,14 @@ tnt-persistent-message.  It should not be too small as you'd never see anything
 else in the minibuffer but it should be sufficiently small to allow you to see
 the message now and then until you notice it.")
 
+(defvar tnt-me-statement-format "* %s *"
+  "*Format variable to replace any messages starting with \"/me \"
+
+This variable holds the format string containing exactly one %s to
+be replaced with the message sans the \"/me \" which will replace
+the message and be sent.  This will also be done on incoming messages.
+This value may be nil to prevent any such action.")
+
 (defvar tnt-beep-on-message-available-event 'current
   "*If non-nil, beeps when giving the \"Message from ... available\" message.
 
@@ -589,12 +597,6 @@ Special commands:
                             (current-time-string)
                             tnt-separator))
             (set-marker tnt-message-marker (point))
-            ;(add-text-properties 1 (point) '(read-only t)))
-            ;(if (functionp 'make-extent)
-            ;    (set-extent-property
-            ;     (setq tnt-extent-read-only (make-extent 1 (point)))
-            ;     'read-only t)
-            ;  (setq tnt-extent-read-only nil)))
           buffer)))))
 
 (defun tnt-send-text-as-instant-message ()
@@ -683,7 +685,6 @@ Special commands:
   (setq mode-name "Chat")
   (setq major-mode 'tnt-chat-mode)
   (setq local-abbrev-table text-mode-abbrev-table)
-  (make-local-variable 'before-change-function)
   (set-syntax-table text-mode-syntax-table)
   (auto-fill-mode 1)
   (run-hooks 'tnt-chat-mode-hook))
@@ -737,12 +738,7 @@ Special commands:
             (insert (format "[Chat room \"%s\" on %s]%s"
                             room (current-time-string) tnt-separator))
             (set-marker tnt-message-marker (point))
-            (if (functionp 'make-extent)
-                (set-extent-property
-                 (setq tnt-extent-read-only (make-extent 1 (point)))
-                 'read-only t)
-              (setq tnt-extent-read-only nil)))
-          buffer))))
+          buffer)))))
 
 
 (defun tnt-chat-buffer-killed ()
@@ -904,9 +900,10 @@ Special commands:
         (setq inhibit-read-only old-inhibit)))))
 
 (defun tnt-replace-me-statement (message)
-  (if (and (>= (length message) 4) (string= (substring message 0 4) "/me "))
-      (concat "**" (substring message 3))
-    message))
+  (when tnt-me-statement-format
+    (if (and (>= (length message) 4) (string= (substring message 0 4) "/me "))
+        (format tnt-me-statement-format (substring message 4))
+      message)))
 
 (defun tnt-get-input-message ()
   (let ((message (buffer-substring tnt-message-marker (point-max))))

@@ -20,6 +20,9 @@
 	switch.  The reason is that with a random name, it's unlikely
 	that the user will want to change it without completely removing
 	it.
+	(tnt-replace-me-statement): added
+	(tnt-append-message): added support for tnt-replace-me-statement
+	(tnt-me-statement-format): added
 
 2001-03-09  NeilFred Picciotto  <fred@guido.derf.net>
 
