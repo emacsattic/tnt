@@ -1,0 +1,51 @@
+March 27, 2000 - Jim Whitehead
+------------------------------
+ - Made keepalive an option to avoid conflicts with Xemacs
+   enable with (setq tnt-use-keepalive t).
+
+March 28, 2000 - Scott Evans
+----------------------------
+ - Made the recentering of the buffer optional.. it defaults to
+   the current behavior.
+ - Buddy entrances/exits are now displayed in the minibuffer
+ - Code patch to change color of incoming user text when in a color
+   environment.
+ - Added a default away message, and a history.
+ - Fixed the regexp for the tnt-im-buddy procedure
+
+March 24, 2000 - Jim Whitehead
+------------------------------
+ - Keepalive packets are now sent to the server, improving uptime.
+ - Fixed sending of nil messages, which would crash other clients 
+   (older versions of Everbuddy, etc)
+ - Pounce Package
+ - Better away status checking
+ - Numerous other minor bugfixes
+
+March 24, 2000 - Scott Evans
+----------------------------
+ - Code patch to remove nil entries in the auto-completion list for screennames
+ - fix in tnt-get-input-message which was killing the region, instead of 
+   deleting in, which hosed the kill ring.
+
+March 24, 2000 - Allan Poindexter
+---------------------------------
+ - Code snippet to show away status in modeline.
+
+March 24, 2000 - Neil Picciotto
+-------------------------------
+ - Added a binding to the tnt-show-help command (C-x t ?)
+ - Links are now displayed rather than being stripped.
+ - Timestamps package has been added.
+ - Beeping only happens when you are not in the im buffer of the person
+   who is iming you.
+ - Buddy list automagically comes up when you signon.  Also, if the option
+   is set, (see INSTALL) the screen splits when the buddy list is displayed.
+ - Return does the same as i in the buddy list, namely initiating an IM.
+ - Mouse clicking a screenname now initiates an IM.
+ - You can now cycle through a list of screennames to sign on as. 
+ - Option (involving code change) that allows you to have all your IM's piped
+   to a commandline.
+
+
+

@@ -1,0 +1,56 @@
+How do I install TNT?
+---------------------
+To install TNT, you must perform two steps.  First, you must ensure
+that the TNT Lisp files are in a directory that is on your load path;
+second, you must arrange for these files to be loaded into Emacs.
+There are several ways of accomplishing each step.  The method you
+choose will depend on how your computer is set up and on your personal
+preferences.  Rather than attempt to describe all possibilities, I'll
+just describe one simple, albeit non-optimal, method.  If you are
+experienced with Emacs, you'll undoubtedly want to improve on it.
+
+Both steps can be accomplished by adding two lines to your Emacs init
+file.  This file is typically called ".emacs" and usually resides in your
+home directory.  Edit this file and add the following two lines to the
+end, substituting the absolute path of the directory containing this
+README file for the "..." in the first line.  
+
+        (setq load-path (cons ".../lisp" load-path))
+        (load "tnt")
+
+Once you've done this, exit and restart Emacs to force the change to
+take effect.  If you see an error message in the echo area at the bottom
+of the Emacs window, you may have mistyped one of the lines.  If there's
+no error, you're probably all set.  To test whether TNT was loaded, use
+the describe-function command (invoked by C-h f) to describe the function
+tnt-open.  If it works, you should be able to run TNT.
+
+(Note: TNT has currently only been tested with Emacs version 19.34.  How
+well it works with earlier or later versions is not known).
+
+INSTALLATION OPTIONS
+--------------------
+
+The following options can also be included in your .emacs file, to invoke
+some certain non-default options:
+
+(setq tnt-use-timestamps t)  
+ 	This will add a timestamp for each message you receive or send.
+	This is best for logging, and for people who are on very often.
+
+(setq tnt-use-split-buddy t)
+	This will force tnt to split to window horizontally whenever the
+	buddy list command is invoked.  This rule does not apply when in 
+	in the scratch buffer.
+
+(setq tnt-use-keepalive t)
+	This tells TNT to use the keepalive packets to help keep your
+	connection alive.  Try this is you keep getting booted randomly
+
+(setq tnt-recenter-windows nil)
+	This tells TNT to NOT recenter each window automatically.
+
+
+
+
+
