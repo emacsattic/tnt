@@ -1,3 +1,30 @@
+2004-09-17  NeilFred Picciotto  <fred@full.halflab.com>
+
+	* procmail/procmail-pipe-message-into-tnt.sh: new file, script for
+	procmail to pipe to, wrapper around gnuclient call.
+
+	* procmail/email-to-tnt-procmail-recipe: new file with procmail
+	recipe for two-way email forwarding.
+
+	* procmail/README: new file, explaining how to set up two-way
+	email forwarding.
+
+	* tnt.el (tnt-email-from-domain): new defcustom var.
+	(tnt-email-use-subject): new defcustom var.
+	(tnt-email-include-user-in-body): new defcustom var.
+	(tnt-send-external-text-as-instant-message): new function to allow
+	the text of an outgoing IM to come from somewhere other than the
+	buffer.  called via gnuclient in the procmail setup for two-way
+	email forwarding.
+	(tnt-handle-closed): tnt-pipe-message-to-program is now ...-email
+	(tnt-handle-nick): tnt-pipe-message-to-program is now ...-email
+	(tnt-handle-im-in): tnt-pipe-message-to-program is now ...-email
+	(tnt-pipe-message-to-email): renamed from -program, and now
+	customizable by above defcustom vars.  most notably,
+	tnt-email-from-domain allows sending emails with different "From:"
+	addresses according to who the IM is from, which allows us to do
+	two-way email forwarding.
+
 2004-09-10  NeilFred Picciotto  <fred@full.halflab.com>
 
 	* tnt.el (tnt-im-mode-map): include a name for make-sparse-keymap

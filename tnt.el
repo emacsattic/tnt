@@ -465,6 +465,32 @@ forwarding on and off with \"C-x t M\"."
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
+(defcustom tnt-email-from-domain nil
+  "Used for two-way email forwarding.
+
+In addition to incoming IMs going out over email, emails that come
+back can then go out as IMs, so if they are forwarded to a two-way
+pager or cell phone, you can reply to the email and the message body
+will be sent as an IM.  Requires some procmail setup, and that you own
+a personal domain.  See <tnt_dir>/procmail/README for config details."
+  :type '(choice :tag "Email domain options"
+                 (string :tag "Email domain")
+                 (const :tag "No two-way email forwarding." nil))
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-email-use-subject t
+  "Whether to include a subject header when forwarding IMs as email."
+  :type 'boolean
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-email-include-user-in-body t
+  "Whether to include the username in the body when forwarding IMs as email."
+  :type 'boolean
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
 (defcustom tnt-email-binary "/bin/mail"
   "Should be set to the executable of your mail binary.
 
@@ -1592,6 +1618,17 @@ Special commands:
   "Sends text at end of buffer as an IM without any formating."
   (interactive)
   (tnt-send-text-as-instant-message t))
+
+;;; ***************************************************************************
+(defun tnt-send-external-text-as-instant-message (user message)
+  "Sends the given message to the given user."
+  (interactive)
+  (let ((buffer (tnt-im-buffer user)))
+    ;; should maybe check if user is online ??
+    (with-current-buffer buffer
+      (tnt-append-message message tnt-current-user nil nil)
+      (toc-send-im tnt-im-user message)
+      )))
 
 ;;; ***************************************************************************
 (defun tnt-show-help ()
@@ -3466,8 +3503,8 @@ nil otherwise."
 
     ;; if we're forwarding to email, send notification
     (if (and tnt-email-to-pipe-to tnt-pipe-to-email-now)
-        (tnt-pipe-message-to-program "TOC-server"
-                                     "TNT connection closed by server"))
+        (tnt-pipe-message-to-email "TOC-server"
+                                   "TNT connection closed by server"))
 
     ;; beep
     (tnt-beep tnt-beep-on-signoff)
@@ -3543,8 +3580,8 @@ nil otherwise."
         (setq tnt-reconnecting-idle-time nil)
 
         (if (and tnt-email-to-pipe-to tnt-pipe-to-email-now)
-            (tnt-pipe-message-to-program "TOC-server"
-                                         "TNT successfully reconnected"))
+            (tnt-pipe-message-to-email "TOC-server"
+                                       "TNT successfully reconnected"))
         (if tnt-timers-available
             (progn
               (setq tnt-just-reconnected t)
@@ -3565,7 +3602,7 @@ nil otherwise."
 
     (if (and tnt-email-to-pipe-to
              tnt-pipe-to-email-now)
-        (tnt-pipe-message-to-program user message))
+        (tnt-pipe-message-to-email user message))
 
     (if (get-buffer-window buffer 'visible)
         (progn
@@ -3602,27 +3639,42 @@ nil otherwise."
   )
 
 ;;; ***************************************************************************
-(defun tnt-pipe-message-to-program (user message)
-  (let ((proc-name "piping-process")
-        (proc-out-buf "*piping-program-output*")
-        (process-connection-type nil))
-    ;; similar code to this could be used to pipe to something else
-    (start-process proc-name proc-out-buf
-                   ;; put executable here:
-                   tnt-email-binary
-                   ;; and now any cmd-line args:
-                 ;; (note that although the subject string has spaces,
-                   ;; it's all sent as one arg to the executable, i.e.
-                   ;; one element of argv)
-                   "-s" ;; -s for subject
-                   (format "IM from %s" user) ;; a subject line
-                   tnt-email-to-pipe-to) ;; email address to send to
-    ;; then what gets piped in
-    (process-send-string proc-name
-                         (format "%s: %s\n" user
-                                 (tnt-reformat-text message)))
-    (process-send-eof proc-name))
-  (message "Reminder: IMs are being forwarded to %s" tnt-email-to-pipe-to))
+(defun tnt-pipe-message-to-email (user message)
+  (let* ((proc-name "piping-process")
+         (proc-out-buf "*piping-program-output*")
+         (process-connection-type nil)
+         (start-process-args
+          (list proc-name proc-out-buf
+                ;; the executable:
+                tnt-email-binary
+                ;; and then any cmd-line args:
+                tnt-email-to-pipe-to ;; email address to send to
+                ;; and in this case, we conditionally add further args below
+                ))
+         (formatted-message
+          (if tnt-email-include-user-in-body
+              (format "%s: %s\n" user (tnt-reformat-text message))
+            (format "%s\n" (tnt-reformat-text message)))))
+    
+    (if tnt-email-from-domain
+        (let* ((nuser (toc-normalize user))
+               (email-from-header (format "From: %s_IM_@%s" nuser
+                                          tnt-email-from-domain)))
+          (setq start-process-args (append start-process-args
+                                           (list "-a" ;; additional header
+                                                 email-from-header)))))
+
+    (if tnt-email-use-subject
+        (let ((email-subject (format "IM from %s" user)))
+          (setq start-process-args (append start-process-args
+                                           (list "-s" ;; subject arg
+                                                 email-subject)))))
+
+    ;; start the process, then pipe in the message and EOF
+    (apply 'start-process start-process-args)
+    (process-send-string proc-name formatted-message)
+    (process-send-eof proc-name)
+    (message "Reminder: IMs are being forwarded to %s" tnt-email-to-pipe-to)))
 
 ;;; ***************************************************************************
 (defun tnt-handle-update-buddy (nick online evil signon idle away)
