@@ -1108,6 +1108,7 @@ Special commands:
 ;;;----------------------------------------------------------------------------
 
 (make-variable-buffer-local 'tnt-message-marker)
+(make-variable-buffer-local 'tnt-archive-filename)
 
 (defun tnt-append-message-and-adjust-window (buffer message &optional user mod)
   (let ((window (get-buffer-window buffer)))
