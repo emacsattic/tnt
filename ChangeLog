@@ -1,5 +1,10 @@
 2000-04-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-test-for-buggy-idle): added.  tests emacs for proper
+	idle timer handling.
+
+2000-04-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-buddy-edit-buffer): fixed typo.  with-current-buffer
 	was typed as with-curren-buffer.
 

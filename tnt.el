@@ -55,7 +55,13 @@
 
 ; check whether this version of emacs has the "run-at-time" function
 (defvar tnt-timers-available (fboundp 'run-at-time))
-(defvar tnt-buggy-idle t)               ; Default to safety
+
+; among versions of emacs which do have "run-at-time", some have a
+; buggy implementation of "run-with-idle-timer".  this var indicates
+; whether we're running in such a version of emacs.  there's no quick
+; way to automate checking for this, so the user should run "M-x
+; tnt-test-for-buggy-idle" to find out.
+(defvar tnt-buggy-idle t)
 
 
 ; these may be changed, but rather than changing them here, use
@@ -1551,3 +1557,97 @@ Special commands:
 (defun tnt-remassoc (key alist)
   "Remove an association KEY from ALIST, and return the new ALIST."
   (delete (assoc key alist) alist))
+
+
+
+;;;----------------------------------------------------------------------------
+;;; testing emacs for the idle timers bug
+;;;----------------------------------------------------------------------------
+
+(defun tnt-test-for-buggy-idle ()
+  "Runs a little test to see whether idle timers are handled correctly."
+  (interactive)
+
+  (switch-to-buffer "*tnt-test-idle-bug*")
+  (insert "\n\n")
+  
+  (if (not (fboundp 'run-at-time))
+      (insert "
+This version of emacs does not have timers at all, let alone buggy
+idle timers.
+")
+
+    (insert "
+IMPORTANT: After running this test, some timers will have been set
+which will make it really annoying to continue to use this emacs
+process, so you'll want to exit this emacs process to get rid of them.
+Therefore you should run the test in a nice new emacs process which
+you won't mind exiting afterward.
+
+Also, after you acknowledge that you have read the explanation of the
+test, do not press any keys until the test finishes (it will take 3-5
+seconds, and will tell you when it has finished).
+
+
+")
+
+    (if (not (y-or-n-p "Have you read the explanation of what this will do? "))
+        (message "read it!")
+      
+      (message "")
+
+      (defvar tnt-idle-bug-sent-string-p nil)
+      (defvar tnt-idle-bug-idle-1-sec-times 0)
+      (defvar tnt-idle-bug-idle-3-sec-run-p nil)
+      
+      (defun tnt-idle-bug-test-proc-filter (proc str) (insert str))
+      
+      (defun tnt-idle-bug-send-string ()
+        (if tnt-idle-bug-sent-string-p
+            (insert "...\n")
+          (setq tnt-idle-bug-sent-string-p t)
+          (process-send-string "test" "sending a string to process-filter\n")
+          (process-send-eof "test")))
+      
+      (defun tnt-idle-bug-idle-1-sec ()
+        (insert "idle 1 second\n")
+        (setq tnt-idle-bug-idle-1-sec-times
+              (+ 1 tnt-idle-bug-idle-1-sec-times))
+        )
+      
+      (defun tnt-idle-bug-idle-3-sec ()
+        (insert "idle 3 seconds\n")
+        (if tnt-idle-bug-idle-3-sec-run-p
+            nil
+          (if (= tnt-idle-bug-idle-1-sec-times 2)
+              (insert "\nSorry, but this emacs has the buggy idle handling.\n")
+            (insert "
+Congratulations, this emacs has correct idle handling.
+Feel free to set tnt-buggy-idle to nil.
+"))
+          (setq tnt-idle-bug-idle-3-sec-run-p t)
+          
+          (insert "
+With the buggy handler, the string being sent to the process-filter
+resets the idle timers, so that it believes it has become unidle (and
+then idle again).  So in the above test, it will say \"idle 1 second\"
+twice -- once before the string is sent and once after.  The correct
+idle handler will only say it before.
+
+You should now exit this emacs process.
+")
+          )
+        )
+      
+      (run-with-idle-timer 1 t 'tnt-idle-bug-idle-1-sec)
+      (run-with-idle-timer 2 t 'tnt-idle-bug-send-string)
+      (run-with-idle-timer 3 t 'tnt-idle-bug-idle-3-sec)
+      
+      (let ((test-proc (start-process "test" "*test*" "/bin/cat")))
+        (set-process-filter test-proc 'tnt-idle-bug-test-proc-filter))
+
+      )
+    )
+  )
+
+
