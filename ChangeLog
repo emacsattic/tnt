@@ -1,5 +1,10 @@
 2000-04-11  John Jannotti  <jj@lcs.mit.edu>
 
+	* toc.el (toc-handle-opened, toc-handle-closed,
+ 	toc-handle-receive): Use toc-run-hooks instead of apply.
+	(toc-run-hooks): Added.  Using this allows multiple "subscribers"
+	to the various toc "events".
+
 	* tnt.el (tnt-shutdown): Changed name from tnt-buddy-shutdown as
 	it has become a catchall for all shutdown realted stuff.  tnt-kill 
 	and tnt-handle-close had some duplicated code that I put here
@@ -19,7 +24,9 @@
 	(tnt-chat-mode): Use syntax-table and abbrev-table from text-mode.
 	(tnt-buddy-list-mode): Use syntax-table from text-mode.
 	(tnt-buddy-edit-mode): Use syntax-table from text-mode.
-	
+	(tnt-blist-to-buffer): Eliminated.  It was called in only one
+	place, and when called in that place most of the code was
+	superfluous.
 
 2000-04-10  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 

@@ -134,7 +134,7 @@ receives any message from the toc server.
 
 ;;; Globals (that need to be declared early on...)
 
-(defvar tnt-current-user    nil)
+(defvar tnt-current-user nil)
 (defvar tnt-pipe-to-email-now nil)
 (defvar tnt-buddy-blist nil)
 
@@ -297,22 +297,20 @@ receives any message from the toc server.
                             (format "Password for %s: " tnt-username))))
     (if (string-equal tnt-password "")
         (error "No password given")
-      (setq toc-opened-function            'tnt-handle-opened
-            toc-closed-function            'tnt-handle-closed
-            toc-sign-on-function           'tnt-handle-sign-on
-            toc-config-function            'tnt-handle-config
-            toc-nick-function              'tnt-handle-nick
-            toc-im-in-function             'tnt-handle-im-in
-            toc-update-buddy-function      'tnt-handle-update-buddy
-            toc-error-function             'tnt-handle-error
-            toc-eviled-function            'tnt-handle-eviled
-            toc-chat-join-function         'tnt-handle-chat-join
-            toc-chat-in-function           'tnt-handle-chat-in
-            toc-chat-update-buddy-function 'tnt-handle-chat-update-buddy
-            toc-chat-invite-function       'tnt-handle-chat-invite
-            toc-chat-left-function         'tnt-debug
-            toc-goto-url-function          'tnt-handle-goto-url
-            toc-pause-function             'tnt-debug)
+      (setq toc-opened-hooks 'tnt-handle-opened
+            toc-closed-hooks 'tnt-handle-closed
+            toc-sign-on-hooks 'tnt-handle-sign-on
+            toc-config-hooks 'tnt-handle-config
+            toc-nick-hooks 'tnt-handle-nick
+            toc-im-in-hooks 'tnt-handle-im-in
+            toc-update-buddy-hooks 'tnt-handle-update-buddy
+            toc-error-hooks 'tnt-handle-error
+            toc-eviled-hooks 'tnt-handle-eviled
+            toc-chat-join-hooks 'tnt-handle-chat-join
+            toc-chat-in-hooks 'tnt-handle-chat-in
+            toc-chat-update-buddy-hooks 'tnt-handle-chat-update-buddy
+            toc-chat-invite-hooks 'tnt-handle-chat-invite
+            toc-goto-url-hooks 'tnt-handle-goto-url)
       (toc-open tnt-toc-host tnt-toc-port tnt-username))))
 
 
@@ -953,22 +951,13 @@ Special commands:
             ;; make-local-hook doesn't work here; tries to call t
             (make-local-variable 'kill-buffer-query-functions)
             (add-hook 'kill-buffer-query-functions 'tnt-buddy-edit-kill-query)
-            (tnt-build-buddy-edit-buffer)
+            (tnt-blist-to-buffer tnt-buddy-blist)
             (set-buffer-modified-p nil))
           buffer))))
-
-
-(defun tnt-build-buddy-edit-buffer ()
-  (save-excursion
-    (set-buffer (tnt-buddy-edit-buffer))
-    (erase-buffer)
-    (tnt-blist-to-buffer tnt-buddy-blist)))
-
 
 (defun tnt-buddy-edit-kill-query ()
   (or (null (buffer-modified-p))
       (yes-or-no-p "Buddy list modified; kill anyway? ")))
-
 
 (defun tnt-save-buddy-list ()
   "Saves a buddy-edit buffer on the host."

@@ -39,28 +39,26 @@
 (require 'tocstr)
 
 
+;; Public hooks.  Multiple "subscribers" may use `add-hook' to get called
+;; when the corrosponding protocol event occurs.  Until better documented,
+;; see toc-handle-receive to learn what the signature of the hook is.
 
-;;;----------------------------------------------------------------------------
-;;; Callback functions
-;;;----------------------------------------------------------------------------
-
-(defvar toc-opened-function            nil)
-(defvar toc-closed-function            nil)
-(defvar toc-sign-on-function           nil)
-(defvar toc-config-function            nil)
-(defvar toc-nick-function              nil)
-(defvar toc-im-in-function             nil)
-(defvar toc-update-buddy-function      nil)
-(defvar toc-error-function             nil)
-(defvar toc-eviled-function            nil)
-(defvar toc-chat-join-function         nil)
-(defvar toc-chat-in-function           nil)
-(defvar toc-chat-update-buddy-function nil)
-(defvar toc-chat-invite-function       nil)
-(defvar toc-chat-left-function         nil)
-(defvar toc-goto-url-function          nil)
-(defvar toc-pause-function             nil)
-
+(defvar toc-opened-hooks nil)
+(defvar toc-closed-hooks nil)
+(defvar toc-sign-on-hooks nil)
+(defvar toc-config-hooks nil)
+(defvar toc-nick-hooks nil)
+(defvar toc-im-in-hooks nil)
+(defvar toc-update-buddy-hooks nil)
+(defvar toc-error-hooks nil)
+(defvar toc-eviled-hooks nil)
+(defvar toc-chat-join-hooks nil)
+(defvar toc-chat-in-hooks nil)
+(defvar toc-chat-update-buddy-hooks nil)
+(defvar toc-chat-invite-hooks nil)
+(defvar toc-chat-left-hooks nil)
+(defvar toc-goto-url-hooks nil)
+(defvar toc-pause-hooks nil)
 
 
 ;;;----------------------------------------------------------------------------
@@ -174,11 +172,11 @@
 ;;;----------------------------------------------------------------------------
 
 (defun toc-handle-opened ()
-  (funcall toc-opened-function))
+  (toc-run-hooks toc-opened-hooks))
 
 
 (defun toc-handle-closed ()
-  (funcall toc-closed-function))
+  (toc-run-hooks toc-closed-hooks))
 
 
 (defun toc-handle-receive (str)
@@ -187,21 +185,21 @@
     (cond
      ((string= cmd "SIGN_ON")
       (let ((version (toc-lop-field str 'index)))
-        (funcall toc-sign-on-function version)))
+        (toc-run-hooks toc-sign-on-hooks version)))
 
      ((string= cmd "CONFIG")
       (let ((config (toc-lop-field str 'index)))
-        (funcall toc-config-function config)))
+        (toc-run-hooks toc-config-hooks config)))
 
      ((string= cmd "NICK")
       (let ((nick (toc-lop-field str 'index)))
-        (funcall toc-nick-function nick)))
+        (toc-run-hooks toc-nick-hooks nick)))
 
      ((string= cmd "IM_IN")
       (let ((user    (toc-lop-field str 'index))
             (auto    (string= "T" (toc-lop-field str 'index)))
             (message (substring str index)))
-        (funcall toc-im-in-function user auto message)))
+        (toc-run-hooks toc-im-in-hooks user auto message)))
 
      ((string= cmd "UPDATE_BUDDY")
       (let ((nick   (toc-lop-field str 'index))
@@ -210,7 +208,8 @@
             (signon (string-to-number (toc-lop-field str 'index)))
             (idle   (string-to-number (toc-lop-field str 'index)))
             (away (toc-lop-field str 'index)))
-        (funcall toc-update-buddy-function nick online evil signon idle away)))
+        (toc-run-hooks toc-update-buddy-hooks
+                       nick online evil signon idle away)))
 
      ((string= cmd "ERROR")
       (let ((code (string-to-number (toc-lop-field str 'index)))
@@ -218,24 +217,24 @@
             (arg  nil))
         (while (setq arg (toc-lop-field str 'index))
           (setq args (cons arg args)))
-        (funcall toc-error-function code (nreverse args))))
+        (toc-run-hooks toc-error-hooks code (nreverse args))))
 
      ((string= cmd "EVILED")
       (let ((evil   (string-to-number (toc-lop-field str 'index)))
             (eviler (toc-lop-field str 'index)))
-        (funcall toc-eviled-function evil eviler)))
+        (toc-run-hooks toc-eviled-hooks evil eviler)))
 
      ((string= cmd "CHAT_JOIN")
       (let ((roomid (toc-lop-field str 'index))
             (room   (toc-lop-field str 'index)))
-        (funcall toc-chat-join-function roomid room)))
+        (toc-run-hooks toc-chat-join-hooks roomid room)))
 
      ((string= cmd "CHAT_IN")
       (let ((roomid  (toc-lop-field str 'index))
             (user    (toc-lop-field str 'index))
             (whisper (string= "T" (toc-lop-field str 'index)))
             (message (substring str index)))
-        (funcall toc-chat-in-function roomid user whisper message)))
+        (toc-run-hooks toc-chat-in-hooks roomid user whisper message)))
 
      ((string= cmd "CHAT_UPDATE_BUDDY")
       (let ((roomid (toc-lop-field str 'index))
@@ -244,29 +243,35 @@
                       (while (setq user (toc-lop-field str 'index))
                         (setq users (cons user users)))
                       users)))
-        (funcall toc-chat-update-buddy-function roomid inside users)))
+        (toc-run-hooks toc-chat-update-buddy-hooks roomid inside users)))
 
      ((string= cmd "CHAT_INVITE")
       (let ((room    (toc-lop-field str 'index))
             (roomid  (toc-lop-field str 'index))
             (sender  (toc-lop-field str 'index))
             (message (substring str index)))
-        (funcall toc-chat-invite-function room roomid sender message)))
+        (toc-run-hooks toc-chat-invite-hooks room roomid sender message)))
 
      ((string= cmd "CHAT_LEFT")
       (let ((roomid (toc-lop-field str 'index)))
-        (funcall toc-chat-left-function cmd roomid)))
+        (toc-run-hooks toc-chat-left-hooks cmd roomid)))
 
      ((string= cmd "GOTO_URL")
       (let ((windowid (toc-lop-field str 'index))
             (url      (substring str index))) ; Url might have a colon?
-        (funcall toc-goto-url-function windowid url)))
+        (toc-run-hooks toc-goto-url-hooks windowid url)))
 
      ;; We probably ought to handle this internally.  Does it ever really
      ;; get sent?
      ((string= cmd "PAUSE")
-      (funcall toc-pause-function cmd)))))
+      (toc-run-hooks toc-pause-hooks cmd)))))
 
+
+(defun toc-run-hooks (hooks &rest args)
+  "Run each function in HOOKS with ARGS."
+  (if (symbolp hooks)
+      (if hooks (apply hooks args))
+    (mapc '(lambda (f) (apply f args)) hooks)))
 
 
 ;;;----------------------------------------------------------------------------
