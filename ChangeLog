@@ -1,3 +1,10 @@
+2001-01-03    <tntdevel@brokendreams.net>
+
+	* tnt.el (tnt-set-buddy-status): Added a call to tnt-send-pounce to
+	fix up the pounce code.
+	(tnt-pounce-add): Added a call to toc-normalize when reading in from 
+	the minibuffer.
+
 2001-01-02  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-login-flag-unset-after): now defaulting to 10 rather

@@ -286,10 +286,10 @@ feature.  defaults to /bin/mail
   "Allows a user to store a pounce message for a buddy"
   (interactive)
   (let* ((completion-ignore-case t)
-         (nick (completing-read "Buddy to Pounce on: "
+         (nick (toc-normalize (completing-read "Buddy to Pounce on: "
                                 (mapcar 'list
                                         (tnt-extract-normalized-buddies
-                                         tnt-buddy-blist))))
+                                         tnt-buddy-blist)))))
          (msg_tmp (read-from-minibuffer "Message to send (enter for none): "))
          (msg (if (string= msg_tmp "") "none" msg_tmp)))
     (setq tnt-pounce-alist (tnt-addassoc nick msg tnt-pounce-alist))
@@ -1108,6 +1108,9 @@ Special commands:
 
           (if tnt-timers-available (tnt-set-just-signedonoff nnick onlinep))
           ))
+
+    (if onlinep
+        (tnt-send-pounce nnick))
     (setq tnt-buddy-alist (tnt-addassoc nnick status tnt-buddy-alist))
     (setq tnt-idle-alist (tnt-addassoc nnick idletime tnt-idle-alist))
     (setq tnt-away-alist (tnt-addassoc nnick away tnt-away-alist))
