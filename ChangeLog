@@ -1,8 +1,3 @@
-2003-10-25  NeilFred Picciotto  <fred@halfshell.halflab.com>
-
-	* tnt.el (tnt-kill): Store the tnt-current-user, *then* check it
-	for null after attempting to sign off.
-
 2003-10-25  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el (tnt-cycle-buddies-sort): Add.
@@ -10,6 +5,11 @@
 	Add "ga", "gi", "go" for grouping.
 	(tnt-buddy-list-menu): Add 4th menu with sort order, grouping commands.
 	(tnt-next-menu): There are 4 menus now.
+
+2003-10-25  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
+	* tnt.el (tnt-kill): Store the tnt-current-user, *then* check it
+	for null after attempting to sign off.
 
 2003-10-25  Scott Evans  <gse@antisleep.com>
 
