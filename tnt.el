@@ -1410,8 +1410,7 @@ Special commands:
 
 (defun tnt-completing-read-list (prompt collection)
   "Reads a list from the minibuffer with completion."
-  (let ((str (let ((collection collection))
-               (completing-read prompt 'tnt-completion-func))))
+  (let ((str (completing-read prompt 'tnt-completion-func)))
     (split-string str ",")))
 
 (defun tnt-persistent-message (&optional fmt &rest args)
