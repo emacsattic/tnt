@@ -978,6 +978,7 @@ Defaults to 'monthly.
   (global-set-key "\C-xtA" 'tnt-toggle-away)
   (global-set-key "\C-xtb" 'tnt-show-buddies)
   (global-set-key "\C-xtB" 'tnt-edit-buddies)
+  (global-set-key "\C-xtc" 'tnt-customize)
   (global-set-key "\C-xti" 'tnt-im)
   (global-set-key "\C-xtj" 'tnt-join-chat)
   (global-set-key "\C-xtl" 'tnt-leave-chat)
@@ -1819,6 +1820,7 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "A" 'tnt-toggle-away)
   (define-key tnt-buddy-list-mode-map "b" 'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "B" 'tnt-edit-buddies)
+  (define-key tnt-buddy-list-mode-map "c" 'tnt-customize)
   (define-key tnt-buddy-list-mode-map "i" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map "I" 'tnt-fetch-info)
   (define-key tnt-buddy-list-mode-map "j" 'tnt-join-chat)
@@ -1902,6 +1904,11 @@ Special commands:
   (tnt-build-buddy-buffer))
 
 ;;; ***************************************************************************
+(defun tnt-customize ()
+  (interactive)
+  (customize "tnt"))
+
+;;; ***************************************************************************
 (defun tnt-build-buddy-buffer ()
   (let ((buffer (tnt-buddy-buffer)))
     (with-current-buffer buffer
@@ -1973,7 +1980,13 @@ Special commands:
                        "[r]eject message     "
                        "                     "
                        "next men[u]"
-                       "\n"))
+                       "\n"
+                       "                     "
+                       "                     "
+                       "                     "
+                       "[?] help"
+                       "\n"
+                       ))
               ((or (= tnt-current-menu 1)
                    (and (= tnt-current-menu 0) (null tnt-event-ring)))
                (setq tnt-current-menu 1)
@@ -1984,7 +1997,8 @@ Special commands:
                        "\n"
                        "[M-p]rev group       "
                        "[M-n]ext group       "
-                       "[q]uit tnt           "))
+                       "[q]uit tnt           "
+                       "[?] help"))
               ((= tnt-current-menu 2)
                (insert "[j]oin chat room     "
                        (if tnt-away "unset [A]way status  "
@@ -1996,17 +2010,22 @@ Special commands:
                        "[P]ounce on buddy    "
                        (if tnt-show-inactive-buddies-now "hide" "show")
                        " [O]ffline       "
-                       "\n"))
+                       "[?] help"
+                       "\n"
+                       ))
               ((= tnt-current-menu 3)
-               (insert (if tnt-muted "un[m]ute tnt sounds  "
+               (insert "[c]ustomize tnt      "
+                       (if tnt-muted "un[m]ute tnt sounds  "
                          "[m]ute tnt sounds    ")
-                       (if tnt-email-to-pipe-to
-                           (if tnt-pipe-to-email-now
-                               "turn off e[M]ail     "
-                             "turn on e[M]ail      ")
-                         "                     ")
-                       "                     "
+                       (if tnt-pipe-to-email-now
+                           "turn off e[M]ail     "
+                         "turn on e[M]ail      ")
                        "next men[u]"
+                       "\n"
+                       "                     "
+                       "                     "
+                       "                     "
+                       "[?] help"
                        "\n"
                        ))
               (t (insert "\n"))))

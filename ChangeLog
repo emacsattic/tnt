@@ -1,3 +1,10 @@
+2002-10-08  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
+	* tnt.el (tnt-customize): just calls (customize "tnt").
+	(tnt-inhibit-key-bindings): added "C-x t c" for tnt-customize.
+	(tnt-buddy-list-mode-map): added "c" for tnt-customize.
+	(tnt-buddy-list-menu): added "[?] help" to each menu.
+
 2002-10-07  Matthias Granberry <matthias@utdallas.edu>
 	* tnt.el (tnt-show-help): added tnt-pounce-list, changed
 	tnt-pounce-add to tnt-toggle-pounce, and changed key binding for
