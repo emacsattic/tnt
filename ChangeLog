@@ -1,3 +1,17 @@
+2002-09-24  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
+	* tnt.el (tnt-buddy-list-point): remove the variable storing
+	point.
+	(tnt-build-buddy-buffer): fix the way we restore point after
+	rebuilding the buddy list.  in particular, put point on the first
+	MESSAGE WAITING line, if any, as we used to; otherwise use the row
+	and col that we store before we erase the buffer (as Joe added).
+	(tnt-get-buddy-at-point): no longer setting tnt-buddy-list-point.
+	(tnt-next-buddy): no longer setting tnt-buddy-list-point.
+	(tnt-prev-buddy): no longer setting tnt-buddy-list-point.
+	(tnt-next-group): no longer setting tnt-buddy-list-point.
+	(tnt-prev-group): no longer setting tnt-buddy-list-point.
+
 2002-09-08  Joe Casadonte  <jcasadonte@northbound-train.com>
 
 	* tnt.el (tnt-default-away-message): added new customization option

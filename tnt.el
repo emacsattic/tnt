@@ -1800,8 +1800,6 @@ Special commands:
 
 (defvar tnt-login-flag-timer nil)
 
-(defvar tnt-buddy-list-point 0)
-
 (unless tnt-buddy-list-mode-map
   (setq tnt-buddy-list-mode-map (make-sparse-keymap))
   (define-key tnt-buddy-list-mode-map "a" 'tnt-accept)
@@ -1889,14 +1887,11 @@ Special commands:
         (set-buffer-modified-p nil)
 
         (goto-char 0)
-        (if (or (not tnt-event-ring)
-                (not (search-forward "(MESSAGE WAITING)" nil t)))
-            (if tnt-buddy-list-point
-                (goto-char tnt-buddy-list-point)))
-        (beginning-of-line)
-
-        (goto-line current-line)
-        (move-to-column col)
+        (if (and tnt-event-ring
+                 (search-forward "(MESSAGE WAITING)" nil t))
+            (beginning-of-line)
+          (goto-line current-line)
+          (move-to-column col))
         ))))
 
 ;;; ***************************************************************************
@@ -1965,7 +1960,6 @@ Special commands:
   "Returns the nickname of the buddy at point."
   (save-excursion
     (save-match-data
-      (setq tnt-buddy-list-point (point))
       (beginning-of-line)
       (if (null (re-search-forward "^ +\\([^[(\n]*\\)" nil t))
           (error "Position cursor on a buddy name")
@@ -2007,7 +2001,6 @@ Special commands:
         (error "No next buddy"))
     (goto-char (match-beginning 0))
     (forward-char)
-    (setq tnt-buddy-list-point (point))
     ))
 
 ;;; ***************************************************************************
@@ -2020,7 +2013,6 @@ Special commands:
         (error "No previous buddy"))
     (goto-char (match-beginning 0))
     (forward-char)
-    (setq tnt-buddy-list-point (point))
     ))
 
 ;;; ***************************************************************************
@@ -2032,7 +2024,6 @@ Special commands:
     (if (null (re-search-forward "\n[^ ]" nil t))
         (error "No next group"))
     (tnt-next-buddy)
-    (setq tnt-buddy-list-point (point))
     ))
 
 ;;; ***************************************************************************
@@ -2045,7 +2036,6 @@ Special commands:
         (error "No previous group"))
     (goto-char (match-beginning 0))
     (tnt-prev-buddy)
-    (setq tnt-buddy-list-point (point))
     ))
 
 ;;; ***************************************************************************
