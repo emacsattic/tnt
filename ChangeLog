@@ -1,5 +1,13 @@
 2000-07-10  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-build-buddy-buffer): now saving point in the
+	buddy-buffer when we rebuild the buffer.  otherwise the cursor
+	will sometimes move suddenly to the end of the buffer, which is
+	annoying when it happens to happen right while you're trying to
+	move it onto someone's name.
+
+2000-07-10  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-handle-im-in): now removing an event from the ring
 	when the buffer is visible -- if the user made the IM buffer
 	visible in a way other than "C-x t a" (for example, with "C-x b"),

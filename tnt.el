@@ -924,12 +924,20 @@ Special commands:
 
 
 (defun tnt-build-buddy-buffer ()
-  (with-current-buffer (tnt-buddy-buffer)
-    (let ((buffer-read-only nil))
-      (erase-buffer)
-      (tnt-blist-to-buffer tnt-buddy-blist
-                           'tnt-buddy-list-filter)
-      (set-buffer-modified-p nil))))
+  (let ((buffer (tnt-buddy-buffer)))
+    (with-current-buffer buffer
+      (let* ((buffer-read-only nil)
+             (my-window (get-buffer-window buffer))
+             (my-buffer-point (window-point my-window)))
+          
+        (erase-buffer)
+        (tnt-blist-to-buffer tnt-buddy-blist
+                             'tnt-buddy-list-filter)
+        (set-buffer-modified-p nil)
+
+        (if (and my-window my-buffer-point)
+            (set-window-point my-window my-buffer-point))
+        ))))
 
 (defun tnt-buddy-list-filter (nick)
   (let* ((status (tnt-buddy-status nick))
