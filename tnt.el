@@ -819,8 +819,9 @@ Special commands:
         tnt-buddy-alist nil
 	tnt-away-alist nil
 	tnt-idle-alist nil
-	tnt-pounce-list nil)
-  (tnt-not-away)
+	tnt-pounce-list nil
+        tnt-away 0
+        tnt-last-away-sent nil)
   (tnt-build-buddy-buffer))
 
 
