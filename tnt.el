@@ -516,6 +516,7 @@ Special commands:
          (input (or (and (stringp user) user)
                     (completing-read "Send IM to: "
                                      (tnt-online-buddies-collection)))))
+    (tnt-remove-im-event (toc-normalize input))
     (switch-to-buffer (tnt-im-buffer input))))
 
 
@@ -1325,6 +1326,13 @@ Special commands:
 
 (defvar tnt-event-ring nil)  ; (buffer-name . (message . callback))
 
+(defun tnt-remove-im-event (nick)
+  "Removes an instant message event from the event-ring."
+  (interactive)
+  (if (assoc (format "*im-%s*" nick) tnt-event-ring)
+      (setq tnt-event-ring 
+            (tnt-remassoc (format "*im-%s*" nick) tnt-event-ring)))
+  (tnt-show-top-event))
 
 (defun tnt-accept ()
   "Accepts an instant message or chat invitation."
@@ -1390,7 +1398,8 @@ Special commands:
                                 (let ((len (length tnt-event-ring)))
                                   (if (= len 1)
                                       ""
-                                    (format "[%d more]" (1- len))))))))
+                                    (format "[%d more]" (1- len))))))
+    (tnt-persistent-message "")))
 
 
 

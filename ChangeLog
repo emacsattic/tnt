@@ -1,3 +1,11 @@
+2000-06-28  Jim Whitehead  <jnwhiteh@brokendreams.net>
+
+	* tnt.el (tnt-remove-im-event): Added this function to take care
+	of removing an im event from the event ring.
+	* tnt.el (tnt-im): Added a call to tnt-remove-im-event to clear
+	any pending im's from that user from the event-ring.  Makes things
+	a little cleaner
+	
 2000-06-08  Jim Whitehead  <jnwhiteh@mailbox.syr.edu>
 
 	* tocstr.el: Integrated the patch into tocstr.el.  Used the 
