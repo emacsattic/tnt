@@ -3,6 +3,8 @@
 	* tnt.el (tnt-inhibit-key-bindings): Added keybinding for
  	tnt-leave-chat.
 	(tnt-show-help): Added help for tnt-leave-chat
+	(tnt-chat-buffer-name): Made comment into docstring
+	(tnt-chat-buffer): Made comment into docstring
 
 	* toc.el (toc-chat-invite): Made the &rest parameter a normal
  	parameter so we wouldn't need to use apply when we have built a
