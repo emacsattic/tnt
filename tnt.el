@@ -39,7 +39,7 @@
 (provide 'tnt)
 (require 'toc)
 
-(defconst tnt-version "TNT 2.1")
+(defconst tnt-version "TNT 2.2")
 
 
 ;;; Config variables

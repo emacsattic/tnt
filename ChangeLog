@@ -1,3 +1,7 @@
+2000-04-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-version): updated version to 2.2
+
 2000-04-21  John Jannotti  <jj@lcs.mit.edu>
 
 	* tnt.el: Use a slightly silly way to check if a face is already
