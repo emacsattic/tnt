@@ -1,3 +1,24 @@
+2000-04-06  John Jannotti  <jj@lcs.mit.edu>
+
+	* tnt.el (tnt-inhibit-key-bindings): Added keybinding for
+ 	tnt-leave-chat.
+	(tnt-show-help): Added help for tnt-leave-chat
+
+	* toc.el (toc-chat-invite): Made the &rest parameter a normal
+ 	parameter so we wouldn't need to use apply when we have built a
+ 	list of buddies to invite.
+
+	* tnt.el (tnt-join-chat): Better docstring
+	(tnt-handle-chat-join): Tiny simplification
+	(tnt-append-message): Significant interface change.  User now
+	comes after message and is optional so if it is not needed it can
+	be left out, not sent as nil.  More significantly, a new optional
+	argument MODIFIED is used for the various parenthetical comments
+	made about some messages, such as Auto-response, whispers,
+	invites, etc.  This is so that the coloring mechanism gets to look 
+	at the unadorned username.  Now when I whisper to someone in a
+	chat room it will still be printed in my color.
+
 2000-04-05  John Jannotti  <jj@lcs.mit.edu>
 
 	* tnt.el (tnt-chat-leave): Allows quitting a chat without killing

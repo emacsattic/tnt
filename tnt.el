@@ -103,6 +103,7 @@
   (global-set-key "\C-xtk" 'tnt-kill)
   (global-set-key "\C-xti" 'tnt-im)
   (global-set-key "\C-xtj" 'tnt-join-chat)
+  (global-set-key "\C-xtl" 'tnt-leave-chat)
   (global-set-key "\C-xtb" 'tnt-show-buddies)
   (global-set-key "\C-xta" 'tnt-accept)
   (global-set-key "\C-xtr" 'tnt-reject)
@@ -165,7 +166,7 @@
      (if msg
          (let ((buffer (tnt-im-buffer user)))
            (toc-send-im user msg)
-           (tnt-append-message-and-adjust-window buffer tnt-current-user msg)
+           (tnt-append-message-and-adjust-window buffer msg tnt-current-user)
            (tnt-push-event (format "You have pounced on %s" user) buffer nil)
            (tnt-pounce-delete user))
      )))
@@ -385,7 +386,7 @@ Special commands:
   (interactive)
   (let* ((message (tnt-get-input-message)))
     (if (string= message "") (message "Please enter a message to send")
-      (tnt-append-message tnt-current-user message))
+      (tnt-append-message message tnt-current-user))
     (if tnt-away (message "Reminder: You are still set as away"))
     (if tnt-recenter-windows (recenter -1))
     (if (string= message "") () (toc-send-im tnt-im-user message))))
@@ -414,6 +415,7 @@ Special commands:
 | tnt-kill          |   C-x t k   | Terminates the current session            |
 | tnt-im            |   C-x t i   | Starts an instant-message conversation    |
 | tnt-join-chat     |   C-x t j   | Joins a chat room                         |
+| tnt-leave-chat    |   C-x t l   | Leaves a chat room                        |
 | tnt-show-buddies  |   C-x t b   | Shows the buddy list                      |
 | tnt-edit-buddies  |   C-x t B   | Invokes the buddy list editor             |
 | tnt-accept        |   C-x t a   | Accepts a message or a chat invitation    |
@@ -483,7 +485,7 @@ Special commands:
 
 
 (defun tnt-join-chat (room)
-  "Joins a chat room."
+  "Joins a chat room.  If in a chat buffer assume that is the one to join."
   (interactive "p")
   (if (null tnt-current-user)
       (error "You must be online to join a chat room.")
@@ -508,15 +510,15 @@ Special commands:
         (set-buffer (tnt-chat-buffer input))
         (setq tnt-chat-participants nil)
         (toc-chat-leave tnt-chat-roomid)
-        (tnt-append-message nil (format "%s left" tnt-current-user))))))
+        (tnt-append-message (format "%s left" tnt-current-user))))))
 
 (defun tnt-chat-buffer-name (room)
-  ;; Returns the name of the chat buffer for ROOM.
+  "Returns the name of the chat buffer for ROOM."
   (format "*chat-%s*" (toc-normalize room)))
 
 
 (defun tnt-chat-buffer (room)
-  ;; Returns the chat buffer for ROOM.
+  "Returns the chat buffer for ROOM."
   (let ((buffer-name (tnt-chat-buffer-name room)))
     (or (get-buffer buffer-name)
         (let ((buffer (get-buffer-create buffer-name)))
@@ -553,10 +555,8 @@ Special commands:
         (message (tnt-get-input-message)))
     (if (= (length message) 0)
         (setq message (read-from-minibuffer "Message: ")))
-    (tnt-append-message (format "%s (whispers to %s)"
-                                tnt-current-user
-                                (tnt-buddy-official-name user))
-                        message)
+    (tnt-append-message message tnt-current-user
+                        (format "whispers to %s" (tnt-buddy-official-name user)))
     (if tnt-recenter-windows (recenter -1))
     (toc-chat-whisper tnt-chat-roomid user message)))
 
@@ -575,20 +575,19 @@ Special commands:
           (if (= (length msg) 0)
               (setq msg (read-from-minibuffer "Message: "
                                               "Join me in this Buddy Chat.")))
-          (tnt-append-message (format "%s (invites %s)"
-                                      tnt-current-user
+          (tnt-append-message msg tnt-current-user
+                              (format "invites %s"
                                       (mapconcat 'tnt-buddy-official-name
-                                                 user-list ", "))
-                              msg)
+                                                 user-list ", ")))
           (if tnt-recenter-windows (recenter -1))
-          (apply 'toc-chat-invite tnt-chat-roomid msg user-list)))))
+          (toc-chat-invite tnt-chat-roomid msg user-list)))))
 
 
 (defun tnt-show-chat-participants ()
   "Append a list of chat room participants to a chat buffer."
   (interactive)
   (let ((string (mapconcat 'identity tnt-chat-participants ", ")))
-    (tnt-append-message nil (format "Participants: %s" string))))
+    (tnt-append-message (format "Participants: %s" string))))
 
 
 (defun tnt-chat-event-pop-function (accept)
@@ -605,11 +604,11 @@ Special commands:
 
 (make-variable-buffer-local 'tnt-message-marker)
 
-(defun tnt-append-message-and-adjust-window (buffer user message)
+(defun tnt-append-message-and-adjust-window (buffer message &optional user mod)
   (let ((window (get-buffer-window buffer)))
     (save-excursion
       (set-buffer buffer)
-      (tnt-append-message user (tnt-strip-html message))
+      (tnt-append-message (tnt-strip-html message) user mod)
       (if window
           (let ((old-window (selected-window)))
             (select-window window)
@@ -625,12 +624,8 @@ Special commands:
 (set-face-foreground 'tnt-other-name-face "blue")
 (set-face-foreground 'tnt-my-name-face "red")
 
-
-;; gse: Added the above faces and modded tnt-append-message to
-;;      change the color of the 'user' text when inserting it.
-;; gse todo: Add timestamps to messages.
-(defun tnt-append-message (user message)
-  ;; Prepends USER to MESSAGE and appends the result to the buffer.
+(defun tnt-append-message (message &optional user modified)
+  ;; Prepends USER (MODIFIED) to MESSAGE and appends the result to the buffer.
   (save-excursion
     (let ((old-point (marker-position tnt-message-marker)))
       (goto-char tnt-message-marker)
@@ -639,9 +634,12 @@ Special commands:
           (insert-before-markers "[" message "]")
         (if tnt-use-timestamps
             (insert-before-markers (format-time-string "%T ")))
-            
+
         (let ((start (point)))
-          (insert-before-markers user ":")
+          (insert-before-markers user)
+          (if modified
+              (insert-before-markers " (" modified ")"))
+          (insert-before-markers ":")
           ;; Change color of user text.
           (if (string-equal user tnt-current-user)
               (add-text-properties start (point) '(face tnt-my-name-face))
@@ -1128,12 +1126,8 @@ Special commands:
       (let ((buffer (tnt-im-buffer user)))
         (setq tnt-last-away-sent user)
         (toc-send-im user tnt-away-msg t)
-        (tnt-append-message-and-adjust-window buffer
-                                              (format "%s (Auto-response)"
-                                                      tnt-current-user)
-                                              tnt-away-msg)
-        ))
-  )
+        (tnt-append-message-and-adjust-window
+         buffer tnt-away-msg tnt-current-user "Auto-response"))))
 
 ;;;----------------------------------------------------------------------------
 ;;; Handlers for TOC events
@@ -1191,11 +1185,9 @@ Special commands:
 
 (defun tnt-handle-im-in (user auto message)
   (let ((buffer (tnt-im-buffer user)))
-    (if auto
-    (tnt-append-message-and-adjust-window buffer 
-                                          (format "%s (Auto-response)" user)
-                                          message)
-    (tnt-append-message-and-adjust-window buffer user message))
+    (tnt-append-message-and-adjust-window
+     buffer message user (if auto "(Auto-response)"))
+
     
     (if (and tnt-email-to-pipe-to
              tnt-pipe-to-email-now)
@@ -1285,30 +1277,24 @@ Special commands:
            amount))
 
 (defun tnt-handle-chat-join (roomid room)
-  (let ((buffer (tnt-chat-buffer room)))
-    (save-excursion
-      (set-buffer buffer)
-      (setq tnt-chat-roomid roomid)))
+  (save-excursion
+    (set-buffer (tnt-chat-buffer room))
+    (setq tnt-chat-roomid roomid))
   (setq tnt-chat-alist (tnt-addassoc roomid room tnt-chat-alist)))
 
 (defun tnt-handle-chat-in (roomid user whisperp message)
   (let ((buffer (tnt-chat-buffer (cdr (assoc roomid tnt-chat-alist)))))
-    (tnt-append-message-and-adjust-window buffer
-                                          (if whisperp
-                                              (format "%s (whispers)" user)
-                                            user)
-                                          message)))
-
+    (tnt-append-message-and-adjust-window
+     buffer message user (if whisperp "whispers"))))
 
 (defun tnt-handle-chat-update-buddy (roomid inside users)
   (save-excursion
     (set-buffer (tnt-chat-buffer (cdr (assoc roomid tnt-chat-alist))))
     (let ((user-string (mapconcat 'identity users ", ")))
-      (tnt-append-message nil (if tnt-chat-participants
-                                  (format "%s %s"
-                                          user-string
-                                          (if inside "joined" "left"))
-                                (format "Participants: %s" user-string))))
+      (tnt-append-message (if tnt-chat-participants
+                              (format "%s %s"
+                                      user-string (if inside "joined" "left"))
+                            (format "Participants: %s" user-string))))
     (if inside
         (setq tnt-chat-participants (append users tnt-chat-participants))
       (while users
@@ -1322,8 +1308,7 @@ Special commands:
   (let ((buffer (tnt-chat-buffer room)))
     (save-excursion
       (set-buffer buffer)
-      (tnt-append-message (format "%s (invitation)" sender)
-                          (tnt-strip-html message)))
+      (tnt-append-message (tnt-strip-html message) sender "invitation"))
     (tnt-push-event (format "Chat invitation from %s arrived" sender)
                     buffer 'tnt-chat-event-pop-function)
     (beep)))
@@ -1507,5 +1492,3 @@ Special commands:
 (defun tnt-remassoc (key alist)
   "Remove an association KEY from ALIST, and return the new ALIST."
   (delete (assoc key alist) alist))
-
-

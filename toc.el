@@ -150,7 +150,7 @@
                        roomid)))
 
 
-(defun toc-chat-invite (roomid message &rest buddies)
+(defun toc-chat-invite (roomid message buddies)
   (tocstr-send (format "toc_chat_invite %s %s %s"
                        roomid
                        (toc-encode message)
