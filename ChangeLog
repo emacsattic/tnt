@@ -1,3 +1,8 @@
+2000-04-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-buddy-edit-buffer): fixed typo.  with-current-buffer
+	was typed as with-curren-buffer.
+
 2000-04-12  John Jannotti  <jj@lcs.mit.edu>
 
 	* tnt.el: use with-current-buffer instead of a save-excursion plus 

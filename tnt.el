@@ -986,7 +986,7 @@ Special commands:
   (let ((buffer-name tnt-buddy-edit-buffer-name))
     (or (get-buffer buffer-name)
         (let ((buffer (get-buffer-create buffer-name)))
-          (with-curren-buffer buffer
+          (with-current-buffer buffer
             (tnt-buddy-edit-mode)
             ;; make-local-hook doesn't work here; tries to call t
             (make-local-variable 'kill-buffer-query-functions)
