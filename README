@@ -33,11 +33,12 @@ What versions of Emacs are supported?
 -------------------------------------
 
 TNT was originally developed using GNU Emacs 19.34.  More recent
-improvements have been developed on various emacses.  We have tested
-it with versions 19.29, 19.30, 20.2, and 20.3, and with XEmacs 20.4
-and 21.1, and it seems to work.  At least one person has had some
-problems with GNU Emacs 20.7.  If you run into difficulties, please
-let us know what emacs you're running!
+improvements have been developed on various emacses.  It has been
+tested at some point (not necessarily recently) with versions 19.29,
+19.30, 20.2, and 20.3, and with XEmacs 20.4 and 21.1, and it seems to
+work.  At least one person has had some problems with GNU Emacs 20.7.
+If you run into difficulties, please let us know what emacs you're
+running!
 
 If you are using a version of GNU Emacs earlier than 19.29, you will
 not be able to load the compiled (.elc) files because those versions
@@ -51,7 +52,7 @@ What does TNT stand for?
 ------------------------
 
 TNT was so named in order to differentiate it from TiK.  What then,
-you may ask, is TiK?  TiK is another unoffical AIM client that is
+you may ask, is TiK?  TiK is another unoffical AIM client, but it's
 written in Tcl.  Both TNT and TiK use a simplified protocol called TOC
 to communicate with the AIM host.  (Actually, they communicate with a
 TOC server which, in turn, communicates with the AIM host).  Details
@@ -77,8 +78,9 @@ The hardest part about registering is choosing a screen name.  There
 are currently more than 30 million screen names in use, so don't
 expect the first one you try to work.  Many people give up, believing
 that the registration page is busted, after trying only their first
-and/or last names.  Doh!  Unless you have an unusual name, this isn't
-going to work.  You need to be creative.
+and/or last names.  D'oh!  Unless you have an unusual name, this isn't
+going to work.  You need to be creative.  Try adding a number after
+your name.
 
 
 How do I use TNT?
@@ -337,8 +339,7 @@ How do I further customize TNT?
 
 Any of the following options can also be included in your .emacs file,
 immediately _after_ the "(setq load-path ...)" and "(load "tnt")"
-lines.  To find out about what these options do, you can use "M-x
-apropos", then type the variable name (e.g. "tnt-default-username").
+lines.
 
     (setq tnt-default-username "MyUserName")
     (setq tnt-default-password "MyPassword")
@@ -348,25 +349,37 @@ apropos", then type the variable name (e.g. "tnt-default-username").
 
     (setq tnt-separator "\n\n")
     (setq tnt-use-timestamps t)
+
     (setq tnt-beep-on-message-available-event 'audible)
     (setq tnt-beep-on-message-in-visible-buffer 'visible)
     (setq tnt-beep-on-buddy-signonoff 'current)
     (setq tnt-beep-on-error nil)
     (setq tnt-message-on-buddy-signonoff nil)
+
     (setq tnt-use-split-buddy t)
     (setq tnt-use-keepalive nil)
     (setq tnt-use-buddy-update-timer nil)
     (setq tnt-use-idle-timer nil)
+
     (setq tnt-directory "/some/tnt/directory")
     (setq tnt-buddy-list-backup-filename nil)
     (setq tnt-recenter-windows nil)
     (setq tnt-email-to-pipe-to "someone@example.com")
-    (setq tnt-email-binary "/bin/mail")
+    (setq tnt-email-binary "/some/other/bin/mail")
+
+All the "tnt-beep-on-..." variables can be set to any of: 'audible,
+'visible, 'current, or nil.  This determines whether it will use the
+audible or visible beep, or whatever the current default beep is for
+emacs, or no beep at all.
+
+NOTE: More information about all the options is available using emacs'
+built-in "apropos" function -- hit "M-x apropos", then type the
+variable name (e.g. "tnt-default-username").  It will give you the
+possible values the variable can be set to, what those do, and what
+the default is.
 
 
-
-And these two lines can also optionally be included in your .emacs
-file:
+Also these two lines can optionally be included in your .emacs file:
 
     (set-face-foreground 'tnt-my-name-face "ColorName1")
     (set-face-foreground 'tnt-other-name-face "ColorName2")
