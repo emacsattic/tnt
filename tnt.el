@@ -1894,32 +1894,36 @@ Special commands:
 
 (unless tnt-buddy-list-mode-map
   (setq tnt-buddy-list-mode-map (make-sparse-keymap))
-  (define-key tnt-buddy-list-mode-map "?" 'tnt-show-help)
-  (define-key tnt-buddy-list-mode-map "a" 'tnt-accept)
-  (define-key tnt-buddy-list-mode-map "A" 'tnt-toggle-away)
-  (define-key tnt-buddy-list-mode-map "b" 'tnt-show-buddies)
-  (define-key tnt-buddy-list-mode-map "B" 'tnt-edit-buddies)
-  (define-key tnt-buddy-list-mode-map "c" 'tnt-customize)
-  (define-key tnt-buddy-list-mode-map "f" 'tnt-set-info)
-  (define-key tnt-buddy-list-mode-map "i" 'tnt-im-buddy)
-  (define-key tnt-buddy-list-mode-map "I" 'tnt-fetch-info)
-  (define-key tnt-buddy-list-mode-map "j" 'tnt-join-chat)
-  (define-key tnt-buddy-list-mode-map "l" 'tnt-leave-chat)
-  (define-key tnt-buddy-list-mode-map "L" 'tnt-pounce-list)
-  (define-key tnt-buddy-list-mode-map "m" 'tnt-toggle-mute)
-  (define-key tnt-buddy-list-mode-map "M" 'tnt-toggle-email)
-  (define-key tnt-buddy-list-mode-map "n" 'tnt-next-buddy)
+  (define-key tnt-buddy-list-mode-map "?"    'tnt-show-help)
+  (define-key tnt-buddy-list-mode-map "a"    'tnt-accept)
+  (define-key tnt-buddy-list-mode-map "A"    'tnt-toggle-away)
+  (define-key tnt-buddy-list-mode-map "b"    'tnt-show-buddies)
+  (define-key tnt-buddy-list-mode-map "B"    'tnt-edit-buddies)
+  (define-key tnt-buddy-list-mode-map "c"    'tnt-customize)
+  (define-key tnt-buddy-list-mode-map "f"    'tnt-set-info)
+  (define-key tnt-buddy-list-mode-map "i"    'tnt-im-buddy)
+  (define-key tnt-buddy-list-mode-map "ga"   'tnt-toggle-group-away-buddies)
+  (define-key tnt-buddy-list-mode-map "gi"   'tnt-toggle-group-idle-buddies)
+  (define-key tnt-buddy-list-mode-map "go"   'tnt-toggle-group-offline-buddies)
+  (define-key tnt-buddy-list-mode-map "I"    'tnt-fetch-info)
+  (define-key tnt-buddy-list-mode-map "j"    'tnt-join-chat)
+  (define-key tnt-buddy-list-mode-map "l"    'tnt-leave-chat)
+  (define-key tnt-buddy-list-mode-map "L"    'tnt-pounce-list)
+  (define-key tnt-buddy-list-mode-map "m"    'tnt-toggle-mute)
+  (define-key tnt-buddy-list-mode-map "M"    'tnt-toggle-email)
+  (define-key tnt-buddy-list-mode-map "n"    'tnt-next-buddy)
   (define-key tnt-buddy-list-mode-map "\M-n" 'tnt-next-group)
-  (define-key tnt-buddy-list-mode-map "o" 'tnt-open)
-  (define-key tnt-buddy-list-mode-map "O" 'tnt-toggle-inactive-buddies)
-  (define-key tnt-buddy-list-mode-map "p" 'tnt-prev-buddy)
-  (define-key tnt-buddy-list-mode-map "P" 'tnt-toggle-pounce)
+  (define-key tnt-buddy-list-mode-map "o"    'tnt-open)
+  (define-key tnt-buddy-list-mode-map "O"    'tnt-toggle-inactive-buddies)
+  (define-key tnt-buddy-list-mode-map "p"    'tnt-prev-buddy)
+  (define-key tnt-buddy-list-mode-map "P"    'tnt-toggle-pounce)
   (define-key tnt-buddy-list-mode-map "\M-p" 'tnt-prev-group)
-  (define-key tnt-buddy-list-mode-map "q" 'tnt-kill)
-  (define-key tnt-buddy-list-mode-map "r" 'tnt-reject)
-  (define-key tnt-buddy-list-mode-map "s" 'tnt-switch-user)
-  (define-key tnt-buddy-list-mode-map "u" 'tnt-next-menu)
-  (define-key tnt-buddy-list-mode-map " " 'tnt-show-buddies)
+  (define-key tnt-buddy-list-mode-map "q"    'tnt-kill)
+  (define-key tnt-buddy-list-mode-map "r"    'tnt-reject)
+  (define-key tnt-buddy-list-mode-map "s"    'tnt-switch-user)
+  (define-key tnt-buddy-list-mode-map "S"    'tnt-cycle-buddies-sort)
+  (define-key tnt-buddy-list-mode-map "u"    'tnt-next-menu)
+  (define-key tnt-buddy-list-mode-map " "    'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "\C-m" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse-down)
   (define-key tnt-buddy-list-mode-map [mouse-2] 'tnt-im-buddy-mouse-up)
@@ -1980,7 +1984,7 @@ Special commands:
 ;;; ***************************************************************************
 (defun tnt-next-menu ()
   (interactive)
-  (setq tnt-current-menu (if (>= tnt-current-menu 3) 0 (1+ tnt-current-menu)))
+  (setq tnt-current-menu (if (>= tnt-current-menu 4) 0 (1+ tnt-current-menu)))
   (tnt-build-buddy-buffer))
 
 ;;; ***************************************************************************
@@ -2347,6 +2351,7 @@ Sorts/groups buddies according to tnt-sort-buddies, tnt-group-*-buddies."
                        "[?] help"
                        "\n"
                        ))
+
               ((or (= tnt-current-menu 1)
                    (and (= tnt-current-menu 0) (null tnt-event-ring)))
                (setq tnt-current-menu 1)
@@ -2361,6 +2366,7 @@ Sorts/groups buddies according to tnt-sort-buddies, tnt-group-*-buddies."
                        "[?] help"
                        "\n"
                        ))
+
               ((= tnt-current-menu 2)
                (insert "[j]oin chat room     "
                        (if tnt-away "unset [A]way status  "
@@ -2375,6 +2381,7 @@ Sorts/groups buddies according to tnt-sort-buddies, tnt-group-*-buddies."
                        "[?] help"
                        "\n"
                        ))
+
               ((= tnt-current-menu 3)
                (insert "[c]ustomize tnt      "
                        (if tnt-muted "un[m]ute tnt sounds  "
@@ -2390,6 +2397,26 @@ Sorts/groups buddies according to tnt-sort-buddies, tnt-group-*-buddies."
                        "[?] help"
                        "\n"
                        ))
+
+              ((= tnt-current-menu 4)
+               (insert (if tnt-group-away-buddies
+                           "[ga]ungroup away     "
+                         "[ga]group away       ")
+                       (if tnt-group-idle-buddies
+                           "[gi]ungroup idle     "
+                         "[gi]group idle       ")
+                       (if tnt-group-offline-buddies
+                           "[go]ungroup offline  "
+                         "[go]group offline    ")
+                       "next men[u]"
+                       "\n"
+                       "[S]ort order         "
+                       "                     "
+                       "                     "
+                       "[?] help   "
+                       "\n"
+                       ))
+
               (t (insert "\n"))))
     (insert "\n"
             "tnt currently offline"
@@ -2424,6 +2451,59 @@ Sorts/groups buddies according to tnt-sort-buddies, tnt-group-*-buddies."
   (tnt-build-buddy-buffer))
 
 ;;; ***************************************************************************
+
+(defun tnt-cycle-buddies-sort ()
+  "Cycles through buddy list sorting options:
+No sort -> Buddy name -> Fullname"
+  (interactive)
+  (setq tnt-sort-buddies-by
+        (cond ((eq tnt-sort-buddies-by nil)        'buddyname)
+              ((eq tnt-sort-buddies-by 'buddyname) 'fullname)
+              ((eq tnt-sort-buddies-by 'fullname)  nil)))
+
+  (tnt-build-buddy-buffer)
+
+  (message
+   (cond ((eq tnt-sort-buddies-by nil)        "Buddy list unsorted.")
+         ((eq tnt-sort-buddies-by 'buddyname) "Buddy list sorted by buddy name.")
+         ((eq tnt-sort-buddies-by 'fullname)  "Buddy list sorted by fullname.")))
+  )
+
+;;; ***************************************************************************
+
+(defun tnt-toggle-group-away-buddies ()
+  "Toggles whether 'away' buddies are grouped at the end of the buddy list."
+  (interactive)
+  (setq tnt-group-away-buddies (not tnt-group-away-buddies))
+  (tnt-build-buddy-buffer)
+  (if tnt-group-away-buddies
+      (message "Away buddies grouped together.")
+    (message "No grouping of 'away' buddies.")))
+
+;;; ***************************************************************************
+
+(defun tnt-toggle-group-idle-buddies ()
+  "Toggles whether 'idle' buddies are grouped at the end of the buddy list."
+  (interactive)
+  (setq tnt-group-idle-buddies (not tnt-group-idle-buddies))
+  (tnt-build-buddy-buffer)
+  (if tnt-group-idle-buddies
+      (message "Idle buddies grouped together.")
+    (message "No grouping of 'idle' buddies.")))
+
+;;; ***************************************************************************
+
+(defun tnt-toggle-group-offline-buddies ()
+  "Toggles whether offline buddies are grouped at the end of the buddy list."
+  (interactive)
+  (setq tnt-group-offline-buddies (not tnt-group-offline-buddies))
+  (tnt-build-buddy-buffer)
+  (if tnt-group-offline-buddies
+      (message "Offline buddies grouped together.")
+    (message "No grouping of offline buddies.")))
+
+;;; ***************************************************************************
+
 (defun tnt-im-buddy ()
   "Initiates an IM conversation with the selected buddy."
   (interactive)

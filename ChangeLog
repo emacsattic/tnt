@@ -5,6 +5,14 @@
 
 2003-10-25  Scott Evans  <gse@antisleep.com>
 
+	* tnt.el (tnt-cycle-buddies-sort): Add.
+	(tnt-buddy-list-mode-map): Add "S" = tnt-cycle-buddies-sort.
+	Add "ga", "gi", "go" for grouping.
+	(tnt-buddy-list-menu): Add 4th menu with sort order, grouping commands.
+	(tnt-next-menu): There are 4 menus now.
+
+2003-10-25  Scott Evans  <gse@antisleep.com>
+
 	* tnt.el (tnt-fullname-for-nick): Move out of tnt-buddy-list-filter.
 	(tnt-is-buddy-away): Rename from tnt-buddy-away, update documentation.
 	(tnt-get-away-msg): Allow prefix to be anything.
