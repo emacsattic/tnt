@@ -40,13 +40,18 @@
 (defvar tocstr-sname)
 
 ;;;----------------------------------------------------------------------------
+;;; Check for run-at-time timer functionality
+;;;----------------------------------------------------------------------------
+
+(defvar tnt-timers-available (fboundp 'run-at-time))
+
+;;;----------------------------------------------------------------------------
 ;;; Callback functions
 ;;;----------------------------------------------------------------------------
 
 (defvar tocstr-opened-function  nil)
 (defvar tocstr-closed-function  nil)
 (defvar tocstr-receive-function nil)
-
 
 ;;;----------------------------------------------------------------------------
 ;;; Public functions
@@ -138,19 +143,54 @@
 (defvar tocstr-flap-size)
 (defvar tocstr-flap-data)
 (defvar tocstr-flap-index)
+(defvar tocstr-flap-packet)
+(defvar tocstr-flap-parsing)
+(defvar tocstr-flap-timer)
 
 (defun tocstr-init-receiver ()
-  (setq tocstr-flap-state 'tocstr-flap-await-frame))
+  (if tnt-timers-available
+      (setq tocstr-flap-state 'tocstr-flap-await-frame)
+    (setq tocstr-flap-state   'tocstr-flap-await-frame
+	tocstr-flap-type    0
+	tocstr-flap-size    0
+	tocstr-flap-data    ""
+	tocstr-flap-packet  nil
+	tocstr-flap-parsing nil
+	tocstr-flap-timer   nil)))
 
+(if tnt-timers-available 
+    (defun tocstr-filter (proc str)
+      (let ((len (length str))
+            (i 0))
+        (while (< i len)
+          (funcall tocstr-flap-state (aref str i))
+          (setq i (1+ i)))))
+  
+  (defun tocstr-filter (proc str)
+    (when tocstr-flap-timer
+      (cancel-timer tocstr-flap-timer)
+      (setq tocstr-flap-timer nil))
+    (if tocstr-flap-parsing
+        (setq tocstr-flap-packet
+              (concat tocstr-flap-packet (string-make-unibyte str)))
+      (setq tocstr-flap-parsing t
+            str (concat tocstr-flap-packet (string-make-unibyte str))
+            tocstr-flap-packet nil)
+      (unwind-protect
+          (while str
+            (let ((len (length str))
+                  (i 0))
+              (while (< i len)
+                (funcall tocstr-flap-state (aref str i))
+                (setq i (1+ i))))
+            (setq str tocstr-flap-packet
+                  tocstr-flap-packet nil))
+        (setq tocstr-flap-parsing nil)
+        (unless (eq tocstr-flap-state 'tocstr-flap-await-frame)
+          (setq tocstr-flap-timer
+                (run-at-time 15 nil 'tocstr-init-receiver)))))))
 
-(defun tocstr-filter (proc str)
-  (let ((len (length str))
-        (i 0))
-    (while (< i len)
-      (funcall tocstr-flap-state (aref str i))
-      (setq i (1+ i)))))
-
-
+  
 (defun tocstr-sentinel (proc str)
   (funcall tocstr-closed-function))
 
@@ -185,18 +225,42 @@
   (setq tocstr-flap-state 'tocstr-flap-collect-data))
 
 
-(defun tocstr-flap-collect-data (byte)
-  (aset tocstr-flap-data tocstr-flap-index byte)
-  (if (< tocstr-flap-index (1- tocstr-flap-size))
-      (setq tocstr-flap-index (1+ tocstr-flap-index))
-    (cond
-     ((= tocstr-flap-type 1)
-      (tocstr-send-flap 1 (format "%c%c%c%c%c%c%c%c%s"
-                                  0 0 0 1
-                                  0 1
-                                  0 (length tocstr-sname)
-                                  tocstr-sname))
-      (funcall tocstr-opened-function))
-     ((= tocstr-flap-type 2)
-      (funcall tocstr-receive-function tocstr-flap-data)))
-    (setq tocstr-flap-state 'tocstr-flap-await-frame)))
+(if tnt-timers-available 
+    (defun tocstr-flap-collect-data (byte)
+      (aset tocstr-flap-data tocstr-flap-index byte)
+      (if (< tocstr-flap-index (1- tocstr-flap-size))
+          (setq tocstr-flap-index (1+ tocstr-flap-index))
+        (cond
+         ((= tocstr-flap-type 1)
+          (tocstr-send-flap 1 (format "%c%c%c%c%c%c%c%c%s"
+                                      0 0 0 1
+                                      0 1
+                                      0 (length tocstr-sname)
+                                      tocstr-sname))
+          (funcall tocstr-opened-function))
+         ((= tocstr-flap-type 2)
+          (funcall tocstr-receive-function tocstr-flap-data)))
+        (setq tocstr-flap-state 'tocstr-flap-await-frame)))
+
+  (defun tocstr-flap-collect-data (byte)
+    (let ((cleanup t))
+      (unwind-protect
+          (progn
+            (aset tocstr-flap-data tocstr-flap-index byte)
+            (if (< tocstr-flap-index (1- tocstr-flap-size))
+                (setq tocstr-flap-index (1+ tocstr-flap-index)
+                      cleanup nil)
+              (cond
+               ((= tocstr-flap-type 1)
+                (tocstr-send-flap 1 (format "%c%c%c%c%c%c%c%c%s"
+                                      0 0 0 1
+                                      0 1
+                                      0 (length tocstr-sname)
+                                      tocstr-sname))
+          (funcall tocstr-opened-function))
+         ((= tocstr-flap-type 2)
+          (funcall tocstr-receive-function tocstr-flap-data))
+         (t
+          (error "tnt: Unexpected flap type")))))
+        (if cleanup
+            (setq tocstr-flap-state 'tocstr-flap-await-frame))))))

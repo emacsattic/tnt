@@ -1,3 +1,12 @@
+2000-06-08  Jim Whitehead  <jnwhiteh@mailbox.syr.edu>
+
+	* tocstr.el: Integrated the patch into tocstr.el.  Used the 
+	tnt-timers-available functionality to save compatability.  The
+	"enhancements" will be available in all versions of emacs containing
+	the run-at-time procedure.
+	(tnt-handle-nick): Added a small hack here to set the tnt-current-user
+	to tnt-username instead of what the server supposedly sends back to us.
+
 2000-06-01  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-handle-nick): if we're supposed to be forwarding to

@@ -1481,7 +1481,12 @@ Special commands:
         (t (error "Bad permit mode %s" tnt-permit-mode))))
 
 (defun tnt-handle-nick (nick)
-  (setq tnt-current-user nick)
+
+;;; This should fix the truncation of nickname problem we've been having.
+  (if (string= nick tnt-username)
+      (setq tnt-current-user nick)
+    (setq tnt-current-user tnt-username))
+
   (or (tnt-restore-buddy-list-if-necessary)
       (setq tnt-buddy-blist (list (list "Buddies" nick))))
   (tnt-set-online-state t)
