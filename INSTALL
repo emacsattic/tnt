@@ -48,7 +48,7 @@ immediately _after_ the above two lines.
 (setq tnt-username-alist '(("UserName1" . "Password1")
                            ("UserName2" . "Password2")
                            ("UserName3")))
-                           
+
     If you have more than one username, set the list this way.  Then
     you can use "C-x t s" to change which username will be used the
     next time you connect.  Any number of usernames can be listed in
@@ -77,6 +77,13 @@ immediately _after_ the above two lines.
     from your computer, so then when you come back, you can see how
     long ago it was that your friend said "hi" while you were gone.
 
+(setq tnt-beep-beep-beep 'always)
+or
+(setq tnt-beep-beep-beep 'never)
+    Controls whether or not TNT beeps for incoming messages.
+    By default, beeps happen "sometimes", namely when the message
+    window for the message originator is not visible.
+
 (setq tnt-beep-on-buddy-signonoff t)
     This makes TNT beep any time one of your buddies signs on or off.
     Note that whether or not you set this, you will still get messages
@@ -89,8 +96,8 @@ immediately _after_ the above two lines.
 
 (setq tnt-use-keepalive t)
     This tells TNT to use the keepalive packets to help keep your
-    connection alive.  Try this if you keep getting booted randomly.  
-    This option will most likely break when used in Xemacs, so if 
+    connection alive.  Try this if you keep getting booted randomly.
+    This option will most likely break when used in Xemacs, so if
     you get error messages using this, don't use it.
 
 (setq tnt-recenter-windows nil)

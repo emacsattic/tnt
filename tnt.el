@@ -11,7 +11,7 @@
 ;;;; form, provided that i) this copyright notice and license appear on all
 ;;;; copies of the software; and ii) Licensee does not utilize the software
 ;;;; in a manner which is disparaging to AOL.
-;;;; 
+;;;;
 ;;;; This software is provided "AS IS," without a warranty of any kind. ALL
 ;;;; EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND WARRANTIES, INCLUDING
 ;;;; ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
@@ -23,7 +23,7 @@
 ;;;; DAMAGES, HOWEVER CAUSED AND REGARDLESS OF THE THEORY OF LIABILITY, ARISING
 ;;;; OUT OF THE USE OF OR INABILITY TO USE SOFTWARE, EVEN IF AOL HAS BEEN
 ;;;; ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-;;;; 
+;;;;
 ;;;; This software is not designed or intended for use in on-line control of
 ;;;; aircraft, air traffic, aircraft navigation or aircraft communications;
 ;;;; or in the design, construction, operation or maintenance of any nuclear
@@ -32,7 +32,7 @@
 
 ;;;; TODO:
 ;;;;   implement permit/deny
-;;;;   point reset by erase-buffer to beginning of buddy buffer during update 
+;;;;   point reset by erase-buffer to beginning of buddy buffer during update
 ;;;;   consider using use-hard-newlines variable
 ;;;;   make processed im messages read-only
 ;;;;   mouse mappings
@@ -63,28 +63,78 @@
 ; for more info.
 
 (defvar tnt-default-username nil
-  "*Should be nil or a string containing your username.")
+  "*Should be nil or a string containing your username.
+
+If you set this, you will not have to type in your username every
+time you want to log in.")
 
 (defvar tnt-username-alist nil
   "*Should be nil or a list of associations of usernames with
-    (optionally) passwords.")
+    (optionally) passwords.
+
+If you have more than one username, set the list this way:
+  (setq tnt-username-alist '((\"UserName1\" . \"Password1\")
+                             (\"UserName2\" . \"Password2\")
+                             (\"UserName3\")))
+
+Then you can use \"C-x t s\" to change which username will be used the
+next time you connect.  Any number of usernames can be listed in this
+way, but note that each element of the list MUST be either of the form
+(\"UserName\") or of the form (\"UserName\" . \"Password\"), and note the
+apostrophe.  When you log in as a username for which the password is
+not stored here, you will be prompted.")
 
 (defvar tnt-default-password nil
-  "*Should be nil or your password.")
+  "*Should be nil or your password.
+
+If you set this, you will not have to type in your password every time
+you want to log in.  However, if the file you set this in is readable
+by other users on your system, they could log in as you, so if you set
+this, be careful.  Also note that if you use multiple usernames, you
+should not set the tnt-default-password (unless all your usernames use
+the same password).")
 
 (defvar tnt-separator "\n\n"
-  "*String printed between IMs.")
+  "*String printed between IMs.
+
+This controls what is printed between message.  One newline is pretty
+much required in order separate messages.  Two newlines is the default,
+but other strings, suchs as \"\n-\n\" may be desirable.")
 
 (defvar tnt-use-timestamps nil
-  "*If t, shows timestamps in TNT conversations.")
+  "*If t, shows timestamps in TNT conversations.
+
+This will add a timestamp for each message you receive or send.
+This is useful for logging, and for people who are on very often.
+It's also convenient if you leave yourself logged in while away
+from your computer, so then when you come back, you can see how
+long ago it was that your friend said \"hi\" while you were gone.")
+
+(defvar tnt-beep-beep-beep 'sometimes
+  "*Controls beeping for incoming messages and chat invitations.
+
+Possible values are:
+  'sometimes  Beep when a new message comes in, but its message window is
+              not in a currently visible window.
+
+  'always     Beep every time a new message comes in.
+
+  'never      No beeping.
+
+Chat invitations always beep unless this variable is set to 'never.")
 
 (defvar tnt-beep-on-buddy-signonoff nil
-  "*If t, beeps when buddies sign on or off.")
+  "*If t, beeps when buddies sign on or off.
 
-(defvar tnt-use-split-buddy nil 
-  "*If t, splits screen automagically when you invoke buddy-view")
+Note that whether or not you set this, you will still get messages
+in your minibuffer saying \"MyBuddy online\" and \"MyBuddy offline\".")
 
-(defvar tnt-use-keepalive tnt-timers-available 
+(defvar tnt-use-split-buddy nil
+  "*If t, forces tnt to split the window horizontally whenever the
+    buddy list command is invoked.  This rule does not apply when in
+    in the *scratch* buffer, or when already in the *buddies* buffer.")
+
+(defvar tnt-use-keepalive tnt-timers-available
   "*If t, sends a keepalive packet once a minute")
 
 (defvar tnt-use-buddy-update-timer tnt-timers-available
@@ -100,11 +150,25 @@ receives any message from the toc server.
   "*If t, recenters text to bottom of window when messages are printed.")
 
 (defvar tnt-email-to-pipe-to nil
-  "*Should be nil or a string containing an email address.")
+  "*Should be nil or a string containing an email address.
+
+Setting this allows you to toggle forwarding of all incoming IMs to
+the specified address.  This might be useful if you have an email
+address which goes to an alphanumeric pager, and you want to be able
+to receive IMs anywhere!  Once the email address is specified, turn
+forwarding on and off with \"C-x t M\".")
 
 (defvar tnt-email-binary "/bin/mail"
   "*Should be set to the executable of your mail binary, if you're
    using the pipe-to-email feature.  defaults to /bin/mail")
+
+
+;; Faces for color highlighting of screen names.
+(make-face 'tnt-other-name-face)
+(make-face 'tnt-my-name-face)
+(set-face-foreground 'tnt-other-name-face "blue")
+(set-face-foreground 'tnt-my-name-face "red")
+
 
 ;;; Key bindings
 
@@ -152,7 +216,7 @@ receives any message from the toc server.
   "Allows a user to store a pounce message for a buddy"
   (interactive)
   (let* ((completion-ignore-case t)
-         (nick (completing-read "Buddy to Pounce on: " 
+         (nick (completing-read "Buddy to Pounce on: "
                                 (mapcar 'list
                                         (tnt-extract-normalized-buddies
                                          tnt-buddy-blist))))
@@ -293,24 +357,24 @@ receives any message from the toc server.
                            tnt-default-password
                            (and tnt-username-alist
                                 (cdar tnt-username-alist))
-                           (tnt-read-from-minibuffer-no-echo 
+                           (tnt-read-from-minibuffer-no-echo
                             (format "Password for %s: " tnt-username))))
     (if (string-equal tnt-password "")
         (error "No password given")
-      (setq toc-opened-hooks 'tnt-handle-opened
-            toc-closed-hooks 'tnt-handle-closed
-            toc-sign-on-hooks 'tnt-handle-sign-on
-            toc-config-hooks 'tnt-handle-config
-            toc-nick-hooks 'tnt-handle-nick
-            toc-im-in-hooks 'tnt-handle-im-in
-            toc-update-buddy-hooks 'tnt-handle-update-buddy
-            toc-error-hooks 'tnt-handle-error
-            toc-eviled-hooks 'tnt-handle-eviled
-            toc-chat-join-hooks 'tnt-handle-chat-join
-            toc-chat-in-hooks 'tnt-handle-chat-in
+      (setq toc-opened-hooks            'tnt-handle-opened
+            toc-closed-hooks            'tnt-handle-closed
+            toc-sign-on-hooks           'tnt-handle-sign-on
+            toc-config-hooks            'tnt-handle-config
+            toc-nick-hooks              'tnt-handle-nick
+            toc-im-in-hooks             'tnt-handle-im-in
+            toc-update-buddy-hooks      'tnt-handle-update-buddy
+            toc-error-hooks             'tnt-handle-error
+            toc-eviled-hooks            'tnt-handle-eviled
+            toc-chat-join-hooks         'tnt-handle-chat-join
+            toc-chat-in-hooks           'tnt-handle-chat-in
             toc-chat-update-buddy-hooks 'tnt-handle-chat-update-buddy
-            toc-chat-invite-hooks 'tnt-handle-chat-invite
-            toc-goto-url-hooks 'tnt-handle-goto-url)
+            toc-chat-invite-hooks       'tnt-handle-chat-invite
+            toc-goto-url-hooks          'tnt-handle-goto-url)
       (toc-open tnt-toc-host tnt-toc-port tnt-username))))
 
 
@@ -331,7 +395,7 @@ receives any message from the toc server.
   (if (null tnt-username-alist)
       (message "No username list defined.")
     (progn
-      (setq tnt-username-alist 
+      (setq tnt-username-alist
             (tnt-rotate-left tnt-username-alist))
       (if tnt-default-username
           (setq tnt-default-username (caar tnt-username-alist)))
@@ -635,20 +699,12 @@ Special commands:
             (select-window old-window))))))
 
 
-;; Should this be done with defface?  I don't know what the current
-;; way of doing this is, but I think this method will work on both
-;; FSF and XEmacs.
-(make-face 'tnt-other-name-face)
-(make-face 'tnt-my-name-face)
-(set-face-foreground 'tnt-other-name-face "blue")
-(set-face-foreground 'tnt-my-name-face "red")
-
 (defun tnt-append-message (message &optional user modified)
   ;; Prepends USER (MODIFIED) to MESSAGE and appends the result to the buffer.
   (save-excursion
     (let ((old-point (marker-position tnt-message-marker)))
       (goto-char tnt-message-marker)
-      
+
       (if (not user)
           (insert-before-markers "[" message "]")
         (if tnt-use-timestamps
@@ -730,7 +786,7 @@ Special commands:
  (if (and tnt-use-split-buddy
           (not (string-equal (buffer-name) "*scratch*"))
           (not (string-equal (buffer-name) "*buddies*")))
-     'switch-to-buffer-other-window 
+     'switch-to-buffer-other-window
    'switch-to-buffer))
 
 (defun tnt-buddy-buffer ()
@@ -755,8 +811,8 @@ Special commands:
             (let ((unick (tnt-buddy-status nick))
                   (idle (tnt-buddy-idle nick))
                   (away (tnt-buddy-away nick)))
-              (if unick (format "  %s%s" 
-                                unick 
+              (if unick (format "  %s%s"
+                                unick
                                 (cond ((and away idle)
                                        (format " (away - %s)" idle))
                                       ((and away (not idle))
@@ -765,7 +821,7 @@ Special commands:
                                        (format " (idle - %s)" idle))
                                       (t ""))
                                       )))))
-        
+
         (set-buffer-modified-p nil))))
 
 (defun tnt-im-buddy ()
@@ -791,7 +847,7 @@ Special commands:
       (error "No next buddy"))
   (goto-char (match-beginning 0))
   (forward-char))
-      
+
 
 (defun tnt-prev-buddy ()
   "Moves the cursor to the previous buddy."
@@ -811,7 +867,7 @@ Special commands:
       (error "No next group"))
   (tnt-next-buddy))
 
-      
+
 (defun tnt-prev-group ()
   "Moves the cursor to the last buddy of the previous group."
   (interactive)
@@ -894,7 +950,7 @@ Special commands:
               ((< idle-mins 60) (format "%dm" idle-mins))
               (t (format "%dh%dm" (/ idle-mins 60) (mod idle-mins 60))))))))
 
-    
+
 (defun tnt-buddy-official-name (buddy)
   ;; Return official screen name of buddy if known, otherwise
   ;; just return buddy.
@@ -1044,10 +1100,10 @@ Special commands:
           (setq name-list (cdr name-list)))
         (setq blist (cdr blist))))
     config))
-  
+
 
 (defun tnt-extract-normalized-buddies (blist)
-  (tnt-nsort-and-remove-dups (mapcar 'toc-normalize 
+  (tnt-nsort-and-remove-dups (mapcar 'toc-normalize
                                      (apply 'append (mapcar 'cdr blist)))))
 
 
@@ -1163,7 +1219,7 @@ Special commands:
   (let ((log-buffer (get-buffer-create "*tnt-debug*")))
     (prin1 args log-buffer)
     (princ "\n" log-buffer)))
-    
+
 
 (defun tnt-handle-opened ()
   (toc-signon tnt-login-host tnt-login-port tnt-username tnt-password
@@ -1209,14 +1265,17 @@ Special commands:
     (tnt-append-message-and-adjust-window
      buffer message user (if auto "(Auto-response)"))
 
-    
     (if (and tnt-email-to-pipe-to
              tnt-pipe-to-email-now)
         (tnt-pipe-message-to-program user message))
-    
-    (if (null (get-buffer-window buffer))
+
+    (if (eq tnt-beep-beep-beep 'always)
+        (beep))
+
+    (if (null (get-buffer-window buffer 'visible))
         (progn
-          (beep)
+          (if (eq tnt-beep-beep-beep 'sometimes)
+              (beep))
           (tnt-push-event (format "Message from %s available" user)
                           (tnt-im-buffer-name user) nil)))
     (if tnt-away (tnt-send-away-msg user))))
@@ -1249,8 +1308,8 @@ Special commands:
                    (format "IM from %s" user)  ;; a subject line
                    tnt-email-to-pipe-to)  ;; email address to send to
     ;; then what gets piped in
-    (process-send-string proc-name 
-                         (format "%s: %s\n" user 
+    (process-send-string proc-name
+                         (format "%s: %s\n" user
                                  (tnt-strip-html message)))
     (process-send-eof proc-name))
   (message "Reminder: IMs are being forwarded to %s" tnt-email-to-pipe-to))
@@ -1323,8 +1382,8 @@ Special commands:
         (let ((user (car users)))
           (setq tnt-chat-participants (delete user tnt-chat-participants))
           (setq users (cdr users)))))))
-                                               
-  
+
+
 (defun tnt-handle-chat-invite (room roomid sender message)
   (tnt-handle-chat-join roomid room)    ; associate roomid with room
   (let ((buffer (tnt-chat-buffer room)))
@@ -1333,7 +1392,7 @@ Special commands:
       (tnt-append-message (tnt-strip-html message) sender "invitation"))
     (tnt-push-event (format "Chat invitation from %s arrived" sender)
                     buffer 'tnt-chat-event-pop-function)
-    (beep)))
+    (if (not (eq tnt-beep-beep-beep 'never)) (beep))))
 
 (defun tnt-handle-goto-url (windowid url)
   (setq url (concat "http://" tnt-toc-host "/" url))
@@ -1382,7 +1441,7 @@ Special commands:
   (apply 'message args)
   (beep))
 
-  
+
 (defvar collection) ; to shut up byte compiler
 
 (defun tnt-completion-func (str pred flag)
