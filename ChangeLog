@@ -1,3 +1,7 @@
+2000-14-07    <tntdevel@brokendreams.net>
+
+	* tnt.el: Changed minor version number.  Now version 2.3
+
 2000-11-07    <tntdevel@brokendreams.net>
 
 	* tocstr.el (tnt-timers-available): Changed occurances of 
