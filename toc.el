@@ -194,7 +194,7 @@
         (funcall toc-config-function config)))
 
      ((string= cmd "NICK")
-      (let ((nick   (toc-lop-field str 'index)))
+      (let ((nick (toc-lop-field str 'index)))
         (funcall toc-nick-function nick)))
 
      ((string= cmd "IM_IN")
@@ -213,9 +213,9 @@
         (funcall toc-update-buddy-function nick online evil signon idle away)))
 
      ((string= cmd "ERROR")
-      (let ((code   (string-to-number (toc-lop-field str 'index)))
-            (args   nil)
-            (arg    nil))
+      (let ((code (string-to-number (toc-lop-field str 'index)))
+            (args nil)
+            (arg  nil))
         (while (setq arg (toc-lop-field str 'index))
           (setq args (cons arg args)))
         (funcall toc-error-function code (nreverse args))))
@@ -226,8 +226,8 @@
         (funcall toc-eviled-function evil eviler)))
 
      ((string= cmd "CHAT_JOIN")
-      (let ((roomid  (toc-lop-field str 'index))
-            (room    (toc-lop-field str 'index)))
+      (let ((roomid (toc-lop-field str 'index))
+            (room   (toc-lop-field str 'index)))
         (funcall toc-chat-join-function roomid room)))
 
      ((string= cmd "CHAT_IN")
@@ -238,12 +238,12 @@
         (funcall toc-chat-in-function roomid user whisper message)))
 
      ((string= cmd "CHAT_UPDATE_BUDDY")
-      (let ((roomid  (toc-lop-field str 'index))
-            (inside  (string= "T" (toc-lop-field str 'index)))
-            (users   (let (user (users nil))
-                       (while (setq user (toc-lop-field str 'index))
-                         (setq users (cons user users)))
-                       users)))
+      (let ((roomid (toc-lop-field str 'index))
+            (inside (string= "T" (toc-lop-field str 'index)))
+            (users  (let (user (users nil))
+                      (while (setq user (toc-lop-field str 'index))
+                        (setq users (cons user users)))
+                      users)))
         (funcall toc-chat-update-buddy-function roomid inside users)))
 
      ((string= cmd "CHAT_INVITE")
@@ -254,7 +254,7 @@
         (funcall toc-chat-invite-function room roomid sender message)))
 
      ((string= cmd "CHAT_LEFT")
-      (let ((roomid  (toc-lop-field str 'index)))
+      (let ((roomid (toc-lop-field str 'index)))
         (funcall toc-chat-left-function cmd roomid)))
 
      ((string= cmd "GOTO_URL")

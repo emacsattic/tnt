@@ -1,5 +1,8 @@
 2000-04-06  John Jannotti  <jj@lcs.mit.edu>
 
+	* toc.el (toc-handle-receive): Fix some indentation.  Sorry I'm so 
+	anal.
+
 	* tnt.el (tnt-handle-goto-url): Added
 	(tnt-open): bind the goto-url function to tnt-handle-goto-url
 
