@@ -273,6 +273,37 @@ feature.  defaults to /bin/mail
 (defvar tnt-deny-list nil)
 
 
+;;;---------------------------------------------------------------------------
+;;;  Sound Package - jnwhiteh@syr.edu
+;;;---------------------------------------------------------------------------
+;;;  This code is very specific, and will be used to play sounds when a user
+;;;  IM's you, when you IM a user, etc.  Eventully I will add signon sounds
+;;;  as well.  This will be disabled by default.
+
+(defvar sound-exec nil)     ;; Set this to the executable to play sounds
+(defvar inwav nil)          ;; This is the IM sound to receive IM's
+(defvar outwav nil)         ;; This is the IM sound when you send IM's
+(defvar firstwav nil)       ;; This is the Sound when you FIRST receive an IM
+                            ;; from a user (meaning their buffer doesn't exist)
+
+(defun tnt-play-sound (event)
+  (let ((proc-name "sound-process")
+        (proc-out-buf "*sound-output*")
+        (process-connection-type nil)
+        (wavfile (if (string= event 'incoming) inwav 
+                   (if (string= event 'outgoing) outwav 
+                     (if (string= event 'first) firstwav nil)))))
+    (if (and wavfile sound-exec)
+        ;; similar code to this could be used to pipe to something else
+        (progn
+          (start-process proc-name proc-out-buf
+                         ;; put executable here:
+                         sound-exec
+                         ;; and now any cmd-line args:
+                         wavfile)
+          (process-send-eof proc-name)))))
+
+
 
 ;;;---------------------------------------------------------------------------
 ;;;  Pounce Package - jnwhiteh@syr.edu
@@ -564,7 +595,9 @@ Special commands:
     (tnt-remove-im-event tnt-im-user)
     (if tnt-away (message "Reminder: You are still set as away"))
     (if tnt-recenter-windows (recenter -1))
-    (if (string= message "") () (toc-send-im tnt-im-user message))))
+    (if (string= message "") () 
+      (progn (toc-send-im tnt-im-user message)
+             (tnt-play-sound 'outgoing)))))
 
 
 
@@ -1624,7 +1657,9 @@ Special commands:
     (tnt-show-buddies)))
 
 (defun tnt-handle-im-in (user auto message)
-  (let ((buffer (tnt-im-buffer user)))
+  (let* ((buffer-exists (get-buffer (tnt-im-buffer-name user)))
+         (buffer (tnt-im-buffer user)))
+        
     (tnt-append-message-and-adjust-window
      buffer message user (if auto "(Auto-response)"))
 
@@ -1632,7 +1667,8 @@ Special commands:
              tnt-pipe-to-email-now)
         (tnt-pipe-message-to-program user message))
     
-    (if (get-buffer-window buffer 'visible)
+    (if buffer-exists (tnt-play-sound 'incoming)
+      (tnt-play-sound 'first)
 
         (progn
           (tnt-beep tnt-beep-on-message-in-visible-buffer)
@@ -1642,7 +1678,6 @@ Special commands:
       (tnt-beep tnt-beep-on-message-available-event)
       (tnt-push-event (format "Message from %s available" user)
                       (tnt-im-buffer-name user) nil))
-    
     (if tnt-away (tnt-send-away-msg user))))
 
 (defun tnt-toggle-email ()

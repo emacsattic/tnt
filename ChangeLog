@@ -4,6 +4,14 @@
 	available" message to their buffer.
 	(tnt-pounce-add): Made null "" messages remain null, rather than being
 	sent as "none".
+	(tnt-play-sound): Added fucntionality for playing sounds corresponding
+	to incoming IM's, outgoing IM's, and first receipt of IM's.
+	(tnt-handle-im-in): Added a call to (tnt-play-sound 'incoming)
+	(tnt-send-text-as-instant-message): Added a call to 
+	(tnt-play-sound 'outgoing).  I've restricted this to here because it
+	makes away messages silent as they should be.
+	(tnt-handle-im-in): Added a call to (tnt-play-sound 'first) if a buffer
+	for the incomign use doesn't exist.
 
 2001-01-03    <tntdevel@brokendreams.net>
 
