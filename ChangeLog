@@ -1,0 +1,245 @@
+2000-04-05 John Jannotti <jj@lcs.mit.edu>
+
+	* tocstr.el (tocstr-init-receiver): Reset flap-state when opening
+	the toc connection since state could be strange due to an
+	ill-timed tnt-kill.
+
+	* toc.el (toc-keepalive): Created to keep tocstr functions out of
+	tnt.el
+
+2000-04-04 Neil "Fred" Picciotto
+
+	* tnt.el: moved defvars for tnt-pipe-to-email-now and
+	tnt-buddy-blist up near the top, to eliminate "reference to free
+	variable" byte-compile errors.
+
+2000-04-04 Jim Whitehead
+
+	* Makefile: Added. Targets are "elc" to bytecompile all files and
+ 	"release" to build a tar file of a release.
+
+2000-04-04 Neil "Fred" Picciotto
+
+	* tnt.el: synchronized help info between the text block displayed
+	by "C-x t ?"  and that in the README.
+
+	* README: added explanations of tnt-show-help, tnt-switch-user,
+ 	and tnt-toggle-email.
+
+	* tnt.el: if *tnt-help* buffer already exists, tnt-show-help now
+	switches to it
+
+	* INSTALL: removed line which said that it had only been tested in
+ 	emacs 19.34, replaced it with line from README about the versions
+ 	it's been tested in.
+
+2000-04-03 Jim Whitehead
+
+	* tnt.el: tnt-show-timestamps has been renamed to
+ 	tnt-use-timestamps to go with our naming conventions
+	
+	* tnt.el (tnt-handle-closed): added a mail-pipe in to notify you
+ 	that your connection has been closed (by the server, or by remote
+ 	signon).
+
+2000-04-01 Jim Whitehead
+
+	* tnt.el (tnt-get-away-msg): Small change to fix a possible error
+ 	with trying to send a nil away message.
+
+2000-04-01 Neil "Fred" Picciotto
+
+	* tnt.el: removed tnt-default-username-list variable, replaced it
+	with a new tnt-username-alist variable, which assocs usernames
+	with passwords.  Explained in INSTALL.
+
+	* tnt.el (tnt-pounce-delete): was using "remassoc" which didn't
+	compile for me; perhaps this was another XEmacs-ism?  in any case,
+	wrote tnt-remassoc to remove an assoc from an alist.
+
+	* tnt.el: removed some tab characters that were still lying around
+	in tnt.el.
+
+2000-03-31 Jim Whitehead
+
+	* tnt.el: Bugfix to fix the "no process" mesasges, due to
+	incorrect calls in tnt-buddy-shutdown
+
+	* tnt.el: Broke alot of fixed code in order to keep the project
+	compatable with GNU emacs.  (replace-in-string) is not standard,
+	and therefore breaks all over the place with GNU.  This affects:
+	tnt-strip-a-href and tnt-strip-html in tnt.el and toc-encode and
+	toc-normalize These have been reverted to their orginal versions.
+
+	* tnt.el (tnt-set-buddy-status): There was a problem with the
+ 	changes to tnt-away, etc where (away) is not being appended to the
+ 	buddy list for any away buddies.  This has been fixed.
+
+2000-03-31 John Jannotti <jj@lcs.mit.edu>
+
+	* tnt.el (tnt-pounce-delete): Simplified pounce deletion to just
+ 	one function, picked tnt-pounce-delete as the "survivor". (Note
+ 	this is user visable, but barely)
+
+	* tnt.el (tnt-addassoc): Simplified a lot of code by adding
+ 	tnt-addassoc and using it.
+
+	* tnt.el: renamed tnt-pounce-list to tnt-pounce-alist for
+	consistency
+
+	* tnt.el: Made tnt-away and tnt-away-alist use t/nil instead of
+	1/0.  This simplifies a lot of code that uses them.
+
+	* toc.el (toc-set-away): Fixed a typo, so now tnt.el doesn't need
+ 	to call tocstr-send directly anymore.
+
+	* toc.el (toc-{add,remove}-buddy): change names, simplify interface
+
+	* tnt.el (tnt-show-help): funcall (switch-buffer-function), not
+ 	apply
+
+	* tnt.el (tnt-keepalive): use tocstr-send-flap, not
+ 	tocstr-send-flap1
+
+	* tnt.el (tnt-rotate-{left,right}): Simplified, sped up and
+ 	docstringed.
+
+	* tnt.el: Used emacs primitives instead of complicated code to
+	simplify toc-encode, toc-normalize, tnt-strip-html,
+	tnt-strip-a-href, and tnt-completing-read-list
+
+	* tnt.el: Added tnt-separator variable
+
+	* tnt.el (tnt-send-away-msg): Was called send-away-msg.
+
+	* tnt.el (tnt-show-chat-participants,
+ 	tnt-handle-chat-update-buddy): Use identity in calls to mapcar.
+
+	* tnt.el (tnt-set-buddy-status): removed format when using message
+	
+	* tnt.el (tnt-pounce-add): removed format when using message
+
+	* tnt.el (tnt-switch-user): removed format when using message
+
+
+	* tnt.el (tnt-participant-collection): use 'list in mapcar call
+
+	* tnt.el (tnt-buddy-status): Simplify
+
+	* tnt.el (tnt-buddy-idle): Simplify
+
+	* tnt.el (tnt-buddy-away): Simplify
+
+	* tnt.el (tnt-set-buddy-status): Eliminated unused old-idle and
+ 	old-away bindings.
+
+2000-03-30 Jim Whitehead
+
+	* tnt.el: added a user-defined variable to avoid needing to hack
+	the code if your mail executable isn't in /bin/mail.
+	tnt-email-binary.
+
+	* tnt.el (tnt-shutdown): fixed so it properly disposes of
+ 	client-side away messages.
+
+	* tnt.el: piping IMs to an email now prints a reminder message.
+	It may be beneficial to add a modeline change, but I don't have
+	time today.
+
+
+2000-03-29 Neil "Fred" Picciotto
+
+	* tnt.el: made piping to email simpler to configure (i.e. just set
+	some variables, rather than having to go in and change the code)
+
+	* tnt.el (pounce-add): tab-complete based on all buddies, rather
+ 	than just those that are currently online
+
+	* tnt.el (pounce-del): tab-complete based on pounce-list, rather
+ 	than online buddies
+
+	* tnt.el: moved a few bits of code around within the file (defvars
+ 	of user-configurable variables all together at top,
+ 	tnt-switch-user near tnt-open, and so on)
+
+	* tnt.el: you can now hit C-g (or just return with no password) to
+	get out of the password prompt
+
+	* tnt.el: added config var for beeping when buddies sign on and
+	off
+
+	* tnt.el: fixed miscellaneous typos, etc
+
+	* INSTALL: explanations for all the user-configurable variables
+
+2000-03-27 Jim Whitehead
+
+	* tnt.el (tnt-keepalive): Added an option to avoid conflicts with
+ 	XEmacs enable with (setq tnt-use-keepalive t).
+
+2000-03-28 Scott Evans
+
+	* tnt.el: Made the recentering of the buffer optional.. it
+	defaults to the current behavior.
+
+	* tnt.el: Buddy entrances/exits are now displayed in the
+	minibuffer
+
+	* tnt.el: Code patch to change color of incoming user text when in
+	a color environment.
+
+	* tnt.el: Added a default away message, and a history.
+
+	* tnt.el (tnt-im-buddy): Fixed regexp
+
+2000-03-24 Jim Whitehead
+
+	* tnt.el: Keepalive packets are now sent to the server, improving
+	uptime.
+
+	* tnt.el: Fixed sending of nil messages, which would crash other
+	clients	(older versions of Everbuddy, etc)
+
+	* tnt.el: Pounce Package
+
+	* tnt.el: Better away status checking
+
+	* tnt.el: Numerous other minor bugfixes
+
+2000-03-24 Scott Evans
+
+	* tnt.el: Code patch to remove nil entries in the auto-completion
+	list for screennames
+
+	* tnt.el (tnt-get-input-message): Was killing the region, instead
+ 	of deleting it, which hosed the kill ring.
+
+2000-03-24 Allan Poindexter
+
+	* tnt.el: Code snippet to show away status in modeline.
+
+2000-03-24 Neil Picciotto
+
+	* tnt.el: Added a binding to the tnt-show-help command (C-x t ?)
+
+	* tnt.el: Links are now displayed rather than being stripped.
+
+	* tnt.el: Timestamps package has been added.
+
+	* tnt.el: Beeping only happens when you are not in the im buffer
+	of the person who is iming you.
+
+	* tnt.el: Buddy list automagically comes up when you signon.
+	Also, if the option is set, (see INSTALL) the screen splits when
+	the buddy list is displayed.
+
+	* tnt.el: Return does the same as i in the buddy list, namely
+	initiating an IM.
+
+	* tnt.el: Mouse clicking a screenname now initiates an IM.
+
+	* tnt.el: You can now cycle through a list of screennames to sign
+	on as.
+
+	* tnt.el: Option (involving code change) that allows you to have
+	all your IM's piped to a commandline.

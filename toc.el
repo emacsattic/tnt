@@ -151,8 +151,10 @@
                        roomid
                        (toc-encode message)
                        (mapconcat 'toc-normalize buddies " "))))
-                       
 
+(defun toc-keepalive ()
+  "Send a keepalive packet to the server."
+  (tocstr-send-flap 5 ""))
 
 
 ;;;----------------------------------------------------------------------------

@@ -183,7 +183,7 @@
 (defun tnt-keepalive ()
   "Sends a keepalive packet to the server"
   (interactive)
-  (tocstr-send-flap 5 "")  
+  (toc-keepalive)
   (setq tnt-keepalive-timer (run-at-time tnt-keepalive-interval nil 
                                          'tnt-keepalive)))
 

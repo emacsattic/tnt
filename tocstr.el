@@ -37,7 +37,7 @@
 (provide 'tocstr)
 
 (defvar tocstr-process)
-(defvar tocstr-flap-index)
+(defvar tocstr-sname)
 
 ;;;----------------------------------------------------------------------------
 ;;; Callback functions
@@ -51,8 +51,6 @@
 ;;;----------------------------------------------------------------------------
 ;;; Public functions
 ;;;----------------------------------------------------------------------------
-
-(defvar tocstr-sname)
 
 (defun tocstr-open (host port sname)
   (setq tocstr-sname sname)
@@ -135,15 +133,14 @@
 ;;; FLAP Receiver
 ;;;----------------------------------------------------------------------------
 
-(defvar tocstr-sname      "")
-(defvar tocstr-flap-state 'tocstr-flap-await-frame)
-(defvar tocstr-flap-type  0)
-(defvar tocstr-flap-size  0)
-(defvar tocstr-flap-data  "")
-
+(defvar tocstr-flap-state)
+(defvar tocstr-flap-type)
+(defvar tocstr-flap-size)
+(defvar tocstr-flap-data)
+(defvar tocstr-flap-index)
 
 (defun tocstr-init-receiver ()
-  )
+  (setq tocstr-flap-state 'tocstr-flap-await-frame))
 
 
 (defun tocstr-filter (proc str)
