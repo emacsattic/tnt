@@ -1,3 +1,14 @@
+2000-05-01  John Jannotti  <jj@lcs.mit.edu>
+
+	* toc.el (toc-permit-mode): Added (keeps track of server side mode
+	(toc-permit-list): Added (keeps track of server side list)
+	(toc-add-permit): Keep track of server info
+	(toc-add-deny): Keep track of server info
+	(toc-permit-all): Smarter if already in the right mode
+	(toc-deny-all): Smarter if already in the right mode
+	(toc-permit-only): Smarter if already correct
+	(toc-deny-only): Smarter is already correct
+
 2000-04-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el: fixed bug introduced on 2000-04-21.  was checking
