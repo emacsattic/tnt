@@ -577,6 +577,7 @@ messages are disabled."
            (toc-send-im user msg)
            (tnt-append-message-and-adjust-window buffer ourmsg
                                                  tnt-current-user)
+           (tnt-beep tnt-beep-on-incoming-message)
            (tnt-push-event (format "You have pounced on %s" user)
                            buffer-name nil)
            (tnt-pounce-delete user))
