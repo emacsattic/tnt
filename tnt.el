@@ -48,7 +48,7 @@
 (require 'cl)
 
 
-(defconst tnt-version "TNT 2.4")
+(defconst tnt-version "TNT 2.5 beta")
 
 ;;; **************************************************************************
 ;;; ***** Configuration variables / Compatability
@@ -307,6 +307,45 @@ Buddies
            (string :tag "Buddy Name")
            (string :tag "Full Name")))
   :group 'tnt)
+
+
+(defcustom tnt-sort-buddies-by nil
+  "If non-nil, sort buddy list.  Possible values are
+'fullname and 'buddyname."
+  :type '(choice
+          (const :tag "No sorting" nil)
+          (const :tag "Buddy name" buddyname)
+          (const :tag "Fullname"   fullname))
+  :group 'tnt)
+
+(defcustom tnt-group-away-buddies nil
+  "Non-nil means \"away\" buddies are grouped together
+at the end of the buddy list."
+  :type 'boolean
+  :group 'tnt)
+
+(defcustom tnt-group-idle-buddies nil
+  "Non-nil means \"idle\" buddies are grouped together
+at the end of the buddy list."
+  :type 'boolean
+  :group 'tnt)
+
+(defcustom tnt-group-offline-buddies nil
+  "Non-nil means offline buddies are grouped together
+at the end of the buddy list.  This setting is really
+only relevant if tnt-show-inactive-buddies is set."
+  :type 'boolean
+  :group 'tnt)
+
+(defcustom tnt-very-idle-minimum nil
+  "Minimum idle time, in seconds, after which a buddy will
+be marked \"very idle\".  Very idle buddies are grouped with
+away buddies if tnt-group-away-buddies is set.
+
+If nil, nobody will go \"very idle\"."
+  :type 'integer
+  :group 'tnt)
+
 
 ;; ---------------------------------------------------------------------------
 ;; ----- IM/Chat formatting
@@ -938,12 +977,13 @@ Settings:
 ;; ---------------------------------------------------------------------------
 (setq tnt-buddy-list-font-lock-keywords
       (list
-       '("^\\(.*(pounce.+\\)$" 1 tnt-buddy-list-pounce-face)
-       '("^\\(.*(idle -.+\\)$" 1 tnt-buddy-list-idle-face)
-       '("^\\(.*(away.+\\)$" 1 tnt-buddy-list-away-face)
-       '("^\\(.*(offline.+\\)$" 1 tnt-buddy-list-inactive-face)
-       '("^\\(\\S-+.+\\)$" 1 tnt-buddy-list-group-face)
-       '("^\\(.+\\)$" 1 tnt-buddy-list-active-face)
+       '("^\\(.*(pounce.+\\)$"   1 tnt-buddy-list-pounce-face)
+       '("^\\(.*(idle .+\\)$"   1 tnt-buddy-list-idle-face)
+       '("^\\(.*(v idle .+\\)$" 1 tnt-buddy-list-away-face)
+       '("^\\(.*(away.+\\)$"     1 tnt-buddy-list-away-face)
+       '("^\\(.*(offline.+\\)$"  1 tnt-buddy-list-inactive-face)
+       '("^\\(\\S-+.+\\)$"       1 tnt-buddy-list-group-face)
+       '("^\\(.+\\)$"            1 tnt-buddy-list-active-face)
        ))
 
 ;; ---------------------------------------------------------------------------
@@ -1166,8 +1206,8 @@ if nil)"
   (setq tnt-just-reconnected nil))
 
 ;;; ***************************************************************************
-(defun tnt-buddy-away (nick)
-  "Mark Buddy NICK as being away."
+(defun tnt-is-buddy-away (nick)
+  "Return t if buddy NICK is away; nil otherwise."
   (cdr (assoc (toc-normalize nick) tnt-away-alist)))
 
 ;;; ***************************************************************************
@@ -1176,7 +1216,7 @@ if nil)"
 
 The value of `tnt-default-away-message' is used as the away message,
 unless PREFIX arg is given."
-  (interactive "p")
+  (interactive "P")
   (if tnt-away
       (tnt-not-away)
     (tnt-set-away (tnt-get-away-msg prefix))))
@@ -1197,14 +1237,12 @@ unless PREFIX arg is given."
   )
 
 ;;; ***************************************************************************
-;; gse: Added history and default away message stuff.
+
 (defvar tnt-away-msg-history nil)
 
-;;; ---------------------------------------------------------------------------
 (defun tnt-get-away-msg (prefix)
-  "Gets the away message."
-  (if (or (/= prefix 1)
-          (not tnt-default-away-message))
+  "Gets the away message.  If PREFIX is non-nil, prompt for message."
+  (if (or prefix (not tnt-default-away-message))
       (read-from-minibuffer "Away Message: "
                             (cons
                              (if tnt-away-msg-history
@@ -1217,12 +1255,12 @@ unless PREFIX arg is given."
 
 ;;; ***************************************************************************
 (defun tnt-set-away (away-msg)
-  "Sets the away message."
+  "Sets user as away, using AWAY-MSG."
   (setq tnt-away-msg away-msg)
-  (message "Set as away: %s" tnt-away-msg)
   (setq tnt-away t)
   (toc-set-away tnt-away-msg)
   (tnt-set-online-state t)
+  (message "Set as away: %s" tnt-away-msg)
   )
 
 ;;; ***************************************************************************
@@ -1512,7 +1550,6 @@ Special commands:
 | tnt-toggle-email  |   C-x t M   | Toggles forwarding incoming IMs to email  |
 | tnt-toggle-mute   |   C-x t m   | Toggles sounds on/off                     |
 +-------------------+-------------+-------------------------------------------+
-;; use built-in keybinding cariable \[[whatever]]
 
 "))
           (tnt-switch-to-buffer buffer)))))
@@ -1947,29 +1984,314 @@ Special commands:
 
 ;;; ***************************************************************************
 (defun tnt-build-buddy-buffer ()
-  (let ((buffer (tnt-buddy-buffer)))
-    (with-current-buffer buffer
-      (let* ((buffer-read-only nil)
-             (col (current-column))
-             (current-line (tnt-current-line-in-buffer)))
-        (erase-buffer)
+  (with-current-buffer (tnt-buddy-buffer)
+    (let* ((buffer-read-only nil)
+           (col (current-column))
+           (current-line (tnt-current-line-in-buffer)))
+      ;; Insert contents of buddy buffer.
+      (erase-buffer)
+      (tnt-insert-blist tnt-buddy-blist t t)
+      (tnt-non-buddy-messages)
+      (tnt-chat-alist-to-buffer tnt-chat-alist)
+      (tnt-buddy-list-menu)
 
-        (tnt-blist-to-buffer tnt-buddy-blist 'tnt-buddy-list-filter)
-        (tnt-non-buddy-messages)
-        (tnt-chat-alist-to-buffer tnt-chat-alist)
-        (tnt-buddy-list-menu)
+      (set-buffer-modified-p nil)
 
-        (set-buffer-modified-p nil)
-
-        (goto-char 0)
-        (if (and tnt-event-ring
-                 (search-forward "(MESSAGE WAITING)" nil t))
-            (beginning-of-line)
-          (goto-line current-line)
-          (move-to-column col))
-        ))))
+      ;; Put the cursor somewhere useful.
+      (goto-char 0)
+      (if (and tnt-event-ring
+               (search-forward "(MESSAGE WAITING)" nil t))
+          (beginning-of-line)
+        (goto-line current-line)
+        (move-to-column col))
+      )))
 
 ;;; ***************************************************************************
+
+(defun tnt-insert-blist (blist decorate reorder)
+  "Insert the contents of BLIST into the current buffer.
+If DECORATE is non-nil, adds display information (fullname,
+idle/away/pounce/message waiting, etc).
+
+If REORDER is non-nil, calls tnt-reorder-annotated-blist, which
+will strip/sort/group buddies based on the tnt-sort-buddies
+and tnt-group-*-buddies settings."
+  (let ((annotated-blist (tnt-annotated-blist blist)))
+    (when reorder
+      (setq annotated-blist (tnt-reorder-annotated-blist annotated-blist)))
+
+    (while annotated-blist
+      (let* ((group (car annotated-blist))
+             (group-name (car group))
+             (nick-list (cdr group)))
+
+        (insert group-name "\n")
+
+        (while nick-list
+          (let* ((nick-list-entry (car nick-list))
+                 (buddylist-name (car nick-list-entry))
+                 (buddy-properties (cdr nick-list-entry))
+                 (fullname   (plist-get buddy-properties 'fullname))
+                 (unick      (plist-get buddy-properties 'unick))
+                 (online     (plist-get buddy-properties 'online))
+                 (away       (plist-get buddy-properties 'away))
+                 (idle-desc  (plist-get buddy-properties 'idle-desc))
+                 (idle-secs  (plist-get buddy-properties 'idle-secs))
+                 (pounced    (plist-get buddy-properties 'pounced))
+                 (event      (plist-get buddy-properties 'event))
+                 (just-onoff (plist-get buddy-properties 'just-onoff))
+                 )
+
+            (if decorate
+                (insert
+                 (concat
+                  "  "
+                  (propertize (or fullname unick) 'mouse-face 'highlight)
+                  (when fullname (concat " [" unick "]"))
+                  (cond ((not online)
+                         (format " (offline)"))
+                        ((and away idle-desc)
+                         (format " (away %s)" idle-desc))
+                        ((and away (not idle-desc))
+                         (format " (away)"))
+                        ((and (not away) idle-desc)
+                         (if (and tnt-very-idle-minimum
+                                  (> idle-secs tnt-very-idle-minimum))
+                             (format " (v idle %s)" idle-desc)
+                           (format " (idle %s)" idle-desc)))
+                        (t ""))
+                  just-onoff
+                  (when pounced " (pounce)")
+                  (when event " (MESSAGE WAITING)")
+                  "\n"))
+              ;; Undecorated version uses raw buddylist name.
+              (insert (concat "  " buddylist-name "\n")))
+          (setq nick-list (cdr nick-list)))))
+      (insert "\n")
+      (setq annotated-blist (cdr annotated-blist)))))
+
+
+;;; ***************************************************************************
+
+(defun tnt-annotated-blist (blist)
+  "Return a buddy list with detailed information about each buddy.
+
+The structure of the annotated blist is slightly different than
+the regular blist -- instead of a string for each buddy name,
+there is a cons cell.  Its car is the buddy name as it appears in the
+buddy list; its car is a plist of buddy properties.
+
+See tnt-nick-properties for a list of the properties."
+  (let ((annotated-blist nil)
+        (groupcount -1))
+    (while blist
+      (setq groupcount (+ 1 groupcount))
+      (let* ((group (car blist))
+             (group-name (car group))
+             (nick-list (cdr group))
+             (nickcount -1))
+        ;; insert group name.
+        (setq annotated-blist (cons (list group-name) annotated-blist))
+        ;; add plists for each buddy in the group.
+        (while nick-list
+          (setq nickcount (+ 1 nickcount))
+          (let* ((nick (car nick-list))
+                 (nick-details (tnt-nick-properties nick groupcount nickcount)))
+            (setcar annotated-blist (cons nick-details (car annotated-blist))))
+          (setq nick-list (cdr nick-list)))
+        )
+      (setq blist (cdr blist)))
+
+    (mapcar 'nreverse (nreverse annotated-blist))
+    ))
+
+;;; ***************************************************************************
+
+(defun tnt-nick-properties (nick groupcount nickcount)
+  "Return a cons cell containing detailed buddy information
+about NICK.
+
+car is the buddy name.
+cdr is a plist containing details about that buddy's state:
+  'online     - t if logged in; nil otherwise
+  'unick      - un-normalized nick
+  'nnick      - normalized nick
+  'idle-secs  - idle time in seconds (if idle; nil otherwise)
+  'idle-desc  - string describing idle time (if idle; nil otherwise)
+  'away       - t if away, nil otherwise
+  'just-onoff - if just on/off, a string saying so; nil otherwise
+  'event      - non-nil if a message is waiting from this buddy
+  'pounced    - pounce message, if one is set for this buddy; nil otherwise
+  'fullname   - fullname string if buddy has one; nil otherwise
+  'groupcount - first group is 0, second group is 1, etc
+  'nickcount  - first nick in a group is 0, second nick is 1, etc
+"
+  (let* ((status (tnt-buddy-status nick))
+         (online (char-or-string-p status))
+         (unick (or status nick))
+         (nnick (toc-normalize nick))
+         (idle-secs (tnt-buddy-idle-secs nick))
+         (idle (tnt-buddy-idle nick))
+         (away (tnt-is-buddy-away nick))
+         (just-onoff (tnt-get-just-signedonoff nnick))
+         (event (assoc (tnt-im-buffer-name nick) tnt-event-ring))
+         (pounced (cdr-safe (assoc nnick tnt-pounce-alist)))
+         (fullname (tnt-fullname-for-nick nick))
+         )
+
+    (cons
+     nick
+     (list
+      'online     online
+      'unick      unick
+      'nnick      nnick
+      'idle-secs  idle-secs
+      'idle-desc  idle
+      'away       away
+      'just-onoff just-onoff
+      'event      event
+      'pounced    pounced
+      'fullname   fullname
+      'groupcount groupcount
+      'nickcount  nickcount
+      ))))
+
+;;; ***************************************************************************
+
+(defun tnt-reorder-annotated-blist (blist)
+  "Return re-ordered version BLIST (which is an annotated blist, as
+created by tnt-annotated-blist).
+
+Strips offline buddies according to tnt-show-inactive-buddies-now.
+Sorts/groups buddies according to tnt-sort-buddies, tnt-group-*-buddies."
+  ;; Have to take apart the annotated blist and reassemble it.
+  ;; Maybe there's a clever lisp way to do this in-place, but I don't
+  ;; know it.
+  (let ((result nil))
+    (while blist
+      (let* ((group (car blist))
+             (nick-list (cdr group)))
+
+        ;; strip.
+        (when (not tnt-show-inactive-buddies-now)
+          (setq nick-list (tnt-strip-offline-nicks nick-list)))
+
+        ;; sort.
+        (setq nick-list (sort nick-list 'tnt-nick-less-than))
+        ;;(setq nick-list (tnt-sort-nicks nick-list))
+
+        (setcdr group nick-list)
+        (setq result (append result (list group))))
+      (setq blist (cdr blist)))
+
+    result))
+
+;;; ***************************************************************************
+
+(defun tnt-nick-less-than (arg1 arg2)
+  (let* ((nick1-props (cdr arg1))
+         (nick2-props (cdr arg2))
+         (nick1-blist-name (car arg1))
+         (nick2-blist-name (car arg2))
+         (nick1-nnick     (plist-get nick1-props 'nnick))
+         (nick2-nnick     (plist-get nick2-props 'nnick))
+         (nick1-fullname  (plist-get nick1-props 'fullname))
+         (nick2-fullname  (plist-get nick2-props 'fullname))
+         (nick1-idle-secs (plist-get nick1-props 'idle-secs))
+         (nick2-idle-secs (plist-get nick2-props 'idle-secs))
+         (nick1-away      (plist-get nick1-props 'away))
+         (nick2-away      (plist-get nick2-props 'away))
+         (nick1-online    (plist-get nick1-props 'online))
+         (nick2-online    (plist-get nick2-props 'online))
+         (nick1-offline   (not nick1-online))
+         (nick2-offline   (not nick2-online))
+         (nick1-nickcount (plist-get nick1-props 'nickcount))
+         (nick2-nickcount (plist-get nick2-props 'nickcount))
+         (nick1-sortname nick1-nnick)
+         (nick2-sortname nick2-nnick)
+         (nick1-vidle nil)
+         (nick2-vidle nil)
+         (nick1-score 0)
+         (nick2-score 0)
+         (name-less-than nil)
+         )
+
+    ;; Compare names and stow the result so we can use it as
+    ;; a secondary sort after doing any grouping comparisons.
+    ;;
+    ;; Note that even if tnt-sort-buddies-by is nil, our sort
+    ;; routine needs to reflect the order of the names in the blist.
+    ;; (a user might have tnt-group-away-buddies set, but *not* have
+    ;; tnt-sort-buddies-by set, in which case we want to group the
+    ;; away buddies, but keep them in the same order as their buddy
+    ;; list.)  That's why 'nickcount exists.
+    (setq name-less-than
+          (if tnt-sort-buddies-by
+              (progn
+                (when (eq tnt-sort-buddies-by 'fullname)
+                  (when nick1-fullname (setq nick1-sortname nick1-fullname))
+                  (when nick2-fullname (setq nick2-sortname nick2-fullname)))
+                (if (equal nick1-sortname nick2-sortname)
+                    (string< nick1-nnick nick2-nnick)
+                  (string< nick1-sortname nick2-sortname)))
+            (< nick1-nickcount nick2-nickcount)))
+
+    ;; Check for "very idle".
+    (setq nick1-vidle (and tnt-very-idle-minimum
+                           nick1-idle-secs
+                           (> nick1-idle-secs tnt-very-idle-minimum)))
+    (setq nick2-vidle (and tnt-very-idle-minimum
+                           nick2-idle-secs
+                           (> nick2-idle-secs tnt-very-idle-minimum)))
+
+    ;; Create sorting positions list by creating a bitmask for each
+    ;; nick.  This is the easiest way I can think of to impose the
+    ;; sorting hierarchy... offline > away > idle > namecomparison.
+    ;; I feel like this is a goofy approach but it's pretty clean.
+
+    (if name-less-than
+        (setq nick2-score (+ 1 nick2-score))
+      (setq nick1-score (+ 1 nick1-score)))
+
+
+    ;; Note that these are cond clauses for a reason.  Since users can
+    ;; be away *and* idle, only the highest-priority value should be
+    ;; applied.  Otherwise a user who is away but not idle will be
+    ;; sorted strangely compared to a user who is away/idle.
+    (cond
+     ((and tnt-group-offline-buddies nick1-offline)
+      (setq nick1-score (+ nick1-score 1000)))
+     ((and tnt-group-away-buddies (or nick1-away nick1-vidle))
+      (setq nick1-score (+ nick1-score 100)))
+     ((and tnt-group-idle-buddies nick1-idle-secs)
+      (setq nick1-score (+ nick1-score 10)))
+     )
+
+    (cond
+     ((and tnt-group-offline-buddies nick2-offline)
+      (setq nick2-score (+ nick2-score 1000)))
+     ((and tnt-group-away-buddies (or nick2-away nick2-vidle))
+      (setq nick2-score (+ nick2-score 100)))
+     ((and tnt-group-idle-buddies nick2-idle-secs)
+      (setq nick2-score (+ nick2-score 10)))
+     )
+
+    (< nick1-score nick2-score)))
+
+;;; ***************************************************************************
+
+(defun tnt-strip-offline-nicks (nick-list)
+  (let ((result nil))
+    (while nick-list
+      (let* ((nick (car nick-list))
+             (nick-props (cdr nick)))
+        (when (plist-get nick-props 'online)
+          (setq result (append result (list nick)))))
+      (setq nick-list (cdr nick-list)))
+    result))
+
+;;; ***************************************************************************
+
 (defun tnt-non-buddy-messages ()
   ;; this is ugly, making use of the buffer name in each event like this,
   ;; rather than storing the information we actually need in the event.
@@ -2080,40 +2402,6 @@ Special commands:
             (if tnt-username-alist "[s]witch user" "")
             "\n")
     ))
-
-;;; ***************************************************************************
-(defun tnt-buddy-list-filter (nick)
-  (let* ((status (tnt-buddy-status nick))
-         (unick (or status nick))
-         (nnick (toc-normalize nick))
-         (idle (tnt-buddy-idle nick))
-         (away (tnt-buddy-away nick))
-         (just-onoff (tnt-get-just-signedonoff nnick))
-         (event (assoc (tnt-im-buffer-name nick) tnt-event-ring))
-         (pounced (cdr-safe (assoc nnick tnt-pounce-alist)))
-         (fullname (tnt-fullname-for-nick nick))
-         (first (propertize (or fullname unick) 'mouse-face 'highlight))
-         )
-
-    (when (or status just-onoff pounced event tnt-show-inactive-buddies-now)
-      ;;       (put-text-property 0 (length first)
-      ;;                          'mouse-face 'highlight first)
-      (concat first
-              (when fullname
-                (concat " [" unick "]"))
-              (cond ((not status)
-                     (format " (offline)"))
-                    ((and away idle)
-                     (format " (away - %s)" idle))
-                    ((and away (not idle))
-                     (format " (away)"))
-                    ((and (not away) idle)
-                     (format " (idle - %s)" idle))
-                    (t ""))
-              just-onoff
-              (when pounced " (pounce)")
-              (when event " (MESSAGE WAITING)")
-              ))))
 
 ;;; ***************************************************************************
 (defun tnt-fetch-info ()
@@ -2298,7 +2586,7 @@ Special commands:
 (defun tnt-set-buddy-status (nick onlinep idle away)
   (let ((nnick (toc-normalize nick))
         (status (if onlinep nick))
-        (prevaway (tnt-buddy-away nick))
+        (prevaway (tnt-is-buddy-away nick))
         (idletime (if (and onlinep idle (> idle 0))
                       ;; see NOTE below about (current-time)
                       (- (cadr (current-time))
@@ -2468,7 +2756,7 @@ Special commands:
             ;; make-local-hook doesn't work here; tries to call t
             (make-local-variable 'kill-buffer-query-functions)
             (add-hook 'kill-buffer-query-functions 'tnt-buddy-edit-kill-query)
-            (tnt-blist-to-buffer tnt-buddy-blist)
+            (tnt-insert-blist tnt-buddy-blist nil nil)
             (set-buffer-modified-p nil))
           buffer))))
 
@@ -2625,22 +2913,7 @@ Special commands:
         ))))
 
 ;;; ***************************************************************************
-(defun tnt-blist-to-buffer (blist &optional filter)
-  (while blist
-    (let ((name-list (car blist)))
-      (insert (car name-list) "\n")
-      (setq name-list (cdr name-list))
 
-      (while name-list
-        (let* ((name (car name-list))
-               (filtered-name (if filter (funcall filter name) name)))
-          (if filtered-name
-              (insert "  " filtered-name "\n")))
-        (setq name-list (cdr name-list)))
-      (setq blist (cdr blist))
-      (if blist (insert "\n")))))
-
-;;; ***************************************************************************
 (defun tnt-config-to-blist (config)
   (setq tnt-permit-list nil)
   (setq tnt-deny-list nil)
@@ -3232,7 +3505,7 @@ of the list, delimited by commas."
       (all-completions last-word collection pred)))))
 
 ;;; ***************************************************************************
-;;; ***** Beep/Sound support (gse)
+;;; ***** Beep/Sound support
 ;;; ***************************************************************************
 
 (defvar tnt-muted nil)

@@ -1,6 +1,27 @@
 2003-10-25  Scott Evans  <gse@antisleep.com>
 
-	* tnt.el (tnt-fullname-for-nick): Moved out of tnt-buddy-list-filter.
+	* tnt.el (tnt-fullname-for-nick): Move out of tnt-buddy-list-filter.
+	(tnt-is-buddy-away): Rename from tnt-buddy-away, update documentation.
+	(tnt-get-away-msg): Allow prefix to be anything.
+	(tnt-toggle-away): Use interactive "P" instead of "p".
+	(tnt-sort-buddies-by): add new customization option.
+	(tnt-group-away-buddies): add new customization option.
+	(tnt-group-idle-buddies): add new customization option.
+	(tnt-group-offline-buddies): add new customization option.
+	(tnt-very-idle-minimum): add new customization option.
+	(tnt-blist-to-buffer): Deleted.
+	(tnt-buddy-list-filter): Deleted.
+	(tnt-insert-blist): Replaces tnt-blist-to-buffer.  Lots of new
+	hoopy functionality.
+	(tnt-annotated-blist): Add.
+	(tnt-nick-properties): Add.
+	(tnt-reorder-annotated-blist): Add.
+	(tnt-nick-less-than): Add.
+	(tnt-strip-offline-nicks): Add.
+	(tnt-buddy-list-font-lock-keywords): Add "v idle" keyword.
+	(tnt-build-buddy-buffer): Use new tnt-insert-blist; comment; refactor.
+	(tnt-is-buddy-away): Renamed from tnt-buddy-away.
+	(tnt-buddy-edit-buffer): Use new tnt-insert-blist.
 
 2003-10-21  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
