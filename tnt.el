@@ -2771,22 +2771,24 @@ No sort -> Buddy name -> Fullname"
   "Returns the nickname of the buddy at point."
   (save-excursion
     (save-match-data
-      (beginning-of-line)
-      (if (or (null (or (re-search-forward "\\[\\([^]]+\\)\\]" (point-at-eol) t)
-                        (re-search-forward "^ +\\([^(]+\\)" (point-at-eol) t)))
-              (> (match-beginning 1) (tnt-buddy-list-menu-line)))
-          (error "Position cursor on a buddy name")
-        (let* ((match-b (match-beginning 1))
-               (match-e (match-end 1))
-               (nick (buffer-substring-no-properties match-b match-e))
-               (nick (substring nick 0
-                                (or (string-match "\\s-+$" nick)
-                                    (length nick)))))
-          (goto-char match-b)
-          (if (re-search-backward "^chat rooms$" nil t)
-              (cons "chat" nick)
-            (cons "im" nick))))
-      )))
+      (end-of-line)
+      (let ((eol-point (point)))
+        (beginning-of-line)
+        (if (or (null (or (re-search-forward "\\[\\([^]]+\\)\\]" eol-point t)
+                          (re-search-forward "^ +\\([^(]+\\)" eol-point t)))
+                (> (match-beginning 1) (tnt-buddy-list-menu-line)))
+            (error "Position cursor on a buddy name")
+          (let* ((match-b (match-beginning 1))
+                 (match-e (match-end 1))
+                 (nick (buffer-substring-no-properties match-b match-e))
+                 (nick (substring nick 0
+                                  (or (string-match "\\s-+$" nick)
+                                      (length nick)))))
+            (goto-char match-b)
+            (if (re-search-backward "^chat rooms$" nil t)
+                (cons "chat" nick)
+              (cons "im" nick))))
+        ))))
 
 ;;; ***************************************************************************
 (defvar tnt-buddy-on-mouse-down "")

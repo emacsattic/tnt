@@ -1,3 +1,8 @@
+2004-01-02  NeilFred Picciotto  <fred@full.halflab.com>
+
+	* tnt.el (tnt-get-buddy-at-point): avoid using point-at-eol, since
+	it's apparently not available on FSF emacs...
+
 2003-12-30  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
 	* tnt.el (tnt-strip-offline-nicks): also don't strip if "just-onoff".
