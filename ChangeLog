@@ -1,5 +1,24 @@
 2002-09-25  NeilFred Picciotto  <fred@halfshell.halflab.com>
 
+	* tnt.el -- toggle inactive (offline) buddies
+	(tnt-show-inactive-buddies-now): added.  this gets set at login
+	time to whatever the user generally prefers, but then can be
+	easily toggled.
+	(tnt-buddy-list-filter): use -now instead of general pref.
+	(tnt-handle-nick): initialize -now based on general pref.
+	(tnt-toggle-inactive-buddies): added.
+	(tnt-buddy-list-mode-map): added "O" to toggle offline buddies.
+
+	* tnt.el -- buddy list menu
+	(tnt-buddy-list-menu): added.  dynamically builds a menu of
+	available commands.
+	(tnt-build-buddy-buffer): added call to tnt-buddy-list-menu.
+	(tnt-switch-user): added call to tnt-build-buddy-buffer.
+	(tnt-toggle-email): added call to tnt-build-buddy-buffer.
+	(tnt-toggle-mute): added call to tnt-build-buddy-buffer.
+
+2002-09-25  NeilFred Picciotto  <fred@halfshell.halflab.com>
+
 	* tnt.el (tnt-toggle-mute): rename from tnt-mute.
 	(tnt-toggle-away): rename from tnt-away-toggle.
 	(tnt-toggle-pounce): rename from tnt-pounce-dwim.

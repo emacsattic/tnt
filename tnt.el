@@ -91,6 +91,7 @@ properties to add to the result.
 (defvar tnt-deny-list nil)
 
 (defvar tnt-event-ring nil)     ; (buffer-name . (message . callback))
+(defvar tnt-show-inactive-buddies-now nil)
 
 ;;; **************************************************************************
 ;;; ***** Custom support - james@ja.ath.cx
@@ -1281,8 +1282,8 @@ unless PREFIX arg is given."
                            (if (fboundp 'read-passwd)
                                (read-passwd (format "Password for %s: " tnt-username))
                              (tnt-read-from-minibuffer-no-echo
-                              (format "Password for %s: " tnt-username)))
-                           ))
+                              (format "Password for %s: " tnt-username))))
+          )
     (if (string-equal tnt-password "")
         (error "No password given")
       (message "Attempting to sign on...")
@@ -1332,7 +1333,8 @@ unless PREFIX arg is given."
             (setq tnt-default-username (caar tnt-username-alist)))
         (if tnt-default-password
             (setq tnt-default-password (cdar tnt-username-alist)))
-        (message "Next login will be as user %s" (caar tnt-username-alist)))
+        (message "Next login will be as user %s" (caar tnt-username-alist))
+        (tnt-build-buddy-buffer))
       )))
 
 ;;; ***************************************************************************
@@ -1816,6 +1818,7 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "n" 'tnt-next-buddy)
   (define-key tnt-buddy-list-mode-map "\M-n" 'tnt-next-group)
   (define-key tnt-buddy-list-mode-map "o" 'tnt-open)
+  (define-key tnt-buddy-list-mode-map "O" 'tnt-toggle-inactive-buddies)
   (define-key tnt-buddy-list-mode-map "p" 'tnt-prev-buddy)
   (define-key tnt-buddy-list-mode-map "P" 'tnt-toggle-pounce)
   (define-key tnt-buddy-list-mode-map "\M-p" 'tnt-prev-group)
@@ -1890,6 +1893,7 @@ Special commands:
         (erase-buffer)
         (tnt-blist-to-buffer tnt-buddy-blist
                              'tnt-buddy-list-filter)
+        (tnt-buddy-list-menu)
         (set-buffer-modified-p nil)
 
         (goto-char 0)
@@ -1899,6 +1903,48 @@ Special commands:
           (goto-line current-line)
           (move-to-column col))
         ))))
+
+;;; ***************************************************************************
+(defun tnt-buddy-list-menu ()
+  (if tnt-current-user
+      (insert (concat "\n\n"
+                      "[p]rev buddy         "
+                      "[n]ext buddy         "
+                      "[RET] IM this buddy  "
+                      "\n"
+                      "[M-p]rev group       "
+                      "[M-n]ext group       "
+                      "[q]uit TNT           "
+                      "\n\n"
+                      "[j]oin chat room     "
+                      "edit [B]uddy list    "
+                      (if tnt-email-to-pipe-to
+                          (if tnt-pipe-to-email-now
+                              "turn off e[M]ail"
+                            "turn on e[M]ail")
+                        "")
+                      "\n"
+                      (if tnt-muted "un[m]ute" "[m]ute  ")
+                      "             "
+                      "[P]ounce on buddy    "
+                      (if tnt-show-inactive-buddies-now "hide" "show")
+                      " [O]ffline buddies"
+                      (if tnt-event-ring
+                          "\n\n[a]ccept message     [r]eject message"
+                        "")
+                      "\n"))
+    (insert (concat "\n"
+                    "tnt currently offline"
+                    "\n\n"
+                    "[o]pen connection"
+                    (let ((username (or tnt-default-username
+                                        (and tnt-username-alist
+                                             (caar tnt-username-alist)))))
+                      (if username (concat " as user: " username) ""))
+                    "\n"
+                    (if tnt-username-alist "[s]witch user" "")
+                    "\n"))
+    ))
 
 ;;; ***************************************************************************
 (defun tnt-buddy-list-filter (nick)
@@ -1915,7 +1961,7 @@ Special commands:
          (first (propertize (or fullname unick) 'mouse-face 'highlight))
          )
 
-    (when (or status just-onoff event tnt-show-inactive-buddies)
+    (when (or status just-onoff event tnt-show-inactive-buddies-now)
       ;;       (put-text-property 0 (length first)
       ;;                          'mouse-face 'highlight first)
       (concat first
@@ -1947,6 +1993,13 @@ Special commands:
           (error "Position cursor on a buddy name")
         (toc-get-info (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
       )))
+
+;;; ***************************************************************************
+(defun tnt-toggle-inactive-buddies ()
+  "Toggle whether we show inactive buddies in buddy list."
+  (interactive)
+  (setq tnt-show-inactive-buddies-now (not tnt-show-inactive-buddies-now))
+  (tnt-build-buddy-buffer))
 
 ;;; ***************************************************************************
 (defun tnt-im-buddy ()
@@ -2709,6 +2762,7 @@ Special commands:
               (run-at-time tnt-just-reconnected-unset-after nil
                            'tnt-unset-just-reconnected)))
         )
+    (setq tnt-show-inactive-buddies-now tnt-show-inactive-buddies)
     (tnt-show-buddies)))
 
 ;;; ***************************************************************************
@@ -2754,6 +2808,7 @@ Special commands:
     (message (format "No longer forwarding incoming IMs")))
 
   (tnt-set-online-state t)
+  (tnt-build-buddy-buffer)
   )
 
 ;;; ***************************************************************************
@@ -3050,7 +3105,8 @@ of the list, delimited by commas."
   (setq tnt-muted (not tnt-muted))
   (if tnt-muted
       (message "All TNT sounds muted.")
-    (message "TNT sound on.")))
+    (message "TNT sound on."))
+  (tnt-build-buddy-buffer))
 
 ;;; ***************************************************************************
 (defun tnt-read-string-with-default (p d)
