@@ -1,5 +1,11 @@
 April 4, 2000 - Jim Whitehead
 -----------------------------
+ - Added Makefile and .cvsignore
+   Useful targets are "elc" to bytecompile all files and "release" to
+   build a tar file of a release.
+
+April 4, 2000 - Jim Whitehead
+-----------------------------
  - Due to a non-completed commit, the .elc files were not added, and the
    permissions (which won't get changes) didn't change.  I just want to make
    a note that two changes (those with *'s) didn't actually happen on the 
