@@ -1,9 +1,40 @@
+2002-09-08  Joe Casadonte  <jcasadonte@northbound-train.com>
+
+	* tnt.el (main): added definition of `propertize' if not already bound
+	* tnt.el (tnt-show-inactive-buddies): added new customization option
+	* tnt.el (tnt-buddy-fullname-alist): added new customization option
+	* tnt.el (tnt-buddy-list-group-face): added new face for buddy list font-lock
+	* tnt.el (tnt-buddy-list-active-face): added new face for buddy list font-lock
+	* tnt.el (tnt-buddy-list-away-face): added new face for buddy list font-lock
+	* tnt.el (tnt-buddy-list-idle-face): added new face for buddy list font-lock
+	* tnt.el (tnt-buddy-list-inactive-face): added new face for buddy list font-lock
+	* tnt.el (tnt-buddy-list-pounce-face): added new face for buddy list font-lock
+	* tnt.el (tnt-buddy-list-group-face): added new defvar for buddy list font-lock
+	* tnt.el (tnt-buddy-list-active-face): added new defvar for buddy list font-lock
+	* tnt.el (tnt-buddy-list-away-face): added new defvar for buddy list font-lock
+	* tnt.el (tnt-buddy-list-idle-face): added new defvar for buddy list font-lock
+	* tnt.el (tnt-buddy-list-inactive-face): added new defvar for buddy list font-lock
+	* tnt.el (tnt-buddy-list-pounce-face): added new defvar for buddy list font-lock
+	* tnt.el (tnt-buddy-list-font-lock-keywords): added new defvar to hold font-lock keywords
+	* tnt.el (main): added new key-bindings in buddy list mode (a, A, E, g, J)
+	* tnt.el (tnt-buddy-list-mode): added font-lock support
+	* tnt.el (tnt-current-line-in-buffer): new function
+	* tnt.el (tnt-build-buddy-buffy): retains current line & column when rebuilding buffer
+	* tnt.el (tnt-buddy-list-filter): added checks & indicators for pounce, offline;
+ 		                          added support for fullname list; fixed so that
+ 		                          only fullname (or nickname) is mouse-sensitive
+	* tnt.el (tnt-im-buddy): accounts for inactive buddies (offers to pounce instead)
+	* tnt.el (tnt-get-buddy-at-point): accounts for possible fullname
+	* tnt.el (tnt-buddy-edit-mode-map): added binding for \C-c\C-c (saves & exits edit mode)
+	* tnt.el (tnt-save-buddy-list): added optional kill-buffer-after-save flag
+	* tnt.el (tnt-pop-event): added call to rebuild buddy buffer after events change
+
 2002-09-02  Joe Casadonte  <jcasadonte@northbound-train.com>
 
 	* tnt.el (general changes): cleanup up code, putting visual
 	                            separators between functions
 	* tnt.el (general changes): moved variables around to group like
-	                            with like)
+	                            with like
 	* tnt.el (tnt-toc-host}: changed from defvar to defcustom
 	* tnt.el (tnt-toc-port}: changed from defvar to defcustom
 	* tnt.el (tnt-login-host}: changed from defvar to defcustom

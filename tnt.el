@@ -49,15 +49,31 @@
 
 (defconst tnt-version "TNT 2.4")
 
-
-;;; Config variables
-
+;;; **************************************************************************
+;;; ***** Configuration variables / Compatability
+;;; **************************************************************************
   ; check whether this version of emacs has the "run-at-time" function
 (defconst tnt-timers-available (fboundp 'run-at-time))
 
+;;; --------------------------------------------------------------------------
 (defconst tnt-running-xemacs
   (save-match-data (string-match "XEmacs" (emacs-version)))
   "Non-nil if we are running in XEmacs.")
+
+;; ---------------------------------------------------------------------------
+(unless (fboundp 'propertize)
+        ;; built-in to GNU Emacs 21, soon to be included into XEmacs
+        (defun propertize (string &rest properties)
+          "Return a copy of STRING with text properties added.
+First argument is the string to copy.
+Remaining arguments form a sequence of PROPERTY VALUE pairs for text
+properties to add to the result."
+          (let ((str (copy-sequence string)))
+            (add-text-properties 0 (length str)
+                                 properties
+                                 str)
+            str))
+        )
 
 ;;; **************************************************************************
 ;;; ***** Custom support - james@ja.ath.cx
@@ -169,6 +185,14 @@ when already in the *buddies* buffer."
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
+(defcustom tnt-show-inactive-buddies nil
+  "If non-nil, show inactive Buddies in Buddy listing.
+
+If nil, inactive Buddies will not appear in the Buddy listing at all."
+  :type 'boolean
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
 (defcustom tnt-buddy-list-backup-filename "%s-buddies"
   "If non-nil, tnt will backup buddy list into this file.
 
@@ -180,6 +204,22 @@ substituted.
 
 Defaults to \"%s-buddies\"."
   :type 'string
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-buddy-fullname-alist nil
+  "A mapping of Buddy names to full names.
+
+If a Buddy's nickname appears in this list, then the real name for the
+Buddy will appear in the Buddy list, with the nickname in square
+brackets at the end of the line.  Example:
+
+Buddies
+  Mom and Dad [kww64nnh72]"
+  :type '(repeat
+          (list
+			(string :tag "Buddy Name")
+			(string :tag "Full Name")))
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
@@ -359,6 +399,54 @@ have been sent, you can't change them."
 (defface tnt-other-name-face '((((class color)) (:foreground "blue"))
                                (t (:bold t)))
   "The face used for my name on messages sent by another user"
+  :group 'tnt-faces)
+
+;; ---------------------------------------------------------------------------
+(defface tnt-buddy-list-group-face
+  '((((class color) (background light)) (:foreground "Black" :bold t))
+    (((class color) (background dark)) (:foreground "White" :bold t))
+    (t (:bold t)))
+  "Face used for displaying Buddy group names."
+  :group 'tnt-faces)
+
+;; ---------------------------------------------------------------------------
+(defface tnt-buddy-list-active-face
+  '((((class color) (background light)) (:foreground "Forest Green" :bold t))
+    (((class color) (background dark)) (:foreground "Yellow Green" :bold t))
+    (t (:bold t)))
+  "Face used for displaying online Buddies."
+  :group 'tnt-faces)
+
+;; ---------------------------------------------------------------------------
+(defface tnt-buddy-list-away-face
+  '((((class color) (background light)) (:foreground "Steel Blue" :italic t))
+    (((class color) (background dark)) (:foreground "Light Steel Blue" :italic t))
+    (t (:italic t)))
+  "Face used for displaying away Buddies."
+  :group 'tnt-faces)
+
+;; ---------------------------------------------------------------------------
+(defface tnt-buddy-list-idle-face
+  '((((class color) (background light)) (:foreground "Forest Green"))
+    (((class color) (background dark)) (:foreground "Yellow Green"))
+    (t (:inverse-video t :bold t)))
+  "Face used for displaying idle Buddies."
+  :group 'tnt-faces)
+
+;; ---------------------------------------------------------------------------
+(defface tnt-buddy-list-inactive-face
+  '((((class color) (background light)) (:foreground "Red" :italic t))
+    (((class color) (background dark)) (:foreground "Pink" :italic t))
+    (t (:inverse-video t :bold t)))
+  "Face used for displaying inactive Buddies."
+  :group 'tnt-faces)
+
+;; ---------------------------------------------------------------------------
+(defface tnt-buddy-list-pounce-face
+  '((((class color) (background light)) (:foreground "Red" :italic t :bold t))
+    (((class color) (background dark)) (:foreground "Pink" :italic t :bold t))
+    (t (:inverse-video t :bold t)))
+  "Face used for displaying Buddies with pending pounce messages."
   :group 'tnt-faces)
 
 ;; ---------------------------------------------------------------------------
@@ -662,9 +750,6 @@ Settings:
 
   :group 'tnt-sound)
 
-
-
-
 ;; ---------------------------------------------------------------------------
 ;; ----- advanced TNT options group
 ;; ---------------------------------------------------------------------------
@@ -701,6 +786,46 @@ Settings:
   "TNT language -- do NOT change unless you know what you're doing!"
   :type 'string
   :group 'tnt-advanced)
+
+;;; ***************************************************************************
+;;; ***** font lock
+;;; ***************************************************************************
+(defvar tnt-buddy-list-group-face	'tnt-buddy-list-group-face
+  "Face name to use for Buddy group names.")
+
+;; ---------------------------------------------------------------------------
+(defvar tnt-buddy-list-active-face	'tnt-buddy-list-active-face
+  "Face name to use for online Buddies.")
+
+;; ---------------------------------------------------------------------------
+(defvar tnt-buddy-list-away-face	'tnt-buddy-list-away-face
+  "Face name to use for aways Buddies.")
+
+;; ---------------------------------------------------------------------------
+(defvar tnt-buddy-list-idle-face	'tnt-buddy-list-idle-face
+  "Face name to use for idle Buddies.")
+
+;; ---------------------------------------------------------------------------
+(defvar tnt-buddy-list-pounce-face	'tnt-buddy-list-pounce-face
+  "Face name to use for Buddies with pending pounce messages.")
+
+;; ---------------------------------------------------------------------------
+(defvar tnt-buddy-list-inactive-face	'tnt-buddy-list-inactive-face
+  "Face name to use for inactive Buddies.")
+
+;; ---------------------------------------------------------------------------
+(defvar tnt-buddy-list-font-lock-keywords)
+
+;; ---------------------------------------------------------------------------
+(setq tnt-buddy-list-font-lock-keywords
+  (list
+   '("^\\(.*(pounce.+\\)$" 1 tnt-buddy-list-pounce-face)
+   '("^\\(.*(idle -.+\\)$" 1 tnt-buddy-list-idle-face)
+   '("^\\(.*(away.+\\)$" 1 tnt-buddy-list-away-face)
+   '("^\\(.*(offline.+\\)$" 1 tnt-buddy-list-inactive-face)
+   '("^\\(\\S-+.+\\)$" 1 tnt-buddy-list-group-face)
+   '("^\\(.+\\)$" 1 tnt-buddy-list-active-face)
+   ))
 
 ;; ---------------------------------------------------------------------------
 ;; ----- what to do with these?
@@ -795,6 +920,7 @@ Defaults to 'monthly.
     (setq tnt-pounce-alist (tnt-addassoc nick msg tnt-pounce-alist))
     (message "%s has been added to your pounce list" nick)))
 
+;;; ***************************************************************************
 (defun tnt-pounce-delete (&optional nick)
   "Deletes a stored pounce message for the given buddy.
 
@@ -949,6 +1075,7 @@ if nil)"
 (defvar tnt-username)
 (defvar tnt-password)
 
+;;; ***************************************************************************
 (defun tnt-open (username password)
   "Starts a new TNT session."
   (interactive "p\np") ;; gag!
@@ -1486,17 +1613,22 @@ Special commands:
 
 (unless tnt-buddy-list-mode-map
   (setq tnt-buddy-list-mode-map (make-sparse-keymap))
-  (define-key tnt-buddy-list-mode-map "n" 'tnt-next-buddy)
-  (define-key tnt-buddy-list-mode-map "p" 'tnt-prev-buddy)
-  (define-key tnt-buddy-list-mode-map "N" 'tnt-next-group)
-  (define-key tnt-buddy-list-mode-map "P" 'tnt-prev-group)
+  (define-key tnt-buddy-list-mode-map "a" 'tnt-accept)
+  (define-key tnt-buddy-list-mode-map "A" 'tnt-away-toggle)
+  (define-key tnt-buddy-list-mode-map "E" 'tnt-edit-buddies)
+  (define-key tnt-buddy-list-mode-map "g" 'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "i" 'tnt-im-buddy)
+  (define-key tnt-buddy-list-mode-map "I" 'tnt-fetch-info)
+  (define-key tnt-buddy-list-mode-map "J" 'tnt-join-chat)
+  (define-key tnt-buddy-list-mode-map "n" 'tnt-next-buddy)
+  (define-key tnt-buddy-list-mode-map "N" 'tnt-next-group)
+  (define-key tnt-buddy-list-mode-map "p" 'tnt-prev-buddy)
+  (define-key tnt-buddy-list-mode-map "P" 'tnt-prev-group)
+  (define-key tnt-buddy-list-mode-map "q" 'tnt-kill)
+  (define-key tnt-buddy-list-mode-map " " 'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "\C-m" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse-down)
   (define-key tnt-buddy-list-mode-map [mouse-2] 'tnt-im-buddy-mouse-up)
-  (define-key tnt-buddy-list-mode-map "I" 'tnt-fetch-info)
-  (define-key tnt-buddy-list-mode-map " " 'tnt-show-buddies)
-  (define-key tnt-buddy-list-mode-map "q" 'tnt-kill)
   )
 
 ;;; ***************************************************************************
@@ -1510,6 +1642,7 @@ Special commands:
   (setq mode-name "Buddy List")
   (setq major-mode 'tnt-buddy-list-mode)
   (set-syntax-table text-mode-syntax-table)
+  (set (make-local-variable 'font-lock-defaults) '(tnt-buddy-list-font-lock-keywords t))
   (run-hooks 'tnt-buddy-list-mode-hook))
 
 ;;; ***************************************************************************
@@ -1539,13 +1672,24 @@ Special commands:
             (setq buffer-read-only t))
           buffer))))
 
+;;; ***************************************************************************
+(defun tnt-current-line-in-buffer ()
+  ""
+  (save-excursion
+    (let ((col (current-column))
+          (line-num (count-lines 1 (point))))
+      (when (= col 0)
+        (setq line-num (1+ line-num)))
+
+      line-num)))
 
 ;;; ***************************************************************************
 (defun tnt-build-buddy-buffer ()
   (let ((buffer (tnt-buddy-buffer)))
     (with-current-buffer buffer
-      (let* ((buffer-read-only nil))
-
+      (let* ((buffer-read-only nil)
+             (col (current-column))
+             (current-line (tnt-current-line-in-buffer)))
         (erase-buffer)
         (tnt-blist-to-buffer tnt-buddy-blist
                              'tnt-buddy-list-filter)
@@ -1557,6 +1701,9 @@ Special commands:
             (if tnt-buddy-list-point
                 (goto-char tnt-buddy-list-point)))
         (beginning-of-line)
+
+        (goto-line current-line)
+        (move-to-column col)
         ))))
 
 ;;; ***************************************************************************
@@ -1568,13 +1715,23 @@ Special commands:
          (away (tnt-buddy-away nick))
          (just-onoff (tnt-get-just-signedonoff nnick))
          (event (assoc (tnt-im-buffer-name nick) tnt-event-ring))
+         (pounced (cdr-safe (assoc nnick tnt-pounce-alist)))
+         (fullname (car-safe (cdr-safe (or (assoc-ignore-case nick tnt-buddy-fullname-alist)
+                                           (assoc-ignore-case nnick tnt-buddy-fullname-alist)))))
+         (first (propertize (or fullname unick) 'mouse-face 'highlight))
          )
-    (if (or status just-onoff event)
-        (progn
-          (put-text-property 0 (length unick)
-                             'mouse-face 'highlight unick)
-          (concat unick
-                  (cond ((and away idle)
+
+    (when (or status just-onoff tnt-show-inactive-buddies)
+;;       (put-text-property 0 (length first)
+;;                          'mouse-face 'highlight first)
+      (concat first
+              (when fullname
+                (concat " [" unick "]"))
+              (cond (pounced
+                     (format " (pounce)"))
+                    ((not status)
+                     (format " (offline)"))
+                    ((and away idle)
                          (format " (away - %s)" idle))
                         ((and away (not idle))
                          (format " (away)"))
@@ -1582,10 +1739,8 @@ Special commands:
                          (format " (idle - %s)" idle))
                         (t ""))
                   just-onoff
-                  (if (and (not status) (not just-onoff)) " (offline)")
-                  (if event " (MESSAGE WAITING)")
-                  )))))
-
+              (when event " (MESSAGE WAITING)")
+              ))))
 
 ;;; ***************************************************************************
 (defun tnt-fetch-info ()
@@ -1604,10 +1759,13 @@ Special commands:
   "Initiates an IM conversation with the selected buddy."
   (interactive)
   (let ((nick (tnt-get-buddy-at-point)))
-    (if (or (tnt-buddy-status nick)
-            (assoc (tnt-im-buffer-name nick) tnt-event-ring))
-        (tnt-im nick)
-      (error "Not online: %s" nick))))
+    (cond
+     ((tnt-buddy-status nick) (tnt-im nick))
+     (tnt-show-inactive-buddies
+      (and (y-or-n-p (format "%s is offline; pounce instead? " nick))
+           (tnt-pounce-add (toc-normalize nick))))
+     (t (error "Not online: %s" nick))
+     )))
 
 ;;; ***************************************************************************
 (defun tnt-get-buddy-at-point ()
@@ -1616,9 +1774,16 @@ Special commands:
     (save-match-data
       (setq tnt-buddy-list-point (point))
       (beginning-of-line)
-      (if (null (re-search-forward "^ +\\([^(\n]*\\)" nil t))
+      (if (null (re-search-forward "^ +\\([^[(\n]*\\)" nil t))
           (error "Position cursor on a buddy name")
-        (buffer-substring (match-beginning 1) (match-end 1)))
+        (let* ((nick-or-name (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
+               (nick-or-name (substring nick-or-name 0 (or (string-match "\\s-+$" nick-or-name)
+                                                           (length nick-or-name))))
+               (element (rassoc (list nick-or-name) tnt-buddy-fullname-alist)))
+          (when element
+            (setq nick-or-name (or (car-safe element) nick-or-name)))
+
+          nick-or-name))
       )))
 
 ;;; ***************************************************************************
@@ -1858,6 +2023,8 @@ Special commands:
 (unless tnt-buddy-edit-mode-map
   (setq tnt-buddy-edit-mode-map (make-sparse-keymap))
   (define-key tnt-buddy-edit-mode-map "\C-x\C-s" 'tnt-save-buddy-list)
+  (define-key tnt-buddy-edit-mode-map "\C-c\C-c"
+    (function (lambda () "" (interactive) (tnt-save-buddy-list t))))
   )
 
 ;;; ***************************************************************************
@@ -1902,7 +2069,7 @@ Special commands:
       (yes-or-no-p "Buddy list modified; kill anyway? ")))
 
 ;;; ***************************************************************************
-(defun tnt-save-buddy-list ()
+(defun tnt-save-buddy-list (&optional kill-buffer-after-save)
   "Saves a buddy-edit buffer on the host."
   (interactive)
   (when (null tnt-current-user)
@@ -1919,7 +2086,11 @@ Special commands:
     (setq tnt-buddy-blist new-blist))
   (set-buffer-modified-p nil)
   (tnt-backup-buddy-list)
-  (tnt-build-buddy-buffer))
+
+  (if (not kill-buffer-after-save)
+      (tnt-build-buddy-buffer)
+    (kill-buffer (current-buffer))
+    (tnt-show-buddies)))
 
 ;;; ***************************************************************************
 ;;; ***** Buddy-list backup/restore
@@ -2172,7 +2343,8 @@ Special commands:
             (switch-to-buffer buffer-name)
           (kill-buffer buffer-name))
         (if function (funcall function accept))
-        (tnt-show-top-event))
+        (tnt-show-top-event)
+        (tnt-build-buddy-buffer))
     (message "No event to %s." (if accept "accept" "reject"))
     ))
 
