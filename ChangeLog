@@ -1,5 +1,9 @@
 2001-05-16  NeilFred Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-event-ring): moved defvar to earlier in the file.
+
+2001-05-16  NeilFred Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-datestamp-format): added.
 	(tnt-last-datestamp): added.  used for inserting a datestamp in IM
 	buffers when the date changes and the IM buffer is still being

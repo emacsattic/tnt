@@ -315,6 +315,9 @@ messages are disabled."
 (defvar tnt-permit-list nil)
 (defvar tnt-deny-list nil)
 
+(defvar tnt-event-ring nil)  ; (buffer-name . (message . callback))
+
+
 ;;;---------------------------------------------------------------------------
 ;;;  Sound Package - jnwhiteh@syr.edu
 ;;;---------------------------------------------------------------------------
@@ -1522,8 +1525,6 @@ Special commands:
 ;;;----------------------------------------------------------------------------
 ;;; Pending-event ring
 ;;;----------------------------------------------------------------------------
-
-(defvar tnt-event-ring nil)  ; (buffer-name . (message . callback))
 
 (defun tnt-remove-im-event (nick)
   "Removes an instant message event from the event-ring."
