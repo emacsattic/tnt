@@ -257,7 +257,8 @@ default of \"%T \" gives a 24 hour format"
 This number is the time between redisplays of messages created with 
 tnt-persistent-message.  It should not be too small as you'd never see anything
 else in the minibuffer but it should be sufficiently small to allow you to see
-the message now and then until you notice it."
+the message now and then until you notice it.  If set to nil or < 1, persistent
+messages are disabled."
   :type 'integer
   :group 'tnt)
 
@@ -1870,8 +1871,9 @@ of the list, delimited by commas."
 (defvar tnt-persistent-message-disable-id nil)
 
 (defun tnt-persistent-message-persist (m)
-  (setq tnt-persistent-message-disable-id
-        (add-timeout tnt-persistent-timeout 'tnt-persistent-message-persist m))
+  (when (and tnt-persistent-timeout (> 0 tnt-persistent-timeout))
+    (setq tnt-persistent-message-disable-id
+          (add-timeout tnt-persistent-timeout 'tnt-persistent-message-persist m)))
   (message m))
 
 (defun tnt-persistent-message (&optional fmt &rest args)

@@ -32,6 +32,11 @@
 	it.
 	(custom): moved a few of the variables that I had added before
 	into the custom support section.
+	(tnt-persistent-message-persist): changed to support not
+	repeating if someone really doesn't want to have persistent
+	messages.
+	(tnt-persistent-timeout): changed the doc to describe the change
+	above in tnt-persistent-message-persist
 
 2001-03-09  NeilFred Picciotto  <fred@guido.derf.net>
 
