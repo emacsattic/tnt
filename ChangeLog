@@ -1,3 +1,10 @@
+2001-01-07    <tntdevel@brokendreams.net>
+
+	* tnt.el (tnt-send-pounce): Made null "" messages send a "user is now
+	available" message to their buffer.
+	(tnt-pounce-add): Made null "" messages remain null, rather than being
+	sent as "none".
+
 2001-01-03    <tntdevel@brokendreams.net>
 
 	* tnt.el (tnt-set-buddy-status): Added a call to tnt-send-pounce to

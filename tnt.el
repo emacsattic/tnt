@@ -291,7 +291,7 @@ feature.  defaults to /bin/mail
                                         (tnt-extract-normalized-buddies
                                          tnt-buddy-blist)))))
          (msg_tmp (read-from-minibuffer "Message to send (enter for none): "))
-         (msg (if (string= msg_tmp "") "none" msg_tmp)))
+         (msg (if (string= msg_tmp "") "" msg_tmp)))
     (setq tnt-pounce-alist (tnt-addassoc nick msg tnt-pounce-alist))
     (message "%s has been added to your pounce list" nick)))
 
@@ -310,11 +310,12 @@ feature.  defaults to /bin/mail
     )))
 
 (defun tnt-send-pounce (user)
-   (let* ((msg (cdr (assoc user tnt-pounce-alist))))
+   (let* ((msg (cdr (assoc user tnt-pounce-alist)))
+          (ourmsg (if (string= msg "") "Is now available" msg)))
      (if msg
          (let ((buffer (tnt-im-buffer user)))
            (toc-send-im user msg)
-           (tnt-append-message-and-adjust-window buffer msg tnt-current-user)
+           (tnt-append-message-and-adjust-window buffer ourmsg tnt-current-user)
            (tnt-push-event (format "You have pounced on %s" user) buffer nil)
            (tnt-pounce-delete user))
      )))
