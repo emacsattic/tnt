@@ -1,3 +1,7 @@
+2004-04-06  NeilFred Picciotto  <fred@full.halflab.com>
+
+	* tnt.el (tnt-backslashify-string): also put a '\' before '+'.
+
 2004-02-13  NeilFred Picciotto  <fred@full.halflab.com>
 
 	* tnt.el (tnt-completion-func): wasn't working before.  not sure

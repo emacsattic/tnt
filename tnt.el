@@ -3999,7 +3999,7 @@ of the list, delimited by commas."
   ;; adds "\" chars as necessary to enable matching the given string
   ;; exactly.
   (save-match-data
-    (let ((chars-regexp "[.?]")
+    (let ((chars-regexp "[.+?]")
           (start-index 0)
           end-index
           (segs nil))
