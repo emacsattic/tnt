@@ -1,3 +1,9 @@
+2004-08-12  NeilFred Picciotto  <fred@full.halflab.com>
+
+	* tnt.el (tnt-im-mode-map): for some reason,
+	(read-kbd-macro "C-<return>")
+	wasn't doing the right thing.  "\C-\r" seems to work.
+
 2004-07-19  NeilFred Picciotto  <fred@full.halflab.com>
 
 	* tnt.el (tnt-reformat-text): make the tnt-strip-a-href call after

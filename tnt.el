@@ -1505,7 +1505,7 @@ unless PREFIX arg is given."
 (unless tnt-im-mode-map
   (setq tnt-im-mode-map (make-sparse-keymap))
   (define-key tnt-im-mode-map "\r" 'tnt-send-text-as-instant-message)
-  (define-key tnt-im-mode-map (read-kbd-macro "C-<return>") 'tnt-send-text-as-instant-message-no-format)
+  (define-key tnt-im-mode-map "\C-\r" 'tnt-send-text-as-instant-message-no-format)
   (define-key tnt-im-mode-map (read-kbd-macro "M-RET") (function (lambda () "" (interactive) (insert "
 "))))
   )
