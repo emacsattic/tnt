@@ -1,3 +1,8 @@
+2003-10-28  Scott Evans  <scott@templarcorp.com>
+
+	* tnt.el (tnt-buddy-list-message-waiting-face): Add.
+	(tnt-buddy-list-font-lock-keywords): Add MESSAGE WAITING keyword.
+
 2003-10-25  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el (tnt-cycle-buddies-sort): Add.

@@ -587,6 +587,14 @@ have been sent, you can't change them."
   :group 'tnt-faces)
 
 ;; ---------------------------------------------------------------------------
+(defface tnt-buddy-list-message-waiting-face
+  '((((class color) (background light)) (:foreground "Red" :italic t :bold t))
+    (((class color) (background dark)) (:foreground "Pink" :italic t :bold t))
+    (t (:inverse-video t)))
+  "Face used for displaying Buddies with pending messages."
+  :group 'tnt-faces)
+
+;; ---------------------------------------------------------------------------
 ;; ----- beep/sound group
 ;; ----- Sound support is built in to XEmacs, so it'll likely work better there.
 ;; ---------------------------------------------------------------------------
@@ -968,6 +976,11 @@ Settings:
   "Face name to use for Buddies with pending pounce messages.")
 
 ;; ---------------------------------------------------------------------------
+
+(defvar tnt-buddy-list-message-waiting-face  'tnt-buddy-list-message-waiting-face
+  "Face name to use for Buddies with pending pounce messages.")
+
+;; ---------------------------------------------------------------------------
 (defvar tnt-buddy-list-inactive-face    'tnt-buddy-list-inactive-face
   "Face name to use for inactive Buddies.")
 
@@ -977,9 +990,10 @@ Settings:
 ;; ---------------------------------------------------------------------------
 (setq tnt-buddy-list-font-lock-keywords
       (list
+       '("^\\(.*(MESSAGE WAITING.+\\)$"   1 tnt-buddy-list-message-waiting-face)
        '("^\\(.*(pounce.+\\)$"   1 tnt-buddy-list-pounce-face)
-       '("^\\(.*(idle .+\\)$"   1 tnt-buddy-list-idle-face)
-       '("^\\(.*(v idle .+\\)$" 1 tnt-buddy-list-away-face)
+       '("^\\(.*(idle .+\\)$"    1 tnt-buddy-list-idle-face)
+       '("^\\(.*(v idle .+\\)$"  1 tnt-buddy-list-away-face)
        '("^\\(.*(away.+\\)$"     1 tnt-buddy-list-away-face)
        '("^\\(.*(offline.+\\)$"  1 tnt-buddy-list-inactive-face)
        '("^\\(\\S-+.+\\)$"       1 tnt-buddy-list-group-face)
