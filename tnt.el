@@ -337,7 +337,9 @@ feature.  defaults to /bin/mail
                                                      tnt-pounce-alist)))))
   (if (not (assoc nick tnt-pounce-alist))
       (message "There is no pounce stored for %s" nick)
-    (setq tnt-pounce-alist (tnt-remassoc nick tnt-pounce-alist))
+    (progn 
+      (setq tnt-pounce-alist (tnt-remassoc nick tnt-pounce-alist))
+      (message "The pounce for %s has been deleted." nick))
     )))
 
 (defun tnt-send-pounce (user)
