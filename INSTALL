@@ -58,12 +58,17 @@ immediately _after_ the above two lines.
     multiple usernames, you should not set the tnt-default-password
     (unless all your usernames use the same password).
 
+(setq tnt-separator "\n\n")
+    This controls what is printed between message.  One newline is pretty
+    much required in order separate messages.  Two newlines is the default,
+    but other strings, suchs as "\n-\n" may be desirable.
+
 (setq tnt-use-timestamps t)
- 	This will add a timestamp for each message you receive or send.
-	This is useful for logging, and for people who are on very often.
-        It's also convenient if you leave yourself logged in while away
-	from your computer, so then when you come back, you can see how
-	long ago it was that your friend said "hi" while you were gone.
+    This will add a timestamp for each message you receive or send.
+    This is useful for logging, and for people who are on very often.
+    It's also convenient if you leave yourself logged in while away
+    from your computer, so then when you come back, you can see how
+    long ago it was that your friend said "hi" while you were gone.
 
 (setq tnt-beep-on-buddy-signonoff t)
     This makes TNT beep any time one of your buddies signs on or off.
@@ -72,15 +77,15 @@ immediately _after_ the above two lines.
 
 (setq tnt-use-split-buddy t)
     This will force tnt to split the window horizontally whenever the
-	buddy list command is invoked.  This rule does not apply when in
-	in the *scratch* buffer, or when already in the *buddies* buffer.
+    buddy list command is invoked.  This rule does not apply when in
+    in the *scratch* buffer, or when already in the *buddies* buffer.
 
 (setq tnt-use-keepalive t)
-	This tells TNT to use the keepalive packets to help keep your
-	connection alive.  Try this if you keep getting booted randomly.
+    This tells TNT to use the keepalive packets to help keep your
+    connection alive.  Try this if you keep getting booted randomly.
 
 (setq tnt-recenter-windows nil)
-	This tells TNT to NOT recenter each window automatically.
+    This tells TNT to NOT recenter each window automatically.
 
 (setq tnt-email-to-pipe-to "someone@example.com")
     Setting this allows you to toggle forwarding of all incoming IMs
@@ -91,15 +96,15 @@ immediately _after_ the above two lines.
 
 (set-face-foreground 'tnt-my-name-face "ColorName1")
 (set-face-foreground 'tnt-other-name-face "ColorName2")
-   These set the colors used for the usernames of yourself and the
-   person you're talking to.  Only works if emacs is running in X (in
-   other words, not for example in a telnet session.)  You can
-   experiment with different colors by simply putting the cursor at
-   the end of one of the above two lines and hitting "C-x C-e".  This
-   will save you having to exit and relaunch emacs millions of times
-   to get just the right color scheme.
+    These set the colors used for the usernames of yourself and the
+    person you're talking to.  Only works if emacs is running in X (in
+    other words, not for example in a telnet session.)  You can
+    experiment with different colors by simply putting the cursor at
+    the end of one of the above two lines and hitting "C-x C-e".  This
+    will save you having to exit and relaunch emacs millions of times
+    to get just the right color scheme.
 
 (setq tnt-email-binary "/bin/mail")
-   This variable is set by default to /bin/mail, but sysadmins can change
-   it without worrying about changing the elisp code.
+    This variable is set by default to /bin/mail, but sysadmins can change
+    it without worrying about changing the elisp code.
 

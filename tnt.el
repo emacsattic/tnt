@@ -64,6 +64,9 @@
 (defvar tnt-default-password nil
   "*Should be nil or your password.")
 
+(defvar tnt-separator "\n\n"
+  "*String printed between IMs.")
+
 (defvar tnt-show-timestamps nil
   "*If t, shows timestamps in TNT conversations.")
 
@@ -149,7 +152,7 @@
     
     (if pair (setcdr pair msg)
       (setq tnt-pounce-list (cons (list nick msg) tnt-pounce-list)))
-    (message (format "%s has been added to your pounce list" nick))
+    (message "%s has been added to your pounce list" nick)
     )
   )
 
@@ -199,23 +202,19 @@
 (defun tnt-keepalive ()
   "Sends a keepalive packet to the server"
   (interactive)
-  (tocstr-send-flap1 5 "")  
+  (tocstr-send-flap 5 "")  
   (setq tnt-keepalive-timer (run-at-time tnt-keepalive-interval nil 
-					 'tnt-keepalive))
-)
+					 'tnt-keepalive)))
 
 (defun tnt-buddy-away (nick)
-  (let* ((nnick (toc-normalize nick))
-         (pair (assoc nnick tnt-away-alist)))
-    (if pair (cdr pair))))
+  (cdr (assoc (toc-normalize nick) tnt-away-alist)))
 
 (defun tnt-away-toggle ()
   "Toggles away or not, and sets message."
   (interactive)
-  (if (eq tnt-away 0) (tnt-get-away-msg)
-      (eq tnt-away 1) (tnt-not-away)
-      )     
-)
+  (if (eq tnt-away 0)
+      (tnt-get-away-msg)
+    (tnt-not-away)))
 
 (defun tnt-not-away ()
   "Sets you as NOT away."
@@ -311,9 +310,8 @@
             (tnt-rotate-left tnt-default-username-list))
       (if tnt-default-username
           (setq tnt-default-username (car tnt-default-username-list)))
-      (message 
-       (format "Next login will be as user %s"
-               (car tnt-default-username-list))))
+      (message "Next login will be as user %s"
+               (car tnt-default-username-list)))
     ))
 
 
@@ -385,9 +383,10 @@ Special commands:
             (tnt-im-mode)
             (setq tnt-im-user user)
             (setq tnt-message-marker (make-marker))
-            (insert (format "[Conversation with %s on %s]\n\n"
+            (insert (format "[Conversation with %s on %s]%s"
                             (tnt-buddy-official-name user)
-                            (current-time-string)))
+                            (current-time-string)
+                            tnt-separator))
             (set-marker tnt-message-marker (point)))
           buffer))))
 
@@ -524,9 +523,8 @@ Special commands:
             (setq tnt-chat-room room)
             (setq tnt-chat-participants nil)
             (setq tnt-message-marker (make-marker))
-            (insert (format "[Chat room \"%s\" on %s]\n\n"
-                            room
-                            (current-time-string)))
+            (insert (format "[Chat room \"%s\" on %s]%s"
+                            room (current-time-string) tnt-separator))
             (set-marker tnt-message-marker (point)))
           buffer))))
 
@@ -559,7 +557,7 @@ Special commands:
 
 
 (defun tnt-participant-collection ()
-  (mapcar '(lambda(x) (list x)) tnt-chat-participants))
+  (mapcar 'list tnt-chat-participants))
 
 
 (defun tnt-send-text-as-chat-invitation (users)
@@ -584,7 +582,7 @@ Special commands:
 (defun tnt-show-chat-participants ()
   "Append a list of chat room participants to a chat buffer."
   (interactive)
-  (let ((string (mapconcat '(lambda (x) x) tnt-chat-participants ", ")))
+  (let ((string (mapconcat 'identity tnt-chat-participants ", ")))
     (tnt-append-message nil (format "Participants: %s" string))))
 
 
@@ -631,21 +629,22 @@ Special commands:
   (save-excursion
     (let ((old-point (marker-position tnt-message-marker)))
       (goto-char tnt-message-marker)
+      
+      (if (not user)
+          (insert-before-markers "[" message "]")
+        (if tnt-show-timestamps
+            (insert-before-markers (format-time-string "%T ")))
+            
+        (let ((start (point)))
+          (insert-before-markers user ":")
+          ;; Change color of user text.
+          (if (string-equal user tnt-current-user)
+              (add-text-properties start (point) '(face tnt-my-name-face))
+            (add-text-properties start (point) '(face tnt-other-name-face)))
+          (insert-before-markers " " message)))
 
-       (if user
-		   (progn
-			(if tnt-show-timestamps
-				(insert-before-markers (format-time-string "%T ")))
-			 
-			(let ((start (point)))
-			  (insert-before-markers (format "%s:" user))
-			  ;; Change color of user text.
-			  (if (string-equal user tnt-current-user)
-				  (add-text-properties start (point) '(face tnt-my-name-face))
-				(add-text-properties start (point) '(face tnt-other-name-face)))
-			  (insert-before-markers (format " %s\n\n" message))))
-			(insert-before-markers (format "[%s]\n\n" message)))
-		 (fill-region old-point (point)))))
+      (insert-before-markers tnt-separator)
+      (fill-region old-point (point)))))
 
 
 (defun tnt-get-input-message ()
@@ -828,14 +827,12 @@ Special commands:
 (defun tnt-set-buddy-status (nick onlinep idle away)
   (let* ((nnick (toc-normalize nick))
          (pair (assoc nnick tnt-buddy-alist))
-		 (pair2 (assoc nnick tnt-idle-alist))
-		 (pair3 (assoc nnick tnt-away-alist))
+         (pair2 (assoc nnick tnt-idle-alist))
+         (pair3 (assoc nnick tnt-away-alist))
          (status (if onlinep nick))	 
-		 (awayflag (if away away))
-		 (idletime (if onlinep idle))
-         (old-status (and pair (cdr pair)))
-		 (old-away (and pair (cdr pair3)))
-		 (old-idle (and pair2 (cdr pair2))))
+         (awayflag (if away away))
+         (idletime (if onlinep idle))
+         (old-status (and pair (cdr pair))))
     (if pair
 		(setcdr pair status)
       (setq tnt-buddy-alist (cons (cons nnick status)
@@ -858,20 +855,16 @@ Special commands:
           ;; but just in case, here's the code for a tnt-event:
           ;;   (tnt-push-event (format "%s online" nick) nil nil)
           (if onlinep
-              (message (format "%s online" nick))
-            (message (format "%s offline" nick)))))
+              (message "%s online" nick)
+            (message "%s offline" nick))))
 	
 	(tnt-build-buddy-buffer)))
 
 (defun tnt-buddy-status (nick)
-  (let* ((nnick (toc-normalize nick))
-         (pair (assoc nnick tnt-buddy-alist)))
-    (if pair (cdr pair))))
+  (cdr (assoc (toc-normalize nick) tnt-buddy-alist)))
 
 (defun tnt-buddy-idle (nick)
-  (let* ((nnick (toc-normalize nick))
-         (pair (assoc nnick tnt-idle-alist)))
-    (if pair (cdr pair))))
+  (cdr (assoc (toc-normalize nick) tnt-idle-alist)))
 
 (defun tnt-buddy-official-name (buddy)
   ;; Return official screen name of buddy if known, otherwise
@@ -1150,7 +1143,7 @@ Special commands:
       (setq global-mode-string (append global-mode-string '(tnt-mode-string))))
   (force-mode-line-update))
 
-(defun send-away-msg (user)
+(defun tnt-send-away-msg (user)
   (if (not (string= user tnt-last-away-sent))
       (let ((buffer (tnt-im-buffer user)))
 	(setq tnt-last-away-sent user)
@@ -1236,7 +1229,7 @@ Special commands:
 	  (beep)
 	  (tnt-push-event (format "Message from %s available" user)
 			  (tnt-im-buffer-name user) nil)))
-    (if (eq tnt-away 1) (send-away-msg user))))
+    (if (eq tnt-away 1) (tnt-send-away-msg user))))
 
 
 
@@ -1313,7 +1306,7 @@ Special commands:
 (defun tnt-handle-chat-update-buddy (roomid inside users)
   (save-excursion
     (set-buffer (tnt-chat-buffer (cdr (assoc roomid tnt-chat-alist))))
-    (let ((user-string (mapconcat '(lambda (x) x) users ", ")))
+    (let ((user-string (mapconcat 'identity users ", ")))
       (tnt-append-message nil (if tnt-chat-participants
                                   (format "%s %s"
                                           user-string
@@ -1460,44 +1453,17 @@ Special commands:
 ;;;----------------------------------------------------------------------------
 ;;; String utilities
 ;;;----------------------------------------------------------------------------
-
 (defun tnt-strip-a-href (str)
   ;; replaces the substring
   ;; <a href="http://www.derf.net/">derf!
   ;; with
   ;; ( http://www.derf.net/ ) derf!
   ;; which will not get stripped out by tnt-strip-html
-  (let ((start-index 0)
-        end-index
-        (segs nil))
-    (while (setq end-index (string-match "<a href=\"" str start-index))
-      (setq segs (cons (substring str start-index end-index) segs))
-      (setq start-index (match-end 0))
-      (setq end-index (string-match "\"" str start-index))
-      (if (null end-index) nil
-        (setq segs (cons "( " segs))
-        (setq segs (cons (substring str start-index end-index) segs))
-        (setq segs (cons " ) " segs))
-        (setq start-index (match-end 0)))
-      (setq end-index (string-match ">" str start-index))
-      (if (null end-index) nil
-        (setq start-index (match-end 0))))
-    (setq segs (cons (substring str start-index) segs))
-    (apply 'concat (nreverse segs))))
-
+  (replace-in-string str "<a href=\"\\([^\"]*\\)\">" "( \\1 ) "))
 
 (defun tnt-strip-html (str)
-  ;; Strips all HTML tags out of STR.
-  (let ((start-index 0)
-        end-index
-        (segs nil))
-    (setq str (tnt-strip-a-href str))
-    (while (setq end-index (string-match "<[^ ][^>]*>" str start-index))
-      (setq segs (cons (substring str start-index end-index) segs))
-      (setq start-index (match-end 0)))
-    (setq segs (cons (substring str start-index) segs))
-    (apply 'concat (nreverse segs))))
-
+  "Strips HTML tags out of STR, returning a new string."
+  (replace-in-string (downcase str) "<[^ ][^>]*>" ""))
 
 (defun tnt-neliminate-newlines (str)
   ;; Converts newlines in STR to spaces.  Modifies STR.
@@ -1514,18 +1480,13 @@ Special commands:
 ;;;----------------------------------------------------------------------------
 ;;; List utilities
 ;;;----------------------------------------------------------------------------
+(defun tnt-rotate-left (l)
+  "Moves the first element of L to the end, destructively."
+  (if l (nconc (cdr l) (list (car l)))))
 
-(defun tnt-rotate-left (list)
-  ;; Rotates LIST left.
-  (if (null list) nil
-    (nreverse (cons (car list) (nreverse (cdr list))))))
-
-
-(defun tnt-rotate-right (list)
-  ;; Rotates LIST right.
-  (if (null list) nil
-    (let ((list (nreverse list)))
-      (cons (car list) (nreverse (cdr list))))))
+(defun tnt-rotate-right (l)
+  "Moves the last element of L to the front destructively."
+  (nreverse (tnt-rotate-left (nreverse l))))
       
 
 

@@ -1,3 +1,22 @@
+March 31, 2000 - John Jannotti
+------------------------------
+ - use tocstr-send-flap, not tocstr-send-flap1 in tnt-keepalive
+ - Simplified, sped up and docstringed tnt-rotate-{left,right}
+ - Used emacs primitives instead of complicated code to simplify
+   toc-encode, toc-normalize, tnt-strip-html, and tnt-strip-a-href
+ - Added tnt-separator variable
+ - Rename send-away-msg to tnt-send-away-msg
+ - Used identity in call to mapcar for tnt-show-chat-participants and
+   tnt-handle-chat-update-buddy
+ - Since 'message' takes the same format string as 'format' does, removed
+   the need for a call to format in tnt-set-buddy-status, tnt-pounce-add,
+   and tnt-switch-user
+ - In tnt-participant-collection's call to mapcar, just use 'list
+ - Simplify tnt-buddy-status, tnt-buddy-idle, tnt-buddy-away using the
+   elisp idiom of not checking to see if a pair is nil or not before
+   calling cdr. (You'll get nil either way)
+ - Eliminated unused old-idle and old-away bindings in tnt-set-buddy-status.
+
 March 30, 2000 - Jim Whitehead
 ------------------------------
  - added a user-defined variable to avoid needing to hack the code 
