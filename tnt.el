@@ -1487,11 +1487,17 @@ Special commands:
   (tnt-set-online-state t)
   (if tnt-reconnecting
       (progn
+        (setq tnt-reconnecting nil)
+
         (if tnt-reconnecting-away
             (tnt-set-away tnt-reconnecting-away-msg))
-        (setq tnt-reconnecting nil)
         (setq tnt-reconnecting-away nil)
-        (setq tnt-reconnecting-away-msg nil))
+        (setq tnt-reconnecting-away-msg nil)
+
+        (if (and tnt-email-to-pipe-to tnt-pipe-to-email-now)
+            (tnt-pipe-message-to-program "TOC-server"
+                                         "TNT successfully reconnected"))
+        )
     (tnt-show-buddies)))
 
 (defun tnt-handle-im-in (user auto message)

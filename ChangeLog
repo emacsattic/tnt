@@ -1,5 +1,11 @@
 2000-06-01  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-handle-nick): if we're supposed to be forwarding to
+	email, notify that we successfully reconnected (we were already
+	notifying when the connection is closed).
+
+2000-06-01  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-set-away): added.  does basically everything
 	get-away-msg used to do, except for the part about getting the
 	away message.
