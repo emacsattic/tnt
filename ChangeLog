@@ -6,6 +6,8 @@
 	(tnt-handle-config): Set up permit/deny correctly
 	(tnt-config-to-blist): Also parse permit/deny stuff
 	(tnt-blist-to-config): Also spit out permit deny stuff
+	(tnt-blist-to-config): Simplified, probably sped up by getting rid 
+	of whiles and using built in mapconcats
 
 	* toc.el (toc-permit-only): Added
 	(toc-deny-only): Added

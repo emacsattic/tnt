@@ -1126,23 +1126,13 @@ Special commands:
 
 
 (defun tnt-blist-to-config (blist)
-  (let ((config ""))
-    (while blist
-      (let ((name-list (car blist)))
-        (setq config (format "%sg %s\n" config (car name-list)))
-        (setq name-list (cdr name-list))
-        (while name-list
-          (setq config (format "%sb %s\n" config (car name-list)))
-          (setq name-list (cdr name-list)))
-        (setq blist (cdr blist))))
-    (setq config (concat config
-                         (mapconcat '(lambda (n) (concat "d " n "\n"))
-                                    tnt-deny-list "")
-                         (mapconcat '(lambda (n) (concat "p " n "\n"))
-                                    tnt-permit-list "")
-                         (format "m %d\n" tnt-permit-mode)))
-          
-    config))
+  (concat (mapconcat '(lambda (name-list)
+                        (concat "g " (car name-list) "\n"
+                                (mapconcat '(lambda (b) (concat "b " b "\n"))
+                                           (cdr name-list) ""))) blist "")
+          (mapconcat '(lambda (d) (concat "d " d "\n")) tnt-deny-list "")
+          (mapconcat '(lambda (p) (concat "p " p "\n")) tnt-permit-list "")
+          (format "m %d\n" tnt-permit-mode)))
 
 
 (defun tnt-extract-normalized-buddies (blist)
