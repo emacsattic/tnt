@@ -111,15 +111,44 @@
   (tocstr-send
    (format "toc_evil %s %s" (toc-normalize user) (if anon "anon" "norm"))))
 
-(defun toc-add-permits (users)
-  (if users
-      (tocstr-send (format "toc_add_permit %s"
-                           (substring (format "%S" users) 1 -1)))))
+(defun toc-add-permit (&optional users)
+  (tocstr-send (mapconcat 'identity (cons "toc_add_permit" users) " ")))
 
-(defun toc-add-denies (users)
-  (if users
-      (tocstr-send (format "toc_add_deny %s"
-                           (substring (format "%S" users) 1 -1)))))
+(defun toc-add-deny (&optional users)
+  (tocstr-send (mapconcat 'identity (cons "toc_add_deny" users) " ")))
+
+
+;; The following are some useful ways to use permit/deny. Because (as far
+;; as I can tell) the toc_add_{permit,deny} protocol messages have pretty
+;; lame semantics, these routines do some apparently unnecessary calls in
+;; order to ensure they do exactly what they say.  This may cause
+;; "flashing". Let's say you are in permit-some mode and you are not
+;; permitting, let's say, "DumbAss416".  You then decide to go into
+;; deny-all mode.  This first switches you to deny mode, but denying noone,
+;; so for a moment you could flash online on DumbAss416's screen.  You will
+;; then go away, but nonetheless this a bit uncool.
+
+
+;; Additionally, the middle two calls in each of next two routines is
+;; probably unneccesary, but PROTOCOL does not explicitly say that
+;; switching modes clears the old permit/deny list.  It only says it clears
+;; the list if a switch is caused by an empty add_{permit,deny} message.
+
+(defun toc-permit-only (buddies)
+  (toc-add-deny)                        ; Ensure deny mode
+  (toc-add-permit)                      ; Ensure permit mode, empty permit list
+  (toc-add-permit buddies))             ; Permit only who we want
+
+(defun toc-deny-only (buddies)
+  (toc-add-permit)                      ; Ensure permit mode
+  (toc-add-deny)                        ; Ensure deny mode, empty deny list
+  (toc-add-deny buddies))               ; Deny only who we want to exclude
+
+(defun toc-permit-all ()
+  (toc-deny-only nil))
+
+(defun toc-deny-all ()
+  (toc-permit-only nil))
 
 (defun toc-chat-join (room)
   (tocstr-send (format "toc_chat_join 4 %s" (toc-encode room))))

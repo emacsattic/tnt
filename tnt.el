@@ -35,7 +35,6 @@
 ;;;;   point reset by erase-buffer to beginning of buddy buffer during update
 ;;;;   consider using use-hard-newlines variable
 ;;;;   make processed im messages read-only
-;;;;   mouse mappings
 
 (provide 'tnt)
 (require 'toc)
@@ -212,6 +211,9 @@ forwarding on and off with \"C-x t M\".")
 (defvar tnt-current-user nil)
 (defvar tnt-pipe-to-email-now nil)
 (defvar tnt-buddy-blist nil)
+(defvar tnt-permit-mode 1)
+(defvar tnt-permit-list nil)
+(defvar tnt-deny-list nil)
 
 
 
@@ -787,6 +789,7 @@ Special commands:
   (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse)
   (define-key tnt-buddy-list-mode-map [mouse-2] 'ignore)
   (define-key tnt-buddy-list-mode-map " " 'tnt-show-buddies)
+  (define-key tnt-buddy-list-mode-map "q" 'tnt-kill)
   )
 
 
@@ -904,10 +907,6 @@ Special commands:
   (goto-char (match-beginning 0))
   (tnt-prev-buddy))
 
-(defun tnt-initialize-buddy-list (config)
-  (setq tnt-buddy-blist (tnt-config-to-blist config))
-  (toc-add-buddies (tnt-extract-normalized-buddies tnt-buddy-blist)))
-
 (defun tnt-shutdown ()
   (tnt-set-online-state nil)
   (if tnt-keepalive-timer (cancel-timer tnt-keepalive-timer))
@@ -920,8 +919,11 @@ Special commands:
   (setq tnt-unidle-timer nil)
 
   (setq tnt-current-user nil
-        tnt-buddy-blist nil
         tnt-buddy-alist nil
+        tnt-buddy-blist nil
+        tnt-permit-list nil
+        tnt-deny-list nil
+        tnt-permit-mode 1
         tnt-away-alist nil
         tnt-idle-alist nil
         tnt-pounce-alist nil
@@ -990,8 +992,6 @@ Special commands:
 (defun tnt-online-buddies-and-groups-collection ()
   (append (mapcar (lambda(x) (list (car x))) tnt-buddy-blist)
           (tnt-online-buddies-collection)))
-
-
 
 ;;;----------------------------------------------------------------------------
 ;;; Buddy-list edit mode
@@ -1101,10 +1101,11 @@ Special commands:
 
 
 (defun tnt-config-to-blist (config)
+  (setq tnt-permit-list nil)
+  (setq tnt-deny-list nil)
   (let ((index 0)
         (blist nil))
-    (while (and config
-                (string-match ". [^\n]*\n" config index))
+    (while (and config (string-match ". [^\n]*\n" config index))
       (let* ((beg (match-beginning 0))
              (end (match-end 0))
              (code (aref config beg))
@@ -1113,7 +1114,13 @@ Special commands:
          ((= code ?g)
           (setq blist (cons (list arg) blist)))
          ((= code ?b)
-          (setcar blist (cons arg (car blist)))))
+          (setcar blist (cons arg (car blist))))
+         ((= code ?p)
+          (setq tnt-permit-list (cons arg tnt-permit-list)))
+         ((= code ?d)
+          (setq tnt-deny-list (cons arg tnt-deny-list))
+         ((= code ?m)
+          (setq tnt-permit-mode (string-to-number arg)))))
         (setq index end)))
     (mapcar 'nreverse (nreverse blist))))
 
@@ -1128,6 +1135,13 @@ Special commands:
           (setq config (format "%sb %s\n" config (car name-list)))
           (setq name-list (cdr name-list)))
         (setq blist (cdr blist))))
+    (setq config (concat config
+                         (mapconcat '(lambda (n) (concat "d " n "\n"))
+                                    tnt-deny-list "")
+                         (mapconcat '(lambda (n) (concat "p " n "\n"))
+                                    tnt-permit-list "")
+                         (format "m %d\n" tnt-permit-mode)))
+          
     config))
 
 
@@ -1235,8 +1249,8 @@ Special commands:
 ;;;----------------------------------------------------------------------------
 
 (defun tnt-debug (&rest args)
-  "Generic handler for messages that are unimplemented.  Used to learn more."
-  (message "Got a strange packet. Look in *tnt-debug* for info.")
+  "Generic debugging handler.  Used to learn more."
+  (message "Got a packet. Look in *tnt-debug* for info.")
   (let ((log-buffer (get-buffer-create "*tnt-debug*")))
     (prin1 args log-buffer)
     (princ "\n" log-buffer)))
@@ -1273,7 +1287,13 @@ Special commands:
   (toc-init-done))
 
 (defun tnt-handle-config (config)
-  (tnt-initialize-buddy-list config))
+  (setq tnt-buddy-blist (tnt-config-to-blist config))
+  (toc-add-buddies (tnt-extract-normalized-buddies tnt-buddy-blist))
+  (cond ((= tnt-permit-mode 1) (toc-permit-all))
+        ((= tnt-permit-mode 2) (toc-deny-all))
+        ((= tnt-permit-mode 3) (toc-permit-only tnt-permit-list))
+        ((= tnt-permit-mode 4) (toc-deny-only tnt-deny-list))
+        (t (error "Bad permit mode %s" tnt-permit-mode))))
 
 (defun tnt-handle-nick (nick)
   (setq tnt-current-user nick)
@@ -1688,4 +1708,28 @@ You should now exit this emacs process.
     )
   )
 
+(defun tnt-turn-on-debugging ()
+  (interactive)
+  (tnt-affect-debugging 'add-hook))
 
+(defun tnt-turn-off-debugging ()
+  (interactive)
+  (tnt-affect-debugging 'remove-hook))
+
+(defun tnt-affect-debugging (f)
+  (funcall f 'toc-opened-hooks 'tnt-debug)
+  (funcall f 'toc-closed-hooks 'tnt-debug)
+  (funcall f 'toc-sign-on-hooks 'tnt-debug)
+  (funcall f 'toc-config-hooks 'tnt-debug)
+  (funcall f 'toc-nick-hooks 'tnt-debug)
+  (funcall f 'toc-im-in-hooks 'tnt-debug)
+  (funcall f 'toc-update-buddy-hooks 'tnt-debug)
+  (funcall f 'toc-error-hooks 'tnt-debug)
+  (funcall f 'toc-eviled-hooks 'tnt-debug)
+  (funcall f 'toc-chat-join-hooks 'tnt-debug)
+  (funcall f 'toc-chat-in-hooks 'tnt-debug)
+  (funcall f 'toc-chat-update-buddy-hooks 'tnt-debug)
+  (funcall f 'toc-chat-invite-hooks 'tnt-debug)
+  (funcall f 'toc-chat-left-hooks 'tnt-debug)
+  (funcall f 'toc-goto-url-hooks 'tnt-debug)
+  (funcall f 'toc-pause-hooks 'tnt-debug))

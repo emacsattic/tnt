@@ -1,3 +1,19 @@
+2000-04-13  John Jannotti  <jj@lcs.mit.edu>
+
+	* tnt.el (tnt-turn-on-debugging): added
+	(tnt-turn-off-debugging): added
+	(tnt-affect-debugging): added
+	(tnt-handle-config): Set up permit/deny correctly
+	(tnt-config-to-blist): Also parse permit/deny stuff
+	(tnt-blist-to-config): Also spit out permit deny stuff
+
+	* toc.el (toc-permit-only): Added
+	(toc-deny-only): Added
+	(toc-permit-all): Added
+	(toc-deny-all): Added
+	(toc-add-permit): Simplified
+	(toc-add-deny): Simplified
+
 2000-04-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-send-text-as-chat-invitation): you can now give the
@@ -42,6 +58,8 @@
 	reflect the fact that they are clickable.
 	(tnt-buddy-list-mode-map): Make it so that mouse-2 doesn't also
 	try to yank when in buddy-list-mode.
+	(tnt-initialize-blist): make this tnt-handle-config.  The
+	previous handler just called tnt-initialize-blist
 
 2000-04-12  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
