@@ -1120,9 +1120,9 @@ Special commands:
          ((= code ?p)
           (setq tnt-permit-list (cons arg tnt-permit-list)))
          ((= code ?d)
-          (setq tnt-deny-list (cons arg tnt-deny-list))
+          (setq tnt-deny-list (cons arg tnt-deny-list)))
          ((= code ?m)
-          (setq tnt-permit-mode (string-to-number arg)))))
+          (setq tnt-permit-mode (string-to-number arg))))
         (setq index end)))
     (mapcar 'nreverse (nreverse blist))))
 

@@ -1,5 +1,9 @@
 2000-04-13  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-config-to-blist): fixed paren typo.
+
+2000-04-13  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-buddy-alist): moved declaration earlier to avoid
 	compiler complaining.
 
