@@ -20,7 +20,7 @@
 
 	* tnt.el (tnt-strip-offline-nicks): also don't strip if "just-onoff".
 
-2003-11-11  Scott Evans  <scott@templarcorp.com>
+2003-11-11  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el (tnt-nick-less-than): Make buddylist grouping case-insensitive.
 	(tnt-downcase): Add.
@@ -47,7 +47,7 @@
 	added replacements for I and B tags to _ and *, respectively.
 	(tnt-html-tags-to-strip): added "</?[Uu]>".
 
-2003-10-28  Scott Evans  <scott@templarcorp.com>
+2003-10-28  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el (tnt-buddy-list-message-waiting-face): Add.
 	(tnt-buddy-list-font-lock-keywords): Add MESSAGE WAITING keyword.
