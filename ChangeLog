@@ -1,3 +1,8 @@
+2001-01-02  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-handle-sign-on): removed call to toc-init-done
+	* tnt.el (tnt-handle-config): added call to toc-init-done
+
 2000-12-01    <tntdevel@brokendreams.net>
 
 	* tocstr.el (tnt-timers-available): Changed the calls of 

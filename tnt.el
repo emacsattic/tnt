@@ -1572,8 +1572,7 @@ Special commands:
                                                   'tnt-send-idle))
         (setq tnt-unidle-timer (run-with-idle-timer tnt-send-unidle-after t
                                                     'tnt-send-unidle))
-    ))
-  (toc-init-done))
+    )))
 
 (defun tnt-handle-config (config)
   (setq tnt-buddy-blist (tnt-config-to-blist config))
@@ -1583,7 +1582,9 @@ Special commands:
         ((= tnt-permit-mode 2) (toc-deny-all))
         ((= tnt-permit-mode 3) (toc-permit-only tnt-permit-list))
         ((= tnt-permit-mode 4) (toc-deny-only tnt-deny-list))
-        (t (error "Bad permit mode %s" tnt-permit-mode))))
+        (t (error "Bad permit mode %s" tnt-permit-mode)))
+  (toc-init-done)
+  )
 
 (defun tnt-handle-nick (nick)
 
