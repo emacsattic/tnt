@@ -2,6 +2,7 @@ March 31, 2000 - Jim Whitehead
 ------------------------------
  - Bugfix to fix the "no process" mesasges, due to incorrect calls
    in tnt-buddy-shutdown
+ - Removed executable permissions on CVS for PROTOCOL and README
 
 March 31, 2000 - John Jannotti
 ------------------------------
