@@ -458,6 +458,7 @@ messages are disabled."
   (global-set-key "\C-xtP" 'tnt-pounce-add)
   (global-set-key "\C-xtD" 'tnt-pounce-delete)
   (global-set-key "\C-xtM" 'tnt-toggle-email)
+  (global-set-key "\C-xtm" 'tnt-mute)
 )
 
 
@@ -813,6 +814,7 @@ Special commands:
 | tnt-pounce-add    |   C-x t P   | Adds a user to your pounce list           |
 | tnt-pounce-delete |   C-x t D   | Removes a user from your pounce list      |
 | tnt-toggle-email  |   C-x t M   | Toggles forwarding incoming IMs to email  |
+| tnt-mute          |   C-x t m   | Toggles sounds on/off                     |
 +-------------------+-------------+-------------------------------------------+
 "))
           (tnt-switch-to-buffer buffer)))))
@@ -2177,6 +2179,8 @@ of the list, delimited by commas."
 ;;; Beep/Sound support (gse)
 ;;;---------------------------------------------------------------------------
 
+(defvar tnt-muted nil)
+
 (defun tnt-play-sound (sound-file)
   "On non-XEmacs systems, requires that tnt-sound-exec be set."
   (if (file-readable-p sound-file)
@@ -2204,16 +2208,29 @@ of the list, delimited by commas."
   ;; 'audible       audible beep
   ;; 'current       whichever emacs is currently set to
   ;; filename       audio file to play
-  (cond
-   ((or (eq beep-type 'visible) (eq beep-type 'audible))
-    (let ((orig-visible visible-bell))
-      (setq visible-bell (eq beep-type 'visible))
-      (beep)
-      (setq visible-bell orig-visible)))
-   ((eq beep-type 'current)
-    (beep))
-   ((stringp beep-type)
-    (tnt-play-sound beep-type))))
+  ;;
+  ;; Also have to check tnt-muted.
+  (if (not tnt-muted)
+      (cond
+       ((or (eq beep-type 'visible) (eq beep-type 'audible))
+        (let ((orig-visible visible-bell))
+          (setq visible-bell (eq beep-type 'visible))
+          (beep)
+          (setq visible-bell orig-visible)))
+       ((eq beep-type 'current)
+        (beep))
+       ((stringp beep-type)
+        (tnt-play-sound beep-type)))))
+
+(defun tnt-mute ()
+  "Toggles muting of all TNT sounds."
+  (interactive)
+  (setq tnt-muted (not tnt-muted))
+  (if tnt-muted
+      (message "All TNT sounds muted.")
+    (message "TNT sound on.")))
+
+
 
 ;;---------------------------------------------------------------------------
 

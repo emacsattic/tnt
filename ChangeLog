@@ -1,3 +1,7 @@
+2001-06-25  Scott Evans  <gse@antisleep.com>
+
+	* tnt.el (tnt-mute): Added.  Bound to C-x t m.
+
 2001-06-22  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el misc changes:
