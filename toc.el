@@ -104,14 +104,16 @@
                        (if auto " auto" ""))))
 
 
-(defun toc-add-buddy (&rest buddies)
-  (tocstr-send (format "toc_add_buddy %s"
-                       (substring (format "%S" buddies) 1 -1))))
+(defun toc-add-buddies (buddies)
+  (if buddies
+      (tocstr-send (format "toc_add_buddy %s"
+                           (substring (format "%S" buddies) 1 -1)))))
 
 
-(defun toc-remove-buddy (&rest buddies)
-  (tocstr-send (format "toc_remove_buddy %s"
-                       (substring (format "%S" buddies) 1 -1))))
+(defun toc-remove-buddies (buddies)
+  (if buddies
+      (tocstr-send (format "toc_remove_buddy %s"
+                           (substring (format "%S" buddies) 1 -1)))))
 
 
 (defun toc-chat-join (exchange room)

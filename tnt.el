@@ -438,7 +438,7 @@ Special commands:
 | tnt-toggle-email |   C-x t M   | Toggle forwarding incoming IMs to email   |
 +------------------+-------------+-------------------------------------------+
 "))
-	  (apply (tnt-switch-to-buffer-function) (list buffer))))))
+	  (funcall (tnt-switch-to-buffer-function) buffer)))))
 
 
 
@@ -809,12 +809,9 @@ Special commands:
   (goto-char (match-beginning 0))
   (tnt-prev-buddy))
 
-
 (defun tnt-initialize-buddy-list (config)
   (setq tnt-buddy-blist (tnt-config-to-blist config))
-  (let ((buddies (tnt-extract-normalized-buddies tnt-buddy-blist)))
-    (apply 'toc-add-buddy buddies)))
-
+  (toc-add-buddies (tnt-extract-normalized-buddies tnt-buddy-blist)))
 
 (defun tnt-buddy-shutdown ()
   (setq tnt-buddy-blist nil
@@ -966,10 +963,8 @@ Special commands:
            (new-list (tnt-extract-normalized-buddies new-blist))
            (old-list (tnt-extract-normalized-buddies old-blist))
            (diffs (tnt-sorted-list-diff old-list new-list)))
-      (if (cdr diffs)
-          (apply 'toc-add-buddy (cdr diffs)))
-      (if (car diffs)
-          (apply 'toc-remove-buddy (car diffs)))
+      (toc-add-buddies (cdr diffs))
+      (toc-remove-buddies (car diffs))
       (toc-set-config (tnt-blist-to-config new-blist))
       (setq tnt-buddy-blist new-blist))
     (set-buffer-modified-p nil)
@@ -1365,17 +1360,10 @@ Special commands:
 
 
 (defun tnt-completing-read-list (prompt collection)
-  ;; Reads a list from the minibuffer with completion.
+  "Reads a list from the minibuffer with completion."
   (let ((str (let ((collection collection))
-               (completing-read prompt 'tnt-completion-func)))
-        (index 0)
-        (list nil))
-    (while (and (< index (length str))
-                (string-match "\\([^,]*\\),?" str index))
-      (setq list (cons (substring str (match-beginning 1) (match-end 1)) list))
-      (setq index (match-end 0)))
-    (nreverse list)))
-
+	       (completing-read prompt 'tnt-completion-func))))
+    (split-string str ",")))
     
 (defun tnt-persistent-message (&optional fmt &rest args)
   ;; Displays a persistent message in the echo area.
