@@ -701,10 +701,11 @@ Special commands:
     (let ((old-point (marker-position tnt-message-marker)))
       (goto-char tnt-message-marker)
 
+      (if tnt-use-timestamps
+          (insert-before-markers (format-time-string "%T ")))
+      
       (if (not user)
           (insert-before-markers "[" message "]")
-        (if tnt-use-timestamps
-            (insert-before-markers (format-time-string "%T ")))
 
         (let ((start (point)))
           (insert-before-markers user)
