@@ -1,4 +1,10 @@
-2000-05-26  Neil Picciotto  <neilp@orion.infoseek.com>
+2000-05-26  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-message-on-buddy-signonoff): changed name from
+	"show-buddy-signonoff", to be consistent with "beep-on-..." vars. 
+	(tnt-set-buddy-status): changed name of var
+
+2000-05-26  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-open): added "Attempting to sign on..." message
 	(tnt-buddy-list-mode-map): added tnt-fetch-info binding

@@ -91,8 +91,7 @@ the same password).
 ")
 
 (defvar tnt-username-alist nil
-  "*Should be nil or a list of associations of usernames with
-    (optionally) passwords.
+  "*Should be nil or a list of usernames and (optionally) passwords.
 
 If you have more than one username, set the list this way:
   (setq tnt-username-alist '((\"UserName1\" . \"Password1\")
@@ -116,7 +115,7 @@ but other strings, suchs as \"\n-\n\" may be desirable.
 ")
 
 (defvar tnt-use-timestamps nil
-  "*If t, shows timestamps in TNT conversations.
+  "*If non-nil, shows timestamps in TNT conversations.
 
 This will add a timestamp for each message you receive or send.
 This is useful for logging, and for people who are on very often.
@@ -165,21 +164,24 @@ set to use (visible or audible).  If set to nil, does not beep.
 ")
   
 
+(defvar tnt-message-on-buddy-signonoff t
+  "*If non-nil, a minibuffer message appears when buddies sign on and off.")
+
 (defvar tnt-use-split-buddy nil
-  "*If t, tnt will split the window when going to the buddy list.
+  "*If non-nil, tnt will split the window when going to the buddy list.
 
 Note that this rule does not apply when in in the *scratch* buffer, or
 when already in the *buddies* buffer.
 ")
 
 (defvar tnt-use-keepalive tnt-timers-available
-  "*If t, sends a keepalive packet once a minute")
+  "*If non-nil, sends a keepalive packet once a minute")
 
 (defvar tnt-use-buddy-update-timer tnt-timers-available
-  "*If t, updates the idle times in the buddy list each minute.")
+  "*If non-nil, updates the idle times in the buddy list each minute.")
 
 (defvar tnt-use-idle-timer (and tnt-timers-available (not tnt-buggy-idle))
-  "*If t, tells TOC server when emacs has been idle for 10 minutes.
+  "*If non-nil, tells TOC server when emacs has been idle for 10 minutes.
 
 NOTE: under certain versions of emacs, you become unidle any time tnt
 receives any message from the toc server.  Try \"M-x
@@ -198,7 +200,7 @@ substituted.
 ")
 
 (defvar tnt-recenter-windows t
-  "*If t, recenters text to bottom of window when messages are printed.")
+  "*If non-nil, recenters text to bottom of window when messages are printed.")
 
 (defvar tnt-email-to-pipe-to nil
   "*Should be nil or a string containing an email address.
@@ -216,10 +218,6 @@ forwarding on and off with \"C-x t M\".
 Note that you only need to set this if you're using the pipe-to-email
 feature.  defaults to /bin/mail
 ")
-
-(defvar tnt-show-buddy-signonoff t
-  "*Set this to nil in order to not have the minibuffer message every time a 
-buddy signs on or off.  Set to true by default.")
 
 ;; Faces for color highlighting of screen names.
 ;; if they already exist, we don't want to change the colors.
@@ -1053,7 +1051,7 @@ Special commands:
                     (with-current-buffer buffer
                       (tnt-append-message (format "%s %s" nick state)))))
 
-          (if tnt-show-buddy-signonoff 
+          (if tnt-message-on-buddy-signonoff 
               (message "%s %s" nick state))
 
           (if tnt-timers-available (tnt-set-just-signedonoff nnick onlinep))
