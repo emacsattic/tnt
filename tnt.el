@@ -354,7 +354,7 @@ Special commands:
   (interactive "p")
   (let* ((completion-ignore-case t)
          (input (or (and (stringp user) user)
-                    (completing-read "Send IM to: " (tnt-buddy-collection)))))
+                    (completing-read "Send IM to: " (tnt-online-buddies-collection)))))
     (switch-to-buffer (tnt-im-buffer input))))
 
 
@@ -503,9 +503,12 @@ Special commands:
   (interactive "p")
   (if (null tnt-current-user)
       (error "You must be online to leave a chat room.")
-    (let* ((input (or (and (stringp room) room)
+    (let* ((completion-ignore-case t)
+           (input (or (and (stringp room) room)
                       (and (boundp 'tnt-chat-room) tnt-chat-room)
-                      (read-from-minibuffer "Leave chat room: "))))
+                      (completing-read "Leave chat room: "
+                                       (mapcar (lambda (x) (list (cdr x)))
+                                               tnt-chat-alist)))))
       (save-excursion
         (set-buffer (tnt-chat-buffer input))
         (setq tnt-chat-participants nil)
@@ -549,7 +552,8 @@ Special commands:
 
 (defun tnt-send-text-as-chat-whisper (user)
   (interactive "p")
-  (let ((user (or (and (stringp user) user)
+  (let* ((completion-ignore-case t)
+         (user (or (and (stringp user) user)
                   (completing-read "Whisper to user: "
                                    (tnt-participant-collection))))
         (message (tnt-get-input-message)))
@@ -567,9 +571,10 @@ Special commands:
 
 (defun tnt-send-text-as-chat-invitation (users)
   (interactive "p")
-  (let ((user-list (or (and (listp users) users)
+  (let* ((completion-ignore-case t)
+         (user-list (or (and (listp users) users)
                        (tnt-completing-read-list "Users to invite: "
-                                                 (tnt-buddy-collection)))))
+                                                 (tnt-online-buddies-collection)))))
     (if user-list
         (let ((msg (tnt-get-input-message)))
           (if (= (length msg) 0)
@@ -853,7 +858,7 @@ Special commands:
   ;; just return buddy.
   (or (tnt-buddy-status buddy) buddy))
 
-(defun tnt-buddy-collection ()
+(defun tnt-online-buddies-collection ()
   ;; Return a "collection" of online buddies for completion commands.
   ;; (Remove all nil entries -- these turn up when a buddy logs off).
   (delete '(nil) (mapcar '(lambda(x) (list (cdr x))) tnt-buddy-alist)))

@@ -75,6 +75,7 @@ description of each command follows the table.
 | tnt-kill          |   C-x t k   | Terminates the current session            |
 | tnt-im            |   C-x t i   | Starts an instant-message conversation    |
 | tnt-join-chat     |   C-x t j   | Joins a chat room                         |
+| tnt-leave-chat    |   C-x t l   | Leaves a chat room                        |
 | tnt-show-buddies  |   C-x t b   | Shows the buddy list                      |
 | tnt-edit-buddies  |   C-x t B   | Invokes the buddy list editor             |
 | tnt-accept        |   C-x t a   | Accepts a message or a chat invitation    |
@@ -147,26 +148,32 @@ tnt-im (C-x t i)
   view or discard the message.
 
 tnt-join-chat (C-x t j)
-  This command joins a chat room in which you can converse with several
-  users at once.  You will be prompted for the name of the room.  The
-  default is a randomly-generated name of an empty chat room.  In most
-  cases you will just want to use this name and invite other users into
-  the room once you've joined.  However, if you know the name of an
-  existing room, you may enter that instead.
+  This command joins a chat room in which you can converse with
+  several users at once.  You will be prompted for the name of the
+  room.  The default is a randomly-generated name of an empty chat
+  room.  In most cases you will just want to use this name and invite
+  other users into the room once you've joined.  However, if you know
+  the name of an existing room, you may enter that instead.
 
   Once inside a chat room, you can invite other users to join.  You do
   this by typing an invitation message (describing the topic being
-  discussed in the room) and terminating it with TAB (C-i).  You will be
-  prompted for a list of users to invite.  Enter their screen names,
-  separated by commas.  Each invited user will recieve a copy of the
-  invitation message and will be given an opportunity to join the room.
-  You will be informed as they join by status messages that appear in
-  the room's buffer.
+  discussed in the room) and terminating it with TAB (C-i).  You will
+  be prompted for a list of users to invite.  Enter their screen
+  names, separated by commas.  Each invited user will recieve a copy
+  of the invitation message and will be given an opportunity to join
+  the room.  You will be informed as they join by status messages that
+  appear in the room's buffer.
 
-  To send a message to all users in a room, simply type the message and
-  hit RETURN.  To send a private message to a particular user, terminate
-  the message with LINEFEED instead of RETURN.  (You will be prompted
-  for the screen name of the desired recipient).
+  To send a message to all users in a room, simply type the message
+  and hit RETURN.  To send a private message to a particular user,
+  terminate the message with LINEFEED (C-j) instead of RETURN (C-m).
+  (You will be prompted for the screen name of the desired recipient).
+
+tnt-leave-chat (C-x t l)
+  This command leaves a chat room you are currently in.  If the
+  current buffer is a chat room, it will leave that one, otherwise it
+  will prompt for the name of the chat room to leave.  (Note that you
+  can also leave a chat room by simply killing its buffer.)
 
 tnt-accept (C-x t a)
   This command accepts a new message or chat invitation from another user.

@@ -1,3 +1,15 @@
+2000-04-06  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-leave-chat): now using completing-read with
+	the list of chats you're in (the cdrs from tnt-chat-alist)
+	(tnt-online-buddies-collection): changed name from
+	tnt-buddy-collection, so that it's clear that this gives just the
+	buddies who are currently online.
+	(tnt-send-text-as-chat-invitation): added (completion-ignore-case t)
+	(tnt-send-text-as-chat-whisper): added (completion-ignore-case t)
+
+	* README: added tnt-leave-chat info.
+
 2000-04-06  John Jannotti  <jj@lcs.mit.edu>
 
 	* tnt.el (tnt-inhibit-key-bindings): Added keybinding for
