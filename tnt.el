@@ -326,6 +326,8 @@ feature.  defaults to /bin/mail
 (defvar tnt-away nil)
 (defvar tnt-keepalive-timer nil)
 (defvar tnt-reconnecting nil)
+(defvar tnt-reconnecting-away nil)
+(defvar tnt-reconnecting-away-msg nil)
 
 (defun tnt-buddy-away (nick)
   (cdr (assoc (toc-normalize nick) tnt-away-alist)))
@@ -335,7 +337,7 @@ feature.  defaults to /bin/mail
   (interactive)
   (if tnt-away
       (tnt-not-away)
-    (tnt-get-away-msg)))
+    (tnt-set-away (tnt-get-away-msg))))
 
 (defun tnt-not-away ()
   "Sets you as NOT away."
@@ -347,26 +349,30 @@ feature.  defaults to /bin/mail
         (message "You have returned."))
     (toc-set-away nil)
     (tnt-set-online-state t)
+    )
   )
-)
 
 ;; gse: Added history and default away message stuff.
 (defvar tnt-away-msg-history nil)
 (defun tnt-get-away-msg ()
-  "Gets the away msg"
-  (interactive)
-  (setq tnt-away-msg (read-from-minibuffer "Away Message: "
-                                           (cons
-                                            (if tnt-away-msg-history
-                                                (car tnt-away-msg-history)
-                                              "I'm away.")
-                                            0)
-                                           nil nil 'tnt-away-msg-history))
+  "Gets the away message."
+  (read-from-minibuffer "Away Message: "
+                        (cons
+                         (if tnt-away-msg-history
+                             (car tnt-away-msg-history)
+                           "I'm away.")
+                         0)
+                        nil nil 'tnt-away-msg-history)
+  )
+
+(defun tnt-set-away (away-msg)
+  "Sets the away message."
+  (setq tnt-away-msg away-msg)
   (message "Set as away: %s" tnt-away-msg)
   (setq tnt-away t)
   (toc-set-away tnt-away-msg)
   (tnt-set-online-state t)
-)
+  )
 
 (defun tnt-send-away-msg (user)
   "Send the current away message to USER."
@@ -1426,12 +1432,18 @@ Special commands:
 
 
 (defun tnt-handle-closed ()
+  ;; save these values
+  (setq tnt-reconnecting-away tnt-away)
+  (setq tnt-reconnecting-away-msg tnt-away-msg)
+  ;; reset everything
   (tnt-shutdown)
+  ;; if we're forwarding to email, send notification
   (if (and tnt-email-to-pipe-to tnt-pipe-to-email-now)
       (tnt-pipe-message-to-program "TOC-server"
                                    "TNT connection closed by server"))
+  ;; error
   (tnt-error "TNT connection closed")
-  ;; auto-reconnect
+  ;; and finally, attempt to reconnect
   (setq tnt-reconnecting t)
   (message "Trying to reconnect...")
   (tnt-open tnt-username tnt-password)
@@ -1474,7 +1486,12 @@ Special commands:
       (setq tnt-buddy-blist (list (list "Buddies" nick))))
   (tnt-set-online-state t)
   (if tnt-reconnecting
-      (setq tnt-reconnecting nil)
+      (progn
+        (if tnt-reconnecting-away
+            (tnt-set-away tnt-reconnecting-away-msg))
+        (setq tnt-reconnecting nil)
+        (setq tnt-reconnecting-away nil)
+        (setq tnt-reconnecting-away-msg nil))
     (tnt-show-buddies)))
 
 (defun tnt-handle-im-in (user auto message)

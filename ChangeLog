@@ -1,5 +1,19 @@
 2000-06-01  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el (tnt-set-away): added.  does basically everything
+	get-away-msg used to do, except for the part about getting the
+	away message.
+	(tnt-get-away-msg): now just gets the away message.
+	(tnt-away-toggle): now calls set-away, passing in the result of
+	get-away-msg.
+	(tnt-reconnecting-away): added.
+	(tnt-reconnecting-away-msg): added.
+	(tnt-handle-closed): now saves away status (tnt-away and
+	tnt-away-msg).
+	(tnt-handle-nick): now restores away status.
+
+2000-06-01  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (tnt-reconnecting): added.
 	(tnt-handle-closed): now sets reconnecting flag.
 	(tnt-handle-nick): now checks reconnecting flag -- if it's t,
