@@ -1,3 +1,25 @@
+2000-07-10  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
+	* tnt.el (tnt-handle-im-in): now removing an event from the ring
+	when the buffer is visible -- if the user made the IM buffer
+	visible in a way other than "C-x t a" (for example, with "C-x b"),
+	then the persistent "message available" message is annoying.
+	(tnt-send-text-as-instant-message): remove event from ring if you
+	say something too (not just the other person).
+	(tnt-next-event): now tells user if there are no events.
+	(tnt-prev-event): now tells user if there are no events.
+	(tnt-remove-im-event): simplified a little.  also, put
+	toc-normalize in here, rather than requiring it to always be
+	called by the calling function.
+	(tnt-im): now does not call toc-normalize, since it will be done
+	in remove-im-event.
+	(tnt-directory): added.
+	(tnt-buddy-list-backup-filename): removed the leading ".tnt-",
+	since it's now in a directory.
+	(tnt-restore-buddy-list): now using "~/.tnt/username-buddies" for
+	backup, rather than "~/.tnt-username-buddies".  though there's
+	still no backup functionality, only restore.
+
 2000-06-28  Jim Whitehead  <jnwhiteh@brokendreams.net>
 
 	* tnt.el (tnt-remove-im-event): Added this function to take care

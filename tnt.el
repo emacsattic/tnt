@@ -189,7 +189,10 @@ tnt-test-for-buggy-idle\", and if it tells you that your idle timers
 are correct, you should set tnt-buggy-idle to nil.
 ")
 
-(defvar tnt-buddy-list-backup-filename "~/.tnt-%s-buddies"
+(defvar tnt-directory "~/.tnt"
+  "*The directory tnt will use to store data.")
+
+(defvar tnt-buddy-list-backup-filename "%s-buddies"
   "*If non-nil, tnt will backup buddy list into this file.
 
 Occasionally, the toc server loses people's buddy lists.  If a
@@ -516,7 +519,7 @@ Special commands:
          (input (or (and (stringp user) user)
                     (completing-read "Send IM to: "
                                      (tnt-online-buddies-collection)))))
-    (tnt-remove-im-event (toc-normalize input))
+    (tnt-remove-im-event input)
     (switch-to-buffer (tnt-im-buffer input))))
 
 
@@ -549,6 +552,7 @@ Special commands:
     (if (string= message "")
         (message "Please enter a message to send")
       (tnt-append-message message tnt-current-user))
+    (tnt-remove-im-event tnt-im-user)
     (if tnt-away (message "Reminder: You are still set as away"))
     (if tnt-recenter-windows (recenter -1))
     (if (string= message "") () (toc-send-im tnt-im-user message))))
@@ -1230,9 +1234,13 @@ Special commands:
 
 (defun tnt-restore-buddy-list ()
   "Restores the buddy list from the backup file."
-  (and tnt-buddy-list-backup-filename
-       (let ((filename (format tnt-buddy-list-backup-filename
-                               (toc-normalize tnt-username))))
+  (and tnt-directory
+       (file-accessible-directory-p tnt-directory)
+       tnt-buddy-list-backup-filename
+       (let ((filename (format "%s/%s"
+                               tnt-directory
+                               (format tnt-buddy-list-backup-filename
+                                       (toc-normalize tnt-username)))))
          (if (file-readable-p filename)
              (progn
                (tnt-edit-buddies)
@@ -1329,10 +1337,9 @@ Special commands:
 (defun tnt-remove-im-event (nick)
   "Removes an instant message event from the event-ring."
   (interactive)
-  (if (assoc (format "*im-%s*" nick) tnt-event-ring)
-      (setq tnt-event-ring 
-            (tnt-remassoc (format "*im-%s*" nick) tnt-event-ring)))
-  (tnt-show-top-event))
+  (let ((event (assoc (format "*im-%s*" (toc-normalize nick)) tnt-event-ring)))
+    (if event (setq tnt-event-ring (delete event tnt-event-ring)))
+    (tnt-show-top-event)))
 
 (defun tnt-accept ()
   "Accepts an instant message or chat invitation."
@@ -1350,14 +1357,18 @@ Special commands:
   "Shows the next event in the notification ring."
   (interactive)
   (setq tnt-event-ring (tnt-rotate-right tnt-event-ring))
-  (tnt-show-top-event))
+  (if tnt-event-ring
+      (tnt-show-top-event)
+    (message "No events in ring.")))
 
 
 (defun tnt-prev-event ()
   "Show the previous event in the notification ring."
   (interactive)
   (setq tnt-event-ring (tnt-rotate-left tnt-event-ring))
-  (tnt-show-top-event))
+  (if tnt-event-ring
+      (tnt-show-top-event)
+    (message "No events in ring.")))
 
 
 (defun tnt-push-event (message buffer-name function)
@@ -1380,9 +1391,7 @@ Special commands:
             (switch-to-buffer buffer-name)
           (kill-buffer buffer-name))
         (if function (funcall function accept))
-        (if tnt-event-ring
-            (tnt-show-top-event)
-          (tnt-persistent-message)))
+        (tnt-show-top-event))
     (message "No event to %s." (if accept "accept" "reject"))
     ))
 
@@ -1400,6 +1409,7 @@ Special commands:
                                       ""
                                     (format "[%d more]" (1- len))))))
     (tnt-persistent-message "")))
+
 
 
 
@@ -1525,7 +1535,10 @@ Special commands:
     
     (if (get-buffer-window buffer 'visible)
 
-        (tnt-beep tnt-beep-on-message-in-visible-buffer)
+        (progn
+          (tnt-beep tnt-beep-on-message-in-visible-buffer)
+          (tnt-remove-im-event user)
+          )
       
       (tnt-beep tnt-beep-on-message-available-event)
       (tnt-push-event (format "Message from %s available" user)
