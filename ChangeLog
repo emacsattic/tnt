@@ -1,3 +1,9 @@
+2003-11-04  Scott Evans  <gse@antisleep.com>
+
+	* tnt.el (tnt-default-away-message): Change default to nil
+	to preserve old behavior.
+	(tnt-append-message): Set buffer-undo-list to nil at end.
+
 2003-11-02  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el (tnt-get-buddy-at-point): Use point-at-eol instead of

@@ -177,7 +177,7 @@ not stored here, you will be prompted."
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
-(defcustom tnt-default-away-message "I'm away."
+(defcustom tnt-default-away-message nil
   "Default message to use when away."
   :type '(choice
           (string :tag "Away message" "I'm away.")
@@ -1939,8 +1939,13 @@ Special commands:
 					(message "")
 					)))
 			  ))))
-
-      )))
+      ))
+  ;; Torches the entire undo history -- but we really don't want the
+  ;; user to be able to undo TNT inserts.  The right fix is probably
+  ;; to remove only certain undo information (or hold the undo info
+  ;; before the insert happens, the restore it), then adjust the point
+  ;; positions in the undo-list.
+  (setq buffer-undo-list nil))
 
 ;;; ***************************************************************************
 (defun tnt-replace-me-statement (message)
