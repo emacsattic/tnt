@@ -259,12 +259,6 @@ forwarding on and off with \"C-x t M\".")
 (defvar tnt-away nil)
 (defvar tnt-keepalive-timer nil)
 
-(defun tnt-keepalive ()
-  "Sends a keepalive packet to the server"
-  (interactive)
-  (toc-keepalive)
-  )
-
 (defun tnt-buddy-away (nick)
   (cdr (assoc (toc-normalize nick) tnt-away-alist)))
 
@@ -300,7 +294,6 @@ forwarding on and off with \"C-x t M\".")
                                               "I'm away.")
                                             0)
                                            nil nil 'tnt-away-msg-history))
-  (message "You are away: %s" tnt-away-msg)
   (message "Set as away: %s" tnt-away-msg)
   (setq tnt-away t)
   (toc-set-away tnt-away-msg)
@@ -1238,7 +1231,7 @@ Special commands:
   (tnt-show-buddies)
   (if tnt-use-keepalive
       (setq tnt-keepalive-timer
-            (tnt-repeat tnt-keepalive-interval 'tnt-keepalive)))
+            (tnt-repeat tnt-keepalive-interval 'toc-keepalive)))
   (if tnt-use-buddy-update-timer
       (setq tnt-buddy-update-timer
             (tnt-repeat tnt-buddy-update-interval 'tnt-build-buddy-buffer)))

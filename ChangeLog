@@ -1,6 +1,10 @@
 2000-04-11  John Jannotti  <jj@lcs.mit.edu>
 
 	* tnt.el (tnt-open): Use add-hook instead of setq.
+	(tnt-handle-sign-on): Just use toc-keepalive, get rid of
+ 	tnt-keepalive.
+	(tnt-get-away-msg): Removed extraneous message (we called message
+ 	twice in a row).
 
 	* toc.el (toc-handle-opened, toc-handle-closed,
  	toc-handle-receive): Use toc-run-hooks instead of apply.
