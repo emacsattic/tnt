@@ -1,5 +1,11 @@
 2000-04-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
 
+	* tnt.el: fixed bug introduced on 2000-04-21.  was checking
+	(member 'tnt-other-name-face (face-list)), should be checking
+	(not (member ...)).  
+
+2000-04-28  Neil ''Fred'' Picciotto  <fred@guido.derf.net>
+
 	* tnt.el (cl): now doing (require 'cl).  maybe later we'll
 	implement those few functions we're using...
 
