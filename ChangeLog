@@ -1,5 +1,19 @@
 2002-09-08  Joe Casadonte  <jcasadonte@northbound-train.com>
 
+	* tnt.el (tnt-supress-pounce-when-away): added new customization option
+	* tnt.el (main): added new keybinding (\C-xtL)
+	* tnt.el (tnt-pounce-dwim): new function (dwim == Do What I Mean)
+	* tnt.el (tnt-pounce-add): will prompt for nick if none given; rebuilds buddy list
+	* tnt.el (tnt-pounce-delete): added flag to require match on `completing-read'
+	* tnt.el (tnt-pounce-delete): rebuilds buddy list
+	* tnt.el (tnt-pounce-list): new function to list pending pounces
+	* tnt.el (tnt-send-pounce): added away check
+	* tnt.el (tnt-send-pending-pounces-maybe): new function to maybe send pounces
+	* tnt.el (tnt-not-away): calls `tnt-send-pending-pounces-maybe'
+	* tnt.el (tnt-buddy-list-mode-map): two new keybindings (l, L)
+
+2002-09-08  Joe Casadonte  <jcasadonte@northbound-train.com>
+
 	* tnt.el (propertize): added source comment
 	* tnt.el (main): moved global variables up considerably
 	* tnt.el (tnt-customize-mode-line-setting): new function to set mode line vars
@@ -39,8 +53,8 @@
 	* tnt.el (tnt-current-line-in-buffer): new function
 	* tnt.el (tnt-build-buddy-buffy): retains current line & column when rebuilding buffer
 	* tnt.el (tnt-buddy-list-filter): added checks & indicators for pounce, offline;
- 		                          added support for fullname list; fixed so that
- 		                          only fullname (or nickname) is mouse-sensitive
+					  added support for fullname list; fixed so that
+					  only fullname (or nickname) is mouse-sensitive
 	* tnt.el (tnt-im-buddy): accounts for inactive buddies (offers to pounce instead)
 	* tnt.el (tnt-get-buddy-at-point): accounts for possible fullname
 	* tnt.el (tnt-buddy-edit-mode-map): added binding for \C-c\C-c (saves & exits edit mode)
@@ -50,23 +64,23 @@
 2002-09-02  Joe Casadonte  <jcasadonte@northbound-train.com>
 
 	* tnt.el (general changes): cleanup up code, putting visual
-	                            separators between functions
+				    separators between functions
 	* tnt.el (general changes): moved variables around to group like
-	                            with like
+				    with like
 	* tnt.el (tnt-toc-host}: changed from defvar to defcustom
 	* tnt.el (tnt-toc-port}: changed from defvar to defcustom
 	* tnt.el (tnt-login-host}: changed from defvar to defcustom
 	* tnt.el (tnt-login-port}: changed from defvar to defcustom
 	* tnt.el (tnt-language}: changed from defvar to defcustom
 	* tnt.el (tnt-timers-available}: changed from defvar to defconst
-	                                 (more efficient)
+					 (more efficient)
 	* tnt.el (tnt-running-xemacs}: added call to `save-match-data'
 	* tnt.el (tnt-customize): added new interactive function to easily
-	                          customize all TNT options
+				  customize all TNT options
 	* tnt.el (tnt-default-username}: changed from defvar to defcustom
 	* tnt.el (tnt-default-password}: changed from defvar to defcustom
 	* tnt.el (tnt-username-alist}: changed from defvar to defcustom;
-	                               fixed doc string to prevent font-lock
+				       fixed doc string to prevent font-lock
 				       from messing up
 	* tnt.el (tnt-default-chatroom}: changed from defvar to defcustom
 	* tnt.el (tnt-sound-exec}: changed from defvar to defcustom
@@ -124,7 +138,7 @@
 	* tnt.el (tnt-buffer-to-blist}: changed from `buffer-substring' to `buffer-substring-no-properties' (twice)
 	* tnt.el (tnt-config-to-blist}: added call to `save-match-data'
 	* tnt.el (tnt-save-buddy-list}: changed from (if (null ...) (error ...) (progn ...))
-	                                to (when (null ...) (error ...)) ...
+					to (when (null ...) (error ...)) ...
 	* tnt.el (tnt-completion-func}: added call to `save-match-data'
 	* tnt.el (tnt-completion-func}: changed from `buffer-substring' to `buffer-substring-no-properties' (twice)
 	* tnt.el (tnt-strip-a-href}: added call to `save-match-data'
@@ -134,15 +148,15 @@
 	* tnt.el (main}: added in call to `tnt-load-hook' at end of file
 	* tnt.el (tnt-buddy-list-buffer-name}: added new defcustom var - replaces old hard-coded value
 	* tnt.el (tnt-load-hook}: added new defcustom var
-	* tnt.el (tnt-persistent-timeout}: changed doc string ('< 0' instead of  '< 1')
+	* tnt.el (tnt-persistent-timeout}: changed doc string ('< 0' instead of	 '< 1')
 
 2002-09-02  Joe Casadonte  <jcasadonte@northbound-train.com>
 
 	* tnt.el (tnt-buffer-to-blist): fixed bug by always adding extra
-          newline at end of buffer (would prevent the buffer from being
-          saved if the newline was not present)
-        * tnt.el (tnt-persistent-message-persist): fixed bug (comparison
-          was switched)
+	  newline at end of buffer (would prevent the buffer from being
+	  saved if the newline was not present)
+	* tnt.el (tnt-persistent-message-persist): fixed bug (comparison
+	  was switched)
 
 2002-07-01  NeilFred Picciotto  <fred@guido.halflab.com>
 

@@ -71,10 +71,10 @@ properties to add to the result.
 
 \[Taken from XEmacs source 21.5.9]"
     (let ((str (copy-sequence string)))
-            (add-text-properties 0 (length str)
-                                 properties
-                                 str)
-            str))
+      (add-text-properties 0 (length str)
+                           properties
+                           str)
+      str))
   )
 
 ;;; ***************************************************************************
@@ -90,7 +90,7 @@ properties to add to the result.
 (defvar tnt-permit-list nil)
 (defvar tnt-deny-list nil)
 
-(defvar tnt-event-ring nil)  ; (buffer-name . (message . callback))
+(defvar tnt-event-ring nil)     ; (buffer-name . (message . callback))
 
 ;;; **************************************************************************
 ;;; ***** Custom support - james@ja.ath.cx
@@ -168,12 +168,12 @@ not stored here, you will be prompted."
 ;; ---------------------------------------------------------------------------
 ;; ----- mode line
 ;; ---------------------------------------------------------------------------
- (defun tnt-customize-mode-line-setting (symbol newval)
-   (set-default symbol newval)
+(defun tnt-customize-mode-line-setting (symbol newval)
+  (set-default symbol newval)
 
-   (when tnt-current-user
-     (tnt-set-mode-string)
-     (force-mode-line-update)))
+  (when tnt-current-user
+    (tnt-set-mode-string)
+    (force-mode-line-update)))
 
 ;; ...........................................................................
 (defcustom tnt-mode-indicator 'nick
@@ -440,6 +440,12 @@ have been sent, you can't change them."
 ;; ---------------------------------------------------------------------------
 (defcustom tnt-inhibit-key-bindings nil
   "If non-nil, do not set up default keybindings."
+  :type 'boolean
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-supress-pounce-when-away nil
+  "If non-nil, don't pounce if you're away."
   :type 'boolean
   :group 'tnt)
 
@@ -967,6 +973,7 @@ Defaults to 'monthly.
   (global-set-key "\C-xts" 'tnt-switch-user)
   (global-set-key "\C-xtA" 'tnt-away-toggle)
   (global-set-key "\C-xtP" 'tnt-pounce-add)
+  (global-set-key "\C-xtL" 'tnt-pounce-list)
   (global-set-key "\C-xtD" 'tnt-pounce-delete)
   (global-set-key "\C-xtM" 'tnt-toggle-email)
   (global-set-key "\C-xtm" 'tnt-mute)
@@ -977,20 +984,57 @@ Defaults to 'monthly.
 ;;; ***************************************************************************
 (defvar tnt-pounce-alist nil)
 
+;;; ***************************************************************************
+(defun tnt-pounce-dwim (&optional pnick)
+  "Pounce do-what-I-mean.
 
-;;; Pounce Code
-(defun tnt-pounce-add ()
-  "Allows a user to store a pounce message for a buddy"
+Pounce if I have no pounce message currently for that Buddy, or delete
+the current pounce message if I do have one.
+
+PNICK - optional Buddy nickname (will be prompted for a Buddy's name
+if nil)"
+  (interactive)
+  (let ((nick pnick))
+    (when (and (not nick)
+               (eq major-mode 'tnt-buddy-list-mode))
+      ;; get nick on this line
+      (setq nick (toc-normalize (tnt-get-buddy-at-point))))
+
+    (unless nick
+      (setq nick (toc-normalize
+                  (completing-read "Buddy name: "
+                                   (mapcar 'list
+                                           (tnt-extract-normalized-buddies
+                                            tnt-buddy-blist))
+                                   ))))
+
+    ;; do something with it
+    (if (assoc nick tnt-pounce-alist)
+        (tnt-pounce-delete nick)
+      (tnt-pounce-add nick))
+    ))
+
+;;; ***************************************************************************
+(defun tnt-pounce-add (&optional pnick)
+  "Allows a user to store a pounce message for a buddy.
+
+PNICK - optional Buddy nickname (will be prompted for a Buddy's name
+if nil)"
   (interactive)
   (let* ((completion-ignore-case t)
-         (nick (toc-normalize (completing-read "Buddy to Pounce on: "
-                                               (mapcar 'list
-                                                       (tnt-extract-normalized-buddies
-                                                        tnt-buddy-blist)))))
-         (msg_tmp (read-from-minibuffer "Message to send (enter for none): "))
+         (nick (or pnick
+                   (toc-normalize
+                    (completing-read "Buddy to Pounce on: "
+                                     (mapcar 'list
+                                             (tnt-extract-normalized-buddies
+                                              tnt-buddy-blist))))))
+         (msg_tmp (read-from-minibuffer "Pounce message to send (enter for none): "))
          (msg (if (string= msg_tmp "") "" msg_tmp)))
     (setq tnt-pounce-alist (tnt-addassoc nick msg tnt-pounce-alist))
-    (message "%s has been added to your pounce list" nick)))
+    (message "%s has been added to your pounce list" nick)
+
+    (tnt-build-buddy-buffer)
+    ))
 
 ;;; ***************************************************************************
 (defun tnt-pounce-delete (&optional nick)
@@ -1004,29 +1048,73 @@ if nil)"
     (if (not nick)
         (let* ((completion-ignore-case t))
           (setq nick (toc-normalize (completing-read "Delete pounce for user: "
-                                                     tnt-pounce-alist)))))
+                                                     tnt-pounce-alist nil t)))))
     (if (not (assoc nick tnt-pounce-alist))
         (message "There is no pounce stored for %s" nick)
       (progn
         (setq tnt-pounce-alist (tnt-remassoc nick tnt-pounce-alist))
         (message "The pounce for %s has been deleted." nick))
+
+      (tnt-build-buddy-buffer)
       )))
 
+;;; ***************************************************************************
+(defun tnt-pounce-list ()
+  "List current pounce message in new buffer."
+  (interactive)
+  (let ((pounce-alist tnt-pounce-alist)
+        (fmt "%-16s   %s\n")
+        current)
+    (with-output-to-temp-buffer "*tnt pounce list*"
+      (with-current-buffer standard-output
+        (insert (format fmt "Buddy" "Pounce Message"))
+        (insert (format fmt "-----" "--------------"))
+
+        (if (> (length pounce-alist) 0)
+            (while pounce-alist
+              (setq current (car pounce-alist))
+              (setq pounce-alist (cdr pounce-alist))
+
+              (insert (format fmt (car current) (cdr current)))
+              )
+          (insert (format fmt "<none>" "")))
+        ))
+    ))
+
+;;; ***************************************************************************
 (defun tnt-send-pounce (user)
-  (let* ((msg (cdr (assoc user tnt-pounce-alist)))
-         (ourmsg (if (string= msg "")
-                     (format "<POUNCE MSG> %s is now available" user) msg)))
-    (if msg
-        (let ((buffer (tnt-im-buffer user))
-              (buffer-name (tnt-im-buffer-name user)))
-          (toc-send-im user msg)
-          (tnt-append-message-and-adjust-window buffer ourmsg
-                                                tnt-current-user)
-          (tnt-beep tnt-beep-on-incoming-message)
-          (tnt-push-event (format "You have pounced on %s" user)
-                          buffer-name nil)
-          (tnt-pounce-delete user))
-      )))
+  "Send any queued pounce messages to USER."
+  (unless (and tnt-away tnt-supress-pounce-when-away)
+    (let* ((msg (cdr (assoc user tnt-pounce-alist)))
+           (ourmsg (if (string= msg "")
+                       (format "<POUNCE MSG> %s is now available" user) msg)))
+      (if msg
+          (let ((buffer (tnt-im-buffer user))
+                (buffer-name (tnt-im-buffer-name user)))
+            (toc-send-im user msg)
+            (tnt-append-message-and-adjust-window buffer ourmsg
+                                                  tnt-current-user)
+            (tnt-beep tnt-beep-on-incoming-message)
+            (tnt-push-event (format "You have pounced on %s" user)
+                            buffer-name nil)
+            (tnt-pounce-delete user))
+        ))
+    ))
+
+;;; ***************************************************************************
+(defun tnt-send-pending-pounces-maybe ()
+  ""
+  (let ((pounce-list tnt-pounce-alist)
+        current nick)
+    (while pounce-list
+      (setq current (car pounce-list))
+      (setq pounce-list (cdr pounce-list))
+
+      (setq nick (car current))
+
+      (when (tnt-buddy-status nick)
+        (tnt-send-pounce nick)))
+    ))
 
 ;;; ***************************************************************************
 ;;; ***** Keepalive/Away Packages - jnwhiteh@syr.edu
@@ -1069,8 +1157,9 @@ if nil)"
   (let ((away tnt-away))
     (setq tnt-away nil)
     (setq tnt-last-away-sent nil)
-    (if away
-        (message "You have returned."))
+    (when away
+      (message "You have returned.")
+      (tnt-send-pending-pounces-maybe))
     (toc-set-away nil)
     (tnt-set-online-state t)
     )
@@ -1692,6 +1781,8 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "i" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map "I" 'tnt-fetch-info)
   (define-key tnt-buddy-list-mode-map "J" 'tnt-join-chat)
+  (define-key tnt-buddy-list-mode-map "l" 'tnt-pounce-dwim)
+  (define-key tnt-buddy-list-mode-map "L" 'tnt-pounce-list)
   (define-key tnt-buddy-list-mode-map "n" 'tnt-next-buddy)
   (define-key tnt-buddy-list-mode-map "N" 'tnt-next-group)
   (define-key tnt-buddy-list-mode-map "p" 'tnt-prev-buddy)
