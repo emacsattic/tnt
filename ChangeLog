@@ -1,3 +1,42 @@
+2001-06-22  Scott Evans  <gse@antisleep.com>
+
+	* tnt.el misc changes:
+	(tnt-auto-reconnect): Added user-configurable variable.	
+	(tnt-running-xemacs): Added variable.	
+	
+	* tnt.el read-only bugfix:
+	(tnt-append-message): Use put-nonduplicable-text-property
+	to add read-only property on XEmacs.  This fixes a bug: previously
+	you couldn't copy text from an IM buffer if you were running on
+	XEmacs for NT.  The copy routine tried to strip out ^M's but the
+	extent being copied was read-only so it broke.  Dumb.  I'm going
+	to report this as a bug.
+	(tnt-im-buffers-read-only): Added user-configurable variable.
+
+	* tnt.el Added some basic contact info to the top comments.
+
+	* tnt.el Moved (provide 'tnt) to bottom of file.
+
+	* tnt.el Use tnt-timestamp-format in signon/signoff messages.
+
+	* tnt.el Sound support
+	Big changes.  Beep variables can now be set to filenames
+	specifying soundfiles to play.  XEmacs uses built-in sound
+	support; FSF uses a refactored/extended version of Jim's code.
+	Changed the names of some of the beep variables to make them
+	consistent; this needs to be mentioned in release notes.
+	Also added beeps that run at login/logoff, as well as one
+	the first time you get a message from someone.
+
+	* tnt.el logon timers
+	(tnt-login-flag-timer): Created variable to track this timer so we
+	could cancel it if users log off quickly.  Did this while chasing
+	a bug: I was getting "xxxx online" messages and sounds during
+	login, which the tnt-login-flag is supposed to fix.  It turns out
+	that run-at-time doesn't work on XEmacs and the function executes
+	immediately.  So this will remain broken on XEmacs but I left in
+	the timer variable anyway 'cause it's a good idea.
+	
 2001-06-20  NeilFred Picciotto  <fred@guido.derf.net>
 
 	* tnt.el (tnt-reconnecting-idle-time): added.  allows

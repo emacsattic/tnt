@@ -29,13 +29,21 @@
 ;;;; or in the design, construction, operation or maintenance of any nuclear
 ;;;; facility. Licensee represents and warrants that it will not use or
 ;;;; redistribute the Software for such purposes.
-
-;;;; TODO:
+;;;;
+;;;; ----------------------------------------------------------------------
+;;;; INSTALLATION
+;;;;   There is a separate "INSTALL" document.  Read that.
+;;;;
+;;;; LATEST VERSION
+;;;;   The TNT project is hosted at Source Forge:
+;;;;   http://sourceforge.net/projects/tnt
+;;;; ----------------------------------------------------------------------
+;;;;
+;;;; todo:
 ;;;;   implement permit/deny
 ;;;;   point reset by erase-buffer to beginning of buddy buffer during update
 ;;;;   consider using use-hard-newlines variable
 
-(provide 'tnt)
 (require 'toc)
 
 ;; only using cl functions in one place...  maybe we should just
@@ -57,6 +65,10 @@
 
 ; check whether this version of emacs has the "run-at-time" function
 (defvar tnt-timers-available (fboundp 'run-at-time))
+
+(defconst tnt-running-xemacs (string-match "XEmacs" (emacs-version))
+  "Non-nil if we are running in XEmacs.")
+
 
 ; these may be changed, but rather than changing them here, use
 ; (setq <variablename> <value>) in your .emacs file.  see INSTALL
@@ -121,49 +133,183 @@ This can be an expression such as the default somewhat how one would
 bind a function to a key or it may be a string.  Note that the function
 must return a string.")
 
-(defvar tnt-beep-on-message-available-event 'current
+
+;;;---------------------------------------------------------------------------
+;;; Beep/Sound settings
+;;;---------------------------------------------------------------------------
+;;; Sound support is built in to XEmacs, so it'll likely work better there.
+
+(defvar tnt-sound-exec nil
+  "*On non-XEmacs systems, the executable used to play sounds.  Program's
+final argument should be the filename of the sound to play.  Other options
+can be specified with tnt-sound-exec-args.
+
+For instance, on Windows you might do:
+  (setq tnt-sound-exec \"sndrec32.exe\")
+  (setq tnt-sound-exec-args
+        (list \"/play\" \"/close\" \"/embedding\"))
+")
+
+(defvar tnt-sound-exec-args nil
+  "*On non-XEmacs systems, a list of strings representing the arguments
+to be passed to tnt-sound-exec.
+
+For instance, on Windows you might do:
+  (setq tnt-sound-exec \"sndrec32.exe\")
+  (setq tnt-sound-exec-args
+        (list \"/play\" \"/close\" \"/embedding\"))
+")
+
+(defvar tnt-beep-on-incoming-message 'current
   "*If non-nil, beeps when giving the \"Message from ... available\" message.
 
-If set to 'visible, uses a visible bell.  If set to 'audible, uses an
-audible bell.  If set to 'current, uses whatever emacs is currently
-set to use (visible or audible).  If set to nil, does not beep.
-
-Note that the value here is also used when receiving a chat
-invitation.
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
 ")
 
-(defvar tnt-beep-on-message-in-visible-buffer nil
+(defvar tnt-beep-on-first-incoming-message nil
+  "*If non-nil, beeps the first time an incoming message comes from
+someone (i.e. that buffer doesn't exist).
+
+If nil, the value of tnt-beep-on-incoming-message is used instead.
+
+Settings:
+ nil        Use the value of tnt-beep-on-incoming-message.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
+")
+
+(defvar tnt-beep-on-visible-incoming-message nil
   "*If non-nil, beeps every time a message comes into a visible IM buffer.
 
-If set to 'visible, uses a visible bell.  If set to 'audible, uses an
-audible bell.  If set to 'current, uses whatever emacs is currently
-set to use (visible or audible).  If set to nil, does not beep.
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
 ")
 
-(defvar tnt-beep-on-buddy-signonoff nil
-  "*If non-nil, beeps when buddies sign on or off.
+(defvar tnt-beep-on-outgoing-message nil
+  "*If non-nil, beep when you send a message.  I have no idea why
+anyone would want to use this.
 
-If set to 'visible, uses a visible bell.  If set to 'audible, uses an
-audible bell.  If set to 'current, uses whatever emacs is currently
-set to use (visible or audible).  If set to nil, does not beep.
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
+")
+
+(defvar tnt-beep-on-buddy-signon nil
+  "*If non-nil, beeps when buddies sign on.
+
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
 
 Note that whatever value this variable has, you will still get
 messages in your minibuffer saying \"MyBuddy online\" and \"MyBuddy
 offline\".
 ")
 
+(defvar tnt-beep-on-buddy-signoff nil
+  "*If non-nil, beeps when buddies sign off.
+
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
+
+Note that whatever value this variable has, you will still get
+messages in your minibuffer saying \"MyBuddy online\" and \"MyBuddy
+offline\".
+")
+
+(defvar tnt-beep-on-signon nil
+  "*If non-nil, beeps when you sign on.
+
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
+")
+
+(defvar tnt-beep-on-signoff nil
+  "*If non-nil, beeps you sign off or get disconnected.
+
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
+")
+
+
 (defvar tnt-beep-on-error 'current
   "*If non-nil, beeps when an error occurs.
 
-If set to 'visible, uses a visible bell.  If set to 'audible, uses an
-audible bell.  If set to 'current, uses whatever emacs is currently
-set to use (visible or audible).  If set to nil, does not beep.
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
 ")
-  
+
+(defvar tnt-beep-on-chat-invitation 'current
+  "*If non-nil, beeps when you are invited to a chatroom.
+
+Settings:
+ nil        Do not beep.
+ 'visible   Visible bell.
+ 'audible   Audible bell.
+ 'current   Current emacs setting (visible or audible).
+ filename   You can also set this value to a string, which is the
+            filename of a soundfile to play.  On non-XEmacs systems,
+            you'll need to set tnt-sound-exec.
+")
+
+;;; end sound settings
+
+;;;---------------------------------------------------------------------------
 
 (defvar tnt-message-on-buddy-signonoff t
-  "*If non-nil, a minibuffer message appears when buddies sign on and off.")
-
+  "*If non-nil, a minibuffer message appears when buddies sign on and off.
+")
 
 (defvar tnt-message-on-chatroom-message t
   "*If non-nil, a minibuffer message (and a beep, depending on your 'beep'
@@ -187,7 +333,8 @@ when already in the *buddies* buffer.
   "*If non-nil, tells TOC server when emacs has been idle for 10 minutes.")
 
 (defvar tnt-directory "~/.tnt"
-  "*The directory tnt will use to store data.")
+  "*The directory tnt will use to store data.
+")
 
 (defvar tnt-buddy-list-backup-filename "%s-buddies"
   "*If non-nil, tnt will backup buddy list into this file.
@@ -219,6 +366,17 @@ Note that you only need to set this if you're using the pipe-to-email
 feature.  defaults to /bin/mail
 ")
 
+(defvar tnt-im-buffers-read-only t
+  "*Non-nil means that TNT buffers will be read-only (except for the
+current message being typed).  That is, once messages have been sent,
+you can't change them.
+")
+
+(defvar tnt-auto-reconnect t
+  "*Non-nil means that TNT will attempt to reconnect if the connection
+goes away.
+")
+
 ;;;---------------------------------------------------------------------------
 ;;;  Custom support - james@ja.ath.cx
 ;;;---------------------------------------------------------------------------
@@ -228,7 +386,7 @@ feature.  defaults to /bin/mail
 
 (require 'custom)
 (defgroup tnt nil "The TNT AIM Client" :group 'comm)
-(defface tnt-my-name-face '((((class color)) (:foreground "red")) 
+(defface tnt-my-name-face '((((class color)) (:foreground "red"))
                             (t (:bold t)))
   "The face used for my name on messages sent by this user"
   :group 'tnt)
@@ -244,8 +402,8 @@ feature.  defaults to /bin/mail
 This variable holds the format string containing exactly one %s to
 be replaced with the message sans the \"/me \" which will replace
 the message and be sent.  This will also be done on incoming messages.
-This value may be nil to prevent any such action." 
-  :type 'string 
+This value may be nil to prevent any such action."
+  :type 'string
   :group 'tnt)
 
 (defcustom tnt-datestamp-format "%Y %b %d"
@@ -268,7 +426,7 @@ default of \"%T \" gives a 24 hour format"
 (defcustom tnt-persistent-timeout 5
   "*Timeout between redisplays of persistent messages.
 
-This number is the time between redisplays of messages created with 
+This number is the time between redisplays of messages created with
 tnt-persistent-message.  It should not be too small as you'd never see anything
 else in the minibuffer but it should be sufficiently small to allow you to see
 the message now and then until you notice it.  If set to nil or < 1, persistent
@@ -319,38 +477,6 @@ messages are disabled."
 
 
 ;;;---------------------------------------------------------------------------
-;;;  Sound Package - jnwhiteh@syr.edu
-;;;---------------------------------------------------------------------------
-;;;  This code is very specific, and will be used to play sounds when a user
-;;;  IM's you, when you IM a user, etc.  Eventully I will add signon sounds
-;;;  as well.  This will be disabled by default.
-
-(defvar tnt-sound-exec nil) ;; Set this to the executable to play sounds
-(defvar tnt-inwav nil)      ;; This is the IM sound to receive IM's
-(defvar tnt-outwav nil)     ;; This is the IM sound when you send IM's
-(defvar tnt-firstwav nil)   ;; This is the Sound when you FIRST receive an IM
-                            ;; from a user (meaning their buffer doesn't exist)
-
-(defun tnt-play-sound (event)
-  (let ((proc-name "sound-process")
-        (proc-out-buf "*sound-output*")
-        (process-connection-type nil)
-        (wavfile (if (string= event 'incoming) tnt-inwav 
-                   (if (string= event 'outgoing) tnt-outwav 
-                     (if (string= event 'first) tnt-firstwav nil)))))
-    (if (and wavfile tnt-sound-exec)
-        ;; similar code to this could be used to pipe to something else
-        (progn
-          (start-process proc-name proc-out-buf
-                         ;; put executable here:
-                         tnt-sound-exec
-                         ;; and now any cmd-line args:
-                         wavfile)
-          (process-send-eof proc-name)))))
-
-
-
-;;;---------------------------------------------------------------------------
 ;;;  Pounce Package - jnwhiteh@syr.edu
 ;;;---------------------------------------------------------------------------
 
@@ -382,14 +508,14 @@ messages are disabled."
                                                      tnt-pounce-alist)))))
   (if (not (assoc nick tnt-pounce-alist))
       (message "There is no pounce stored for %s" nick)
-    (progn 
+    (progn
       (setq tnt-pounce-alist (tnt-remassoc nick tnt-pounce-alist))
       (message "The pounce for %s has been deleted." nick))
     )))
 
 (defun tnt-send-pounce (user)
    (let* ((msg (cdr (assoc user tnt-pounce-alist)))
-          (ourmsg (if (string= msg "") 
+          (ourmsg (if (string= msg "")
                       (format "<POUNCE MSG> %s is now available" user) msg)))
      (if msg
          (let ((buffer (tnt-im-buffer user)))
@@ -552,7 +678,9 @@ messages are disabled."
       (error "Already offline")
     (toc-close)
     (tnt-shutdown)
-    (message "Signed off")))
+    (message "Signed off")
+    (tnt-beep tnt-beep-on-signoff)
+    ))
 
 
 (defun tnt-switch-user ()
@@ -649,10 +777,10 @@ Special commands:
     (tnt-remove-im-event tnt-im-user)
     (if tnt-away (message "Reminder: You are still set as away"))
     (if tnt-recenter-windows (recenter -1))
-    (if (string= message "") () 
-      (progn (toc-send-im tnt-im-user message)
-             (tnt-play-sound 'outgoing)))))
-
+    (if (string= message "") ()
+      (progn
+        (toc-send-im tnt-im-user message)
+        (tnt-beep tnt-beep-on-outgoing-message)))))
 
 
 (defun tnt-show-help ()
@@ -737,7 +865,7 @@ Special commands:
       (error "You must be online to join a chat room.")
     (let* ((input (or (and (stringp room) room)
                       (and (boundp 'tnt-chat-room) tnt-chat-room)
-                      (tnt-read-string-with-default "Join chat room" 
+                      (tnt-read-string-with-default "Join chat room"
                                             (eval tnt-default-chatroom)))))
       (toc-chat-join input)
       (switch-to-buffer (tnt-chat-buffer input)))))
@@ -774,6 +902,7 @@ Special commands:
             (add-hook 'kill-buffer-hook 'tnt-chat-buffer-killed nil t)
             (setq tnt-chat-room room)
             (setq tnt-chat-participants nil)
+            (setq tnt-last-datestamp (format-time-string tnt-datestamp-format))
             (setq tnt-message-marker (make-marker))
             (insert (format "[Chat room \"%s\" on %s]%s"
                             room (current-time-string) tnt-separator))
@@ -817,15 +946,15 @@ Special commands:
   (let ((user-list
          (if (and (listp users) users)
              users
-           
+
            ;; replace (buddy-list) groups in the user-list with the
            ;; members of those groups who are online, and not already
            ;; in the chat, then prompt again to confirm.
-           
+
            (let ((completion-ignore-case t)
                  (user-list-typed '(""))
                  (user-list-processed nil))
-             
+
              (while (not (equal user-list-typed user-list-processed))
                (setq user-list-typed (tnt-completing-read-list
                                       "Users to invite: "
@@ -838,9 +967,9 @@ Special commands:
              user-list-processed)
            )
          ))
-    
+
     (if user-list
-        
+
         (let (msg (tnt-get-input-message))
           (if (= (length msg) 0)
               (setq msg (read-from-minibuffer "Message: "
@@ -871,7 +1000,7 @@ Special commands:
       (toc-chat-accept tnt-chat-roomid)))
 
 (defun tnt-expand-groups-for-chat-invitation (user-list exclude-list)
-  (remove-duplicates 
+  (remove-duplicates
    (apply 'append
     (mapcar (lambda (name)
               (let ((group (assoc name tnt-buddy-blist)))
@@ -924,7 +1053,7 @@ Special commands:
 
       (if tnt-use-timestamps
           (insert-before-markers (format-time-string tnt-timestamp-format)))
-      
+
       (if (not user)
           (insert-before-markers "[" (tnt-replace-me-statement message) "]")
 
@@ -938,14 +1067,28 @@ Special commands:
               (add-text-properties start (point) '(face tnt-my-name-face))
             (add-text-properties start (point) '(face tnt-other-name-face)))
           (insert-before-markers " " (tnt-replace-me-statement message))))
-      
+
       (insert-before-markers tnt-separator)
       (fill-region old-point (point))
-      (let ((old-inhibit inhibit-read-only))
-        (setq inhibit-read-only t)
-        (add-text-properties 1 (point) '(read-only t front-sticky t rear-sticky t))
-        (add-text-properties (- (point) 1) (point) '(rear-nonsticky t))
-        (setq inhibit-read-only old-inhibit)))))
+
+      ;; Make inserted text read-only.  I'm not really sure why we
+      ;; need the inhibit-read-only code; IM buffers should never be
+      ;; read-only (right?).
+      (if tnt-im-buffers-read-only
+          (let ((old-inhibit inhibit-read-only))
+            (setq inhibit-read-only t)
+            ;; gse: These need to be different in FSF/XEmacs.
+            ;; XEmacs 21.4 on MS-Windows breaks if you try to copy
+            ;; text that has a read-only property -- the copy routine
+            ;; tries to strip out ^M's and the text is read-only.
+            ;; Duh.  Using put-nonduplicable-text-property seems to
+            ;; fix it.  Of course that doesn't exist on FSF.
+            (if tnt-running-xemacs
+                (put-nonduplicable-text-property (point-min) (point) 'read-only t)
+              (add-text-properties 1 (point) '(read-only t front-sticky t rear-sticky t))
+              (add-text-properties (- (point) 1) (point) '(rear-nonsticky t)))
+            (setq inhibit-read-only old-inhibit)))
+      )))
 
 (defun tnt-replace-me-statement (message)
   (when tnt-me-statement-format
@@ -979,6 +1122,8 @@ Special commands:
 
 (defvar tnt-buddy-update-timer nil)
 (defvar tnt-buddy-update-interval 60)
+
+(defvar tnt-login-flag-timer nil)
 
 (defvar tnt-buddy-list-point 0)
 
@@ -1041,7 +1186,7 @@ Special commands:
   (let ((buffer (tnt-buddy-buffer)))
     (with-current-buffer buffer
       (let* ((buffer-read-only nil))
-        
+
         (erase-buffer)
         (tnt-blist-to-buffer tnt-buddy-blist
                              'tnt-buddy-list-filter)
@@ -1180,6 +1325,8 @@ Special commands:
   (setq tnt-buddy-update-timer nil)
   (if tnt-idle-timer (cancel-timer tnt-idle-timer))
   (setq tnt-idle-timer nil)
+  (if tnt-login-flag-timer (cancel-timer tnt-login-flag-timer))
+  (setq tnt-login-flag-timer nil)
 
   (setq tnt-current-user nil
         tnt-buddy-alist nil
@@ -1196,9 +1343,8 @@ Special commands:
   ;; this needs to happen after the current-user is set to nil, so it
   ;; knows we're no longer online
   (if tnt-currently-idle (tnt-send-unidle))
-  
-  (tnt-build-buddy-buffer))
 
+  (tnt-build-buddy-buffer))
 
 (defun tnt-set-buddy-status (nick onlinep idle away)
   (let ((nnick (toc-normalize nick))
@@ -1208,16 +1354,23 @@ Special commands:
                       (- (cadr (current-time))
                          (* 60 idle))))
         (state (if onlinep "online" "offline")))
+
+    ;; This part doesn't work on XEmacs.  tnt-login-flag never stays
+    ;; set because run-at-time is broken on XEmacs and runs right
+    ;; away.  Grrrrrrr.
     (if (and (not tnt-login-flag)
              (not (string= status (tnt-buddy-status nick))))
         (progn
-          (tnt-beep tnt-beep-on-buddy-signonoff)
+          ;; Beep appropriately.
+          (if onlinep
+              (tnt-beep tnt-beep-on-buddy-signon)
+            (tnt-beep tnt-beep-on-buddy-signoff))
           (let ((buffer (get-buffer (tnt-im-buffer-name nick))))
             (if buffer
                     (with-current-buffer buffer
                       (tnt-append-message (format "%s %s" nick state)))))
 
-          (if tnt-message-on-buddy-signonoff 
+          (if tnt-message-on-buddy-signonoff
               (message "%s %s" nick state))
 
           (if tnt-timers-available (tnt-set-just-signedonoff nnick onlinep))
@@ -1226,7 +1379,7 @@ Special commands:
     (let ((just-onoff (assoc nick tnt-just-signedonoff-alist))
           (buffer (get-buffer (tnt-im-buffer-name nick))))
         (if (and away (not just-onoff))
-            (if buffer 
+            (if buffer
                 (with-current-buffer buffer
                   (tnt-append-message (format "%s has gone away." nick))))))
 
@@ -1416,7 +1569,7 @@ Special commands:
         (error (format "directory %s not accessible" tnt-directory))
       (if (null tnt-buddy-list-backup-filename)
           (error "variable tnt-buddy-list-backup-filename undefined")
-        
+
         (let ((filename (format "%s/%s"
                                 tnt-directory
                                 (format tnt-buddy-list-backup-filename
@@ -1453,7 +1606,7 @@ Special commands:
             (message "")
             (rename-buffer tnt-buddy-edit-buffer-name)
             ))))))
- 
+
 
 ;;;----------------------------------------------------------------------------
 ;;; Buddy utilities
@@ -1660,9 +1813,9 @@ Special commands:
   (if tnt-just-reconnected
       (progn
         (tnt-shutdown)
-        (tnt-error "TNT connection closed immediately on reconnect")
-        )
-    
+        (tnt-error "TNT connection closed immediately on reconnect"))
+
+
     ;; save these values -- NOTE: must be done before tnt-shutdown
     (setq tnt-reconnecting-away tnt-away)
     (setq tnt-reconnecting-away-msg tnt-away-msg)
@@ -1677,17 +1830,24 @@ Special commands:
                                      "TNT connection closed by server"))
 
     ;; error
-    (tnt-error (format-time-string (concat "TNT connection closed [%T]")))
+    ;; Use (error) instead of (tnt-error) so that no error sound
+    ;; gets generated -- we want to use the signoff sound here.
+    (error (format-time-string (concat tnt-timestamp-format "TNT connection closed")))
+    (tnt-beep tnt-beep-on-signoff)
+
 
     ;; and finally, attempt to reconnect
-    (setq tnt-reconnecting t)
-    (message "Trying to reconnect...")
-    (tnt-open tnt-username tnt-password)
+    (if tnt-auto-reconnect
+        (progn
+          (setq tnt-reconnecting t)
+          (message "Trying to reconnect...")
+          (tnt-open tnt-username tnt-password)))
     )
   )
 
 (defun tnt-handle-sign-on (version)
-  (message (format-time-string (concat "Signed on [%T]")))
+  (message (format-time-string (concat tnt-timestamp-format "Signed on")))
+  (tnt-beep tnt-beep-on-signon)
   (if tnt-use-keepalive
       (setq tnt-keepalive-timer
             (tnt-repeat tnt-keepalive-interval 'toc-keepalive)))
@@ -1697,8 +1857,8 @@ Special commands:
   (if tnt-timers-available
       (progn
         (setq tnt-login-flag t)
-        (run-at-time tnt-login-flag-unset-after nil
-                     'tnt-unset-login-flag)))
+        (setq tnt-login-flag-timer (run-at-time tnt-login-flag-unset-after nil
+                                                'tnt-unset-login-flag))))
   (if tnt-use-idle-timer
       (setq tnt-idle-timer (run-with-idle-timer tnt-send-idle-after t
                                                 'tnt-send-idle)))
@@ -1736,7 +1896,7 @@ Special commands:
             (tnt-set-away tnt-reconnecting-away-msg))
         (if tnt-reconnecting-idle-time
             (tnt-send-idle tnt-reconnecting-idle-time))
-        
+
         (setq tnt-reconnecting-away nil)
         (setq tnt-reconnecting-away-msg nil)
         (setq tnt-reconnecting-idle-time nil)
@@ -1755,25 +1915,26 @@ Special commands:
 (defun tnt-handle-im-in (user auto message)
   (let* ((buffer-exists (get-buffer (tnt-im-buffer-name user)))
          (buffer (tnt-im-buffer user)))
-        
+
     (tnt-append-message-and-adjust-window
      buffer message user (if auto "(Auto-response)"))
 
     (if (and tnt-email-to-pipe-to
              tnt-pipe-to-email-now)
         (tnt-pipe-message-to-program user message))
-    
-    (if buffer-exists (tnt-play-sound 'incoming)
-      (tnt-play-sound 'first))
 
     (if (get-buffer-window buffer 'visible)
-
         (progn
-          (tnt-beep tnt-beep-on-message-in-visible-buffer)
-          (tnt-remove-im-event user)
-          )
-      
-      (tnt-beep tnt-beep-on-message-available-event)
+          (tnt-beep tnt-beep-on-visible-incoming-message)
+          (tnt-remove-im-event user))
+
+      ;; Buffer is not visible.  If it didn't exist, this is a "first"
+      ;; message from that user.  Check to see if first message sound
+      ;; is non-nil and use it if so.
+      (if (and (not buffer-exists) tnt-beep-on-first-incoming-message)
+          (tnt-beep tnt-beep-on-first-incoming-message)
+        (tnt-beep tnt-beep-on-incoming-message))
+
       (tnt-push-event (format "Message from %s available" user)
                       (tnt-im-buffer-name user) nil))
 
@@ -1906,10 +2067,10 @@ Special commands:
              (not (string-equal user tnt-current-user)))
         (if (get-buffer-window buffer 'visible)
             (progn
-              (tnt-beep tnt-beep-on-message-in-visible-buffer)
+              (tnt-beep tnt-beep-on-visible-incoming-message)
               (tnt-remove-im-event user))
           (progn
-            (tnt-beep tnt-beep-on-message-available-event)
+            (tnt-beep tnt-beep-on-incoming-message)
             (tnt-push-event (format "Chat message from %s available" user)
                             buffer nil))))))
 
@@ -1935,7 +2096,7 @@ Special commands:
       (tnt-append-message (tnt-reformat-text message) sender "invitation"))
     (tnt-push-event (format "Chat invitation from %s arrived" sender)
                     buffer 'tnt-chat-event-pop-function)
-    (tnt-beep tnt-beep-on-message-available-event)
+    (tnt-beep tnt-beep-on-chat-invitation)
     ))
 
 (defun tnt-handle-goto-url (windowid url)
@@ -2011,6 +2172,30 @@ of the list, delimited by commas."
      ((eq flag t)
       (all-completions last-word collection pred)))))
 
+
+;;;---------------------------------------------------------------------------
+;;; Beep/Sound support (gse)
+;;;---------------------------------------------------------------------------
+
+(defun tnt-play-sound (sound-file)
+  "On non-XEmacs systems, requires that tnt-sound-exec be set."
+  (if (file-readable-p sound-file)
+      (if tnt-running-xemacs
+          (play-sound-file sound-file)
+
+        ;; On non-XEmacs systems, use Jim's code.
+        (let ((proc-name "sound-process")
+              (proc-out-buf "*sound-output*")
+              (process-connection-type nil))
+          (if tnt-sound-exec
+              (progn
+                (apply 'start-process
+                       proc-name proc-out-buf tnt-sound-exec
+                       (append tnt-sound-exec-args (list sound-file)))
+                (process-send-eof proc-name))
+            (message "Warning: tnt-sound-exec is not set"))))
+    (message "Warning: %s is not a readable file" sound-file)))
+
 (defun tnt-beep (beep-type)
   ;; beep-type      action
   ;; ---------      ------
@@ -2018,20 +2203,26 @@ of the list, delimited by commas."
   ;; 'visible       visible beep
   ;; 'audible       audible beep
   ;; 'current       whichever emacs is currently set to
-  (if beep-type
-      (if (or (eq beep-type 'visible)
-              (eq beep-type 'audible))
-          (let ((orig-visible visible-bell))
-            (setq visible-bell (eq beep-type 'visible))
-            (beep)
-            (setq visible-bell orig-visible))
-        (beep))))
+  ;; filename       audio file to play
+  (cond
+   ((or (eq beep-type 'visible) (eq beep-type 'audible))
+    (let ((orig-visible visible-bell))
+      (setq visible-bell (eq beep-type 'visible))
+      (beep)
+      (setq visible-bell orig-visible)))
+   ((eq beep-type 'current)
+    (beep))
+   ((stringp beep-type)
+    (tnt-play-sound beep-type))))
+
+;;---------------------------------------------------------------------------
 
 (defun tnt-read-string-with-default (p d)
   (let ((reply (read-string (format "%s (%s): " p d))))
     (if (equal reply "")
         d
       reply)))
+
 
 ;;;----------------------------------------------------------------------------
 ;;; String list utilities
@@ -2164,7 +2355,7 @@ of the list, delimited by commas."
       )
     (setq segs (cons (substring str start-index) segs))
     (apply 'concat (nreverse segs))))
-    
+
 
 (defun tnt-strip-html (str)
   ;; Strips all HTML tags out of STR.
@@ -2214,7 +2405,7 @@ of the list, delimited by commas."
           (tnt-strip-some-html (tnt-strip-a-href str)
                                (list tnt-html-tags-to-strip "")
                                )))
-  
+
 
 
 (defun tnt-repeat (interval function)
@@ -2269,3 +2460,7 @@ of the list, delimited by commas."
   (funcall f 'toc-chat-left-hooks 'tnt-debug)
   (funcall f 'toc-goto-url-hooks 'tnt-debug)
   (funcall f 'toc-pause-hooks 'tnt-debug))
+
+;;---------------------------------------------------------------------------
+
+(provide 'tnt)
