@@ -198,7 +198,7 @@
 (defvar tnt-last-away-sent nil)
 (defvar tnt-away-msg nil)
 (defvar tnt-away-alist nil)
-(defvar tnt-away 0)
+(defvar tnt-away nil)
 (defvar tnt-keepalive-timer nil)
 
 (defun tnt-keepalive ()
@@ -214,19 +214,19 @@
 (defun tnt-away-toggle ()
   "Toggles away or not, and sets message."
   (interactive)
-  (if (eq tnt-away 0)
-      (tnt-get-away-msg)
-    (tnt-not-away)))
+  (if tnt-away
+      (tnt-not-away)
+    (tnt-get-away-msg)))
 
 (defun tnt-not-away ()
   "Sets you as NOT away."
   (interactive)
   (let ((away tnt-away))
-    (setq tnt-away 0)
+    (setq tnt-away nil)
     (setq tnt-last-away-sent nil)
-    (if (eq away 1)
-    (message "You have returned."))
-    (tocstr-send (format "toc_set_away"))
+    (if away
+        (message "You have returned."))
+    (toc-set-away nil)
     (tnt-set-online-state t)
   )
 )
@@ -236,7 +236,7 @@
 (defun tnt-get-away-msg ()
   "Gets the away msg"
   (interactive)
-  (setq tnt-away 1)
+  (setq tnt-away t)
   (setq tnt-away-msg (read-from-minibuffer "Away Message: "
                                            (cons
                                             (if tnt-away-msg-history
@@ -246,7 +246,7 @@
                                            nil nil 'tnt-away-msg-history))
   (message "You are away: %s" tnt-away-msg)
   (message "Set as away: %s" tnt-away-msg)
-  (tocstr-send (format "toc_set_away %s" (toc-encode tnt-away-msg)))
+  (toc-set-away tnt-away-msg)
   (tnt-set-online-state t)
 )
 
@@ -294,7 +294,7 @@
   (if (null tnt-current-user)
       (error "Already offline")
     ;; gse addition: turn off "away" setting
-    (setq tnt-away 0)
+    (setq tnt-away nil)
     (toc-close)
     (tnt-set-online-state nil)
     (setq tnt-current-user nil)
@@ -399,7 +399,7 @@ Special commands:
   (let* ((message (tnt-get-input-message)))
     (if (string= message "") (message "Please enter a message to send")
       (tnt-append-message tnt-current-user message))
-    (if (eq tnt-away 1) (message "Reminder: You are still set as away") ())
+    (if tnt-away (message "Reminder: You are still set as away"))
     (if tnt-recenter-windows (recenter -1))
     (if (string= message "") () (toc-send-im tnt-im-user message))))
 
@@ -745,13 +745,12 @@ Special commands:
 				       (away (tnt-buddy-away nick)))
                                    (if unick (format "  %s%s%s" 
 	    unick 
-	    (if (eq away 1) 
+	    (if away
 		(if (> idle 0) (format " (away - %d)" idle)
 		  (format " (away)")) "")
 		  
-	    (if (> idle 0)
-		(if (eq away 0) 
-		    (format " (idle - %d)" idle) "") "" )
+	    (if (and (> idle 0) (not away))
+                (format " (idle - %d)" idle) "")
 	    )))))
 
         (set-buffer-modified-p nil))))
@@ -819,7 +818,7 @@ Special commands:
 	tnt-away-alist nil
 	tnt-idle-alist nil
 	tnt-pounce-list nil
-        tnt-away 0
+        tnt-away nil
         tnt-last-away-sent nil)
   (tnt-build-buddy-buffer))
 
@@ -830,21 +829,20 @@ Special commands:
          (pair2 (assoc nnick tnt-idle-alist))
          (pair3 (assoc nnick tnt-away-alist))
          (status (if onlinep nick))	 
-         (awayflag (if away away))
          (idletime (if onlinep idle))
          (old-status (and pair (cdr pair))))
     (if pair
-		(setcdr pair status)
+        (setcdr pair status)
       (setq tnt-buddy-alist (cons (cons nnick status)
-								  tnt-buddy-alist)))
+                                  tnt-buddy-alist)))
     (if pair2
-		(setcdr pair2 idletime)
+        (setcdr pair2 idletime)
       (setq tnt-idle-alist (cons (cons nnick idletime) tnt-idle-alist)))
-
+    
     (if pair3
-		(setcdr pair3 awayflag)
-      (setq tnt-away-alist (cons (cons nnick awayflag) tnt-away-alist)))
-
+        (setcdr pair3 away)
+      (setq tnt-away-alist (cons (cons nnick away) tnt-away-alist)))
+    
     ;; Online or not?
     (if (not (string= status old-status))
         (progn
@@ -1130,9 +1128,7 @@ Special commands:
   (setq tnt-mode-string (if is-online
 			    (concat " ["
 				    (format "%s" tnt-current-user)
-				    (if (eq 1 tnt-away)
-					":away"
-				      "")
+				    (if tnt-away ":away" "")
 				    "]")
 			  ""))
   (or global-mode-string
@@ -1145,7 +1141,7 @@ Special commands:
   (if (not (string= user tnt-last-away-sent))
       (let ((buffer (tnt-im-buffer user)))
 	(setq tnt-last-away-sent user)
-	(toc-send-im user tnt-away-msg 1)
+	(toc-send-im user tnt-away-msg t)
 	(tnt-append-message-and-adjust-window buffer
 					      (format "%s (Auto-response)"
 						      tnt-current-user)
@@ -1200,8 +1196,8 @@ Special commands:
   (if (or (string= away " UU")
 	  (string= away " OU")
  	  )
-      (tnt-set-buddy-status nick online idle 1)
-    (tnt-set-buddy-status nick online idle 0))
+      (tnt-set-buddy-status nick online idle t)
+    (tnt-set-buddy-status nick online idle nil))
   (if online
       (tnt-send-pounce (toc-normalize nick)))
   )
@@ -1227,7 +1223,7 @@ Special commands:
 	  (beep)
 	  (tnt-push-event (format "Message from %s available" user)
 			  (tnt-im-buffer-name user) nil)))
-    (if (eq tnt-away 1) (tnt-send-away-msg user))))
+    (if tnt-away (tnt-send-away-msg user))))
 
 
 

@@ -93,8 +93,9 @@
                        (toc-encode config))))
 
 (defun toc-set-away (message)
-  (tocstr-send (format "toc_set-away %s"
-	               (toc-encode message))))
+  (if message
+      (tocstr-send (concat "toc_set_away " (toc-encode message)))
+    (tocstr-send "toc_set_away")))
 
 
 (defun toc-send-im (user message &optional auto)

@@ -6,6 +6,10 @@ March 31, 2000 - Jim Whitehead
 
 March 31, 2000 - John Jannotti
 ------------------------------
+ - Made tnt-away and tnt-away-alist use t/nil instead of 1/0.  This
+   simplifies a lot of code that uses them.
+ - Fixed toc-set-away so that tnt.el doesn't need to call tocstr-send
+   directly anymore.
  - toc-{add,remove}-buddy - change names, simplify interface
  - funcall (switch-buffer-function), not apply
  - use tocstr-send-flap, not tocstr-send-flap1 in tnt-keepalive
