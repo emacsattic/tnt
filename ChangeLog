@@ -135,17 +135,10 @@
 
 	* toc.el (toc-set-away): Fixed a typo, so now tnt.el doesn't need
  	to call tocstr-send directly anymore.
-
-	* toc.el (toc-{add,remove}-buddy): change names, simplify interface
-
-	* tnt.el (tnt-show-help): funcall (switch-buffer-function), not
- 	apply
-
-	* tnt.el (tnt-keepalive): use tocstr-send-flap, not
- 	tocstr-send-flap1
-
-	* tnt.el (tnt-rotate-{left,right}): Simplified, sped up and
- 	docstringed.
+ 	(toc-{add,remove}-buddy): change names, simplify interface
+	(tnt-show-help): funcall (switch-buffer-function), not apply
+ 	(tnt-keepalive): use tocstr-send-flap, not tocstr-send-flap1
+ 	(tnt-rotate-{left,right}): Simplified, sped up and docstringed.
 
 	* tnt.el: Used emacs primitives instead of complicated code to
 	simplify toc-encode, toc-normalize, tnt-strip-html,
@@ -154,27 +147,17 @@
 	* tnt.el: Added tnt-separator variable
 
 	* tnt.el (tnt-send-away-msg): Was called send-away-msg.
-
-	* tnt.el (tnt-show-chat-participants,
- 	tnt-handle-chat-update-buddy): Use identity in calls to mapcar.
-
-	* tnt.el (tnt-set-buddy-status): removed format when using message
-	
-	* tnt.el (tnt-pounce-add): removed format when using message
-
-	* tnt.el (tnt-switch-user): removed format when using message
-
-
-	* tnt.el (tnt-participant-collection): use 'list in mapcar call
-
-	* tnt.el (tnt-buddy-status): Simplify
-
-	* tnt.el (tnt-buddy-idle): Simplify
-
-	* tnt.el (tnt-buddy-away): Simplify
-
-	* tnt.el (tnt-set-buddy-status): Eliminated unused old-idle and
- 	old-away bindings.
+	(tnt-show-chat-participants, tnt-handle-chat-update-buddy): Use
+ 	identity in calls to mapcar.
+	(tnt-set-buddy-status): removed format when using message
+	(tnt-pounce-add): removed format when using message
+	(tnt-switch-user): removed format when using message
+	(tnt-participant-collection): use 'list in mapcar call
+	(tnt-buddy-status): Simplify
+	(tnt-buddy-idle): Simplify
+	(tnt-buddy-away): Simplify
+	(tnt-set-buddy-status): Eliminated unused old-idle and old-away
+ 	bindings.
 
 2000-03-30 Jim Whitehead
 
