@@ -3296,7 +3296,6 @@ Special commands:
         (let* ((end (match-end 0))
                (code (match-string 1 config))
                (arg  (match-string 2 config)))
-(message "config code='%s' arg='%s'" code arg)
           (cond
            ((string-equal code "g")
             (setq blist (cons (list arg) blist)))
