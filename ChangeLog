@@ -1,3 +1,8 @@
+2005-08-22  Scott Evans  <gse@antisleep.com>
+
+	* tnt.el: updates for TOC2
+	* toc.el: updates for TOC2
+
 2004-09-17  NeilFred Picciotto  <fred@full.halflab.com>
 
 	* procmail/procmail-pipe-message-into-tnt.sh: new file, script for

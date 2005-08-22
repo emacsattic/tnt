@@ -1034,7 +1034,7 @@ Settings:
   :group 'tnt-advanced)
 
 ;; ---------------------------------------------------------------------------
-(defcustom tnt-toc-port 5190
+(defcustom tnt-toc-port 29999
   "TOC port # -- do NOT change unless you know what you're doing!"
   :type 'integer
   :group 'tnt-advanced)
@@ -1046,7 +1046,7 @@ Settings:
   :group 'tnt-advanced)
 
 ;; ---------------------------------------------------------------------------
-(defcustom tnt-login-port 5190
+(defcustom tnt-login-port 29999
   "TNT port # -- do NOT change unless you know what you're doing!"
   :type 'integer
   :group 'tnt-advanced)
@@ -3287,27 +3287,35 @@ Special commands:
 ;;; ***************************************************************************
 
 (defun tnt-config-to-blist (config)
+(save-excursion
+  (set-buffer (get-buffer-create "*gse-debug2*"))
+  (goto-char (point-max))
+  (insert "========= ENTER tnt-config-to-blist\n")
+  (insert config)
+  (insert "\n-------------------------\n"))
+
   (setq tnt-permit-list nil)
   (setq tnt-deny-list nil)
   (save-match-data
     (let ((index 0)
           (blist nil))
-      (while (and config (string-match ". [^\n]*\n" config index))
-        (let* ((beg (match-beginning 0))
-               (end (match-end 0))
-               (code (aref config beg))
-               (arg (substring config (+ beg 2) (- end 1))))
+      (while (and config (string-match "\\([^:]+\\):\\([^\n]*\\)\n" config index))
+        (let* ((end (match-end 0))
+               (code (match-string 1 config))
+               (arg  (match-string 2 config)))
+(message "config code='%s' arg='%s'" code arg)
           (cond
-           ((= code ?g)
+           ((string-equal code "g")
             (setq blist (cons (list arg) blist)))
-           ((= code ?b)
+           ((string-equal code "b")
             (setcar blist (cons arg (car blist))))
-           ((= code ?p)
+           ((string-equal code "p")
             (setq tnt-permit-list (cons arg tnt-permit-list)))
-           ((= code ?d)
+           ((string-equal code "d")
             (setq tnt-deny-list (cons arg tnt-deny-list)))
-           ((= code ?m)
+           ((string-equal code "m")
             (setq tnt-permit-mode (string-to-number arg))))
+           ;; last line should always be "done:" but that doesn't matter
           (setq index end)))
       (mapcar 'nreverse (nreverse blist))
       )))
@@ -3545,7 +3553,9 @@ nil otherwise."
 (defun tnt-handle-config (config)
   (setq tnt-buddy-blist (tnt-config-to-blist config))
   (tnt-backup-or-restore-buddy-list)
-  (toc-add-buddies (tnt-extract-normalized-buddies tnt-buddy-blist))
+
+  ;; 2005.08.21 gse: not needed in TOC2
+  ;;(toc-add-buddies (tnt-extract-normalized-buddies tnt-buddy-blist))
   (cond ((= tnt-permit-mode 1) (toc-permit-all))
         ((= tnt-permit-mode 2) (toc-deny-all))
         ((= tnt-permit-mode 3) (toc-permit-only tnt-permit-list))

@@ -59,6 +59,7 @@
 (defvar toc-chat-left-hooks nil)
 (defvar toc-goto-url-hooks nil)
 (defvar toc-pause-hooks nil)
+(defvar toc-client-event-hooks nil)
 
 
 ;;; Private State
@@ -84,19 +85,35 @@ Depending on toc-permit-mode, it is a permit or deny list.")
   (tocstr-close))
 
 
+
+;; toc2_signon <address> <port> <screenname> <roasted pw> <language> <version*> <??**> <code***>
+;; 
+;; * The version string MUST start with "TIC:" otherwise, no dice.  For
+;;   example, "TIC:AIMM" is ok, but "AIMM2" would be rejected.
+;; 
+;; ** I have no idea what this is.  By default it's 160, but you can
+;;    change it to other numbers and it still connects.
+;; 
+;; *** This is a simple code created with the first letter of the screen
+;;     name and password. (see comments in toc-generate-signon-code)
 (defun toc-signon (host port username password language version)
-  (tocstr-send (format "toc_signon %s %d %s %s %s %s"
+  (tocstr-send (format "toc2_login %s %d %s %s %s %s %d %s %d"
                        host
                        port
                        (toc-normalize username)
                        (toc-roast password)
                        language
-                       (toc-encode version))))
+                       (toc-encode (concat "TIC:" version))
+                       160
+                       "US \"\" \"\" 3 0 21030 -kentucky -utf8"  ;; (?!?) lifted from miranda code
+                       (toc-generate-signon-code username password))))
+  
 
 (defun toc-init-done ()
   (tocstr-send "toc_init_done"))
 
 (defun toc-send-im (user message &optional auto)
+  ;; Apparently there is a toc2_send_im but it's the same.
   (tocstr-send (format "toc_send_im %s %s%s"
                        (toc-normalize user)
                        (toc-encode message)
@@ -225,6 +242,13 @@ Depending on toc-permit-mode, it is a permit or deny list.")
 
 
 (defun toc-handle-receive (str)
+
+(save-excursion
+  (set-buffer (get-buffer-create "*gse-debug*"))
+  (goto-char (point-max))
+  (insert str)
+  (insert "\n-------------------------\n"))
+  
   (let* ((index 0)
          (cmd (toc-lop-field str 'index)))
     (cond
@@ -232,27 +256,50 @@ Depending on toc-permit-mode, it is a permit or deny list.")
       (let ((version (toc-lop-field str 'index)))
         (toc-run-hooks toc-sign-on-hooks version)))
 
-     ((string= cmd "CONFIG")
-      (let ((config (toc-lop-field str 'index)))
-        (toc-run-hooks toc-config-hooks config)))
+     ;;((string= cmd "CONFIG")
+     ;; (let ((config (toc-lop-field str 'index)))
+     ;;   (toc-run-hooks toc-config-hooks config)))
 
+     ;; 2005.08.21 gse: added for TOC2
+     ((string= cmd "CONFIG2")
+      ;;(let ((config (toc-lop-field str 'index)))
+      (let ((config str))
+        (toc-run-hooks toc-config-hooks config)))
+     
      ((string= cmd "NICK")
       (let ((nick (toc-lop-field str 'index)))
         (toc-run-hooks toc-nick-hooks nick)))
 
-     ((string= cmd "IM_IN")
+     ((string= cmd "IM_IN2")
       (let ((user    (toc-lop-field str 'index))
             (auto    (string= "T" (toc-lop-field str 'index)))
+            (unknown (toc-lop-field str 'index)) 
             (message (substring str index)))
         (toc-run-hooks toc-im-in-hooks user auto message)))
 
-     ((string= cmd "UPDATE_BUDDY")
-      (let ((nick   (toc-lop-field str 'index))
-            (online (string= "T" (toc-lop-field str 'index)))
-            (evil   (string-to-number (toc-lop-field str 'index)))
-            (signon (string-to-number (toc-lop-field str 'index)))
-            (idle   (string-to-number (toc-lop-field str 'index)))
-            (away (toc-lop-field str 'index)))
+
+     ;; 2005.08.22 gse: No idea what the difference is between IM_IN2
+     ;; and IM_IN_ENC2 -- there are a bunch of extra fields.
+     ((string= cmd "IM_IN_ENC2")
+      (let ((user     (toc-lop-field str 'index))
+            (auto     (string= "T" (toc-lop-field str 'index)))
+            (unknown1 (toc-lop-field str 'index)) 
+            (unknown2 (toc-lop-field str 'index)) 
+            (unknown3 (toc-lop-field str 'index)) 
+            (unknown4 (toc-lop-field str 'index)) 
+            (unknown5 (toc-lop-field str 'index)) 
+            (unknown6 (toc-lop-field str 'index)) ;; language?
+            (message  (substring str index)))
+        (toc-run-hooks toc-im-in-hooks user auto message)))
+     
+     ((string= cmd "UPDATE_BUDDY2")
+      (let ((nick    (toc-lop-field str 'index))
+            (online  (string= "T" (toc-lop-field str 'index)))
+            (evil    (string-to-number (toc-lop-field str 'index)))
+            (signon  (string-to-number (toc-lop-field str 'index)))
+            (idle    (string-to-number (toc-lop-field str 'index)))
+            (away    (toc-lop-field str 'index))
+            (unknown (toc-lop-field str 'index)))
         (toc-run-hooks toc-update-buddy-hooks
                        nick online evil signon idle away)))
 
@@ -309,7 +356,18 @@ Depending on toc-permit-mode, it is a permit or deny list.")
      ;; We probably ought to handle this internally.  Does it ever really
      ;; get sent?
      ((string= cmd "PAUSE")
-      (toc-run-hooks toc-pause-hooks cmd)))))
+      (toc-run-hooks toc-pause-hooks cmd))
+
+     ;; known event codes:
+     ;;   2 = buddy is typing
+     ((string= cmd "CLIENT_EVENT2")
+      (let ((user  (toc-lop-field str 'index))
+            (event (toc-lop-field str 'index)))
+        (toc-run-hooks toc-client-event-hooks user event)))
+
+     (t
+      (message (concat "Recieved unknown command: " cmd)))
+     )))
 
 
 (defun toc-run-hooks (hooks &rest args)
@@ -348,6 +406,27 @@ Depending on toc-permit-mode, it is a permit or deny list.")
                                                 (aref roaster (% i rlen))))))
       (setq i (1+ i)))
     rstr))
+
+(defun toc-generate-signon-code (user password)
+  ;; Wow, this is silly:
+  ;;   sn = ascii value of the first letter of the screen name - 96
+  ;;   pw = ascii value of the first character of the password - 96
+  ;; 
+  ;;   a = sn * 7696 + 738816
+  ;;   b = sn * 746512
+  ;;   c = pw * a
+  ;;
+  ;;   return c - a + b + 71665152
+  (let* ((first-user-char (char-to-int (string-to-char user)))
+         (first-pw-char (char-to-int (string-to-char password)))
+         (sn (- first-user-char 96))
+         (pw (- first-pw-char 96))
+         (a (+ (* sn 7696) 738816))
+         (b (* sn 746512))
+         (c (* pw a)))
+    
+         (+ c (- a) b 71665152)))
+                          
 
 (defun toc-encode (str)
   ;; Encloses STR in quotes and backslashes special characters in it.
