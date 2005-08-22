@@ -3287,13 +3287,6 @@ Special commands:
 ;;; ***************************************************************************
 
 (defun tnt-config-to-blist (config)
-(save-excursion
-  (set-buffer (get-buffer-create "*gse-debug2*"))
-  (goto-char (point-max))
-  (insert "========= ENTER tnt-config-to-blist\n")
-  (insert config)
-  (insert "\n-------------------------\n"))
-
   (setq tnt-permit-list nil)
   (setq tnt-deny-list nil)
   (save-match-data
