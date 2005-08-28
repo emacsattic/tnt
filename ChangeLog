@@ -1,3 +1,11 @@
+2005-08-27  Scott Evans  <gse@SALON>
+
+	* tnt.el: (tnt-save-buddy-list): rewrite, add related helper methods
+	(tnt-leave-chat): reorder one bit to work around buffer-setting quirk
+	* toc.el: (toc-add-buddies): for TOC2
+	(toc-remove-buddies): for TOC2
+	(toc-remove-group): for TOC2
+
 2005-08-22  Scott Evans  <gse@antisleep.com>
 
 	* tnt.el: updates for TOC2

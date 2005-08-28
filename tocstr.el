@@ -74,6 +74,12 @@
 
 
 (defun tocstr-send (string)
+  (set-buffer (get-buffer-create "*gse-debug*"))
+  (goto-char (point-max))
+  (insert "SEND:\n")
+  (insert string)
+  (insert "\n-------------------------\n")
+  
   (tocstr-send-flap 2 (format "%s%c" string 0)))
 
 

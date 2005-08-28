@@ -60,6 +60,8 @@
 (defvar toc-goto-url-hooks nil)
 (defvar toc-pause-hooks nil)
 (defvar toc-client-event-hooks nil)
+(defvar toc-buddy-caps2-hooks nil)
+(defvar toc-bart2-hooks nil)
 
 
 ;;; Private State
@@ -119,15 +121,37 @@ Depending on toc-permit-mode, it is a permit or deny list.")
                        (toc-encode message)
                        (if auto " auto" ""))))
 
-(defun toc-add-buddies (buddies)
-  (if buddies
-      (tocstr-send (format "toc_add_buddy %s"
-                           (substring (format "%S" buddies) 1 -1)))))
+(defun toc-add-buddies (blist)
+  (if blist
+    (let ((command "toc2_new_buddies {"))
+      (while blist
+        (let* ((group      (car blist))
+               (group-name (car group))
+               (buddies    (cdr group)))
+          
+          (setq command (concat command "g:" group-name "\n"))
+          
+          (while buddies
+            (setq command (concat command "b:" (car buddies) "\n"))
+            (setq buddies (cdr buddies)))
+          
+          (setq blist (cdr blist))))
+      (setq command (concat command "}"))
+      (tocstr-send command))))
+             
 
-(defun toc-remove-buddies (buddies)
+(defun toc-remove-buddies (group buddies)
+  "Remove one or more buddies from a group.
+ BUDDIES is a list of strings of buddy names that are in GROUP."
   (if buddies
-      (tocstr-send (format "toc_remove_buddy %s"
-                           (substring (format "%S" buddies) 1 -1)))))
+      (tocstr-send (format "toc2_remove_buddy %s \"%s\""
+                           (substring (format "%S" buddies) 1 -1)
+                           group))))
+
+(defun toc-remove-group (group)
+  "Remove GROUP.  GROUP must contain no buddies, or TOC2
+won't do anything."
+  (tocstr-send (format "toc2_del_group \"%s\"" group)))
 
 (defun toc-set-config (config)
   (tocstr-send (format "toc_set_config %s" (toc-encode config))))
@@ -328,6 +352,15 @@ Depending on toc-permit-mode, it is a permit or deny list.")
             (message (substring str index)))
         (toc-run-hooks toc-chat-in-hooks roomid user whisper message)))
 
+     ((string= cmd "CHAT_IN_ENC")
+      (let ((roomid   (toc-lop-field str 'index))
+            (user     (toc-lop-field str 'index))
+            (whisper  (string= "T" (toc-lop-field str 'index)))
+            (unknown1 (toc-lop-field str 'index))
+            (unknown2 (toc-lop-field str 'index))
+            (message  (substring str index)))
+        (toc-run-hooks toc-chat-in-hooks roomid user whisper message)))
+     
      ((string= cmd "CHAT_UPDATE_BUDDY")
       (let ((roomid (toc-lop-field str 'index))
             (inside (string= "T" (toc-lop-field str 'index)))
@@ -365,6 +398,18 @@ Depending on toc-permit-mode, it is a permit or deny list.")
             (event (toc-lop-field str 'index)))
         (toc-run-hooks toc-client-event-hooks user event)))
 
+     ;; don't know what this event is for
+     ((string= cmd "BUDDY_CAPS2")
+      (let ((user      (toc-lop-field str 'index))
+            (remainder str))
+        (toc-run-hooks toc-buddy-caps2-hooks user remainder)))
+
+     ;; don't know what this event is for
+     ((string= cmd "BART2")
+      (let ((user      (toc-lop-field str 'index))
+            (remainder str))
+        (toc-run-hooks toc-bart2-hooks user remainder)))
+     
      (t
       (message (concat "Recieved unknown command: " cmd)))
      )))

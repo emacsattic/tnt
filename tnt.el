@@ -1735,10 +1735,11 @@ Special commands:
                                        (mapcar (lambda (x) (list (cdr x)))
                                                tnt-chat-alist)))))
       (with-current-buffer (tnt-chat-buffer input)
-        (toc-chat-leave tnt-chat-roomid)
         (setq tnt-chat-participants nil)
         (setq tnt-chat-alist (tnt-remassoc tnt-chat-roomid tnt-chat-alist))
-        (tnt-append-message (format "%s left" tnt-current-user)))
+        (tnt-append-message (format "%s left" tnt-current-user))
+        ;; do this last, it changes current-buffer
+        (toc-chat-leave tnt-chat-roomid))
       (tnt-build-buddy-buffer)
       )))
 
@@ -3138,6 +3139,56 @@ Special commands:
       (yes-or-no-p "Buddy list modified; kill anyway? ")))
 
 ;;; ***************************************************************************
+
+(defun tnt-nick-in-blist-group (blist nick group)
+  "Returns nick if GROUP exists in BLIST, and contains NICK."
+  (car (member nick (cdr (tnt-group-in-blist group blist)))))
+
+
+(defun tnt-group-in-blist (group blist)
+  "Returns group if GROUP exists in BLIST."
+  (let ((result nil))
+    (while (and blist (not result))
+      (let* ((cur-group (car blist))
+             (group-name (car cur-group)))
+        (when (string-equal group-name group)
+          (setq result cur-group)))
+      (setq blist (cdr blist)))
+
+    result))
+
+(defun tnt-grouped-new-buddies (old-blist new-blist)
+  "Returns a blist of groups, or buddies (in their respective groups)
+that are in NEW-BLIST, but not OLD-BLIST.
+
+This is all group-centric; so given
+  old-blist = ((g1 b1 b2) (g2 b3 b4))
+  new-blist = ((g0 b1) (g1 b2) (g2 b4 b5) (g3))
+this would return
+  ((g0 b1) (g2 b5) (g3))"
+  (let ((result nil))
+    (while new-blist
+      (let* ((group       (car new-blist))
+             (group-name  (car group))
+             (nick-list   (cdr group))
+             (new-group   (list group-name)))
+
+        (while nick-list
+          (let ((nick (car nick-list)))
+            (when (not (tnt-nick-in-blist-group old-blist nick group-name))
+              (setq new-group (cons nick new-group)))
+            (setq nick-list (cdr nick-list))))
+        (setq new-group (reverse new-group))
+
+        (when (or
+               (> (length new-group) 1)
+               (not (tnt-group-in-blist group-name old-blist)))
+          (setq result (cons new-group result))))
+      (setq new-blist (cdr new-blist)))
+
+    (reverse result)))
+
+
 (defun tnt-save-buddy-list (&optional kill-buffer-after-save)
   "Saves a buddy-edit buffer on the host."
   (interactive)
@@ -3146,13 +3197,39 @@ Special commands:
 
   (let* ((new-blist (tnt-buffer-to-blist))
          (old-blist tnt-buddy-blist)
-         (new-list (tnt-extract-normalized-buddies new-blist))
-         (old-list (tnt-extract-normalized-buddies old-blist))
-         (diffs (tnt-sorted-list-diff old-list new-list)))
-    (toc-add-buddies (cdr diffs))
-    (toc-remove-buddies (car diffs))
-    (toc-set-config (tnt-blist-to-config new-blist))
+         ;;(add-blist (tnt-grouped-new-buddies old-blist new-blist))
+         (del-blist (tnt-grouped-new-buddies new-blist old-blist)))
+
+    ;; Remove deleted buddies and groups.  This must be done with
+    ;; multiple commands.
+    (while del-blist
+      (let* ((group      (car del-blist))
+             (group-name (car group))
+             (buddies    (cdr group)))
+
+        (when (> (length buddies) 0)
+          (toc-remove-buddies group-name buddies))
+
+        (when (not (tnt-group-in-blist group-name new-blist))
+          (toc-remove-group group-name))
+        
+        (setq del-blist (cdr del-blist))))
+
+    ;; Add new buddies/groups.  This can all be done in one command.
+    ;; Rather than building a list of only the new buddies/groups, we
+    ;; send the entire list.  Why:
+    ;;   * it's easy
+    ;;   * the server doesn't seem to mind
+    ;;   * deleting all the buddies in a group deletes the group on
+    ;;     the server, and we don't want that unless we explictly want
+    ;;     it, so this will add it back.
+    ;; Only problem is that it's kind of slow to send the entire buddy
+    ;; list.  Could change this call to (toc-add-buddies add-blist),
+    ;; but need code to deal with the third point listed above.
+    (toc-add-buddies new-blist)
+    
     (setq tnt-buddy-blist new-blist))
+  
   (set-buffer-modified-p nil)
   (tnt-backup-buddy-list)
 
@@ -3160,6 +3237,7 @@ Special commands:
       (tnt-build-buddy-buffer)
     (kill-buffer (current-buffer))
     (tnt-show-buddies)))
+
 
 ;;; ***************************************************************************
 ;;; ***** Buddy-list backup/restore
@@ -3657,7 +3735,7 @@ nil otherwise."
           (if tnt-email-include-user-in-body
               (format "%s: %s\n" user (tnt-reformat-text message))
             (format "%s\n" (tnt-reformat-text message)))))
-    
+
     (if tnt-email-from-domain
         (let* ((nuser (toc-normalize user))
                (email-from-header (format "From: %s_IM_@%s" nuser
