@@ -1034,7 +1034,7 @@ Settings:
   :group 'tnt-advanced)
 
 ;; ---------------------------------------------------------------------------
-(defcustom tnt-toc-port 29999
+(defcustom tnt-toc-port 5190
   "TOC port # -- do NOT change unless you know what you're doing!"
   :type 'integer
   :group 'tnt-advanced)
@@ -1046,7 +1046,7 @@ Settings:
   :group 'tnt-advanced)
 
 ;; ---------------------------------------------------------------------------
-(defcustom tnt-login-port 29999
+(defcustom tnt-login-port 5190
   "TNT port # -- do NOT change unless you know what you're doing!"
   :type 'integer
   :group 'tnt-advanced)
@@ -1531,8 +1531,11 @@ unless PREFIX arg is given."
 (unless tnt-im-mode-map
   (setq tnt-im-mode-map (make-sparse-keymap "tnt-im-mode-map"))
   (define-key tnt-im-mode-map "\r" 'tnt-send-text-as-instant-message)
-  (define-key tnt-im-mode-map "\C-\r" 'tnt-send-text-as-instant-message-no-format)
-  (define-key tnt-im-mode-map (read-kbd-macro "M-RET") (function (lambda () "" (interactive) (insert "
+
+  (define-key tnt-im-mode-map (read-kbd-macro "C-<return>")
+    'tnt-send-text-as-instant-message-no-format)
+  (define-key tnt-im-mode-map (read-kbd-macro "M-<return>")
+    (function (lambda () "" (interactive) (insert "
 "))))
   )
 
@@ -3612,7 +3615,7 @@ nil otherwise."
   (if tnt-timers-available
       (progn
         (setq tnt-login-flag t)
-        (setq tnt-login-flag-timer (run-at-time 0 tnt-login-flag-unset-after
+        (setq tnt-login-flag-timer (run-at-time 1 tnt-login-flag-unset-after
                                                 'tnt-unset-login-flag))))
   (if tnt-use-idle-timer
       (setq tnt-idle-timer (run-with-idle-timer tnt-send-idle-after t

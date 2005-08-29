@@ -1,3 +1,12 @@
+2005-08-29  Scott Evans  <gse@NEVE>
+
+	* tnt.el: Change ports back to 5190.
+	Change C-return keybinding to something that seems Emacs/XEmacs
+	compatible.
+	Change tnt-login-flag-timer to a 1-second value since 0 seconds
+	doesn't work on newer XEmacses.
+	* toc.el: (toc-get-ascii-value): add for cross-emacs compatibility
+
 2005-08-27  Scott Evans  <gse@SALON>
 
 	* tnt.el: (tnt-save-buddy-list): rewrite, add related helper methods

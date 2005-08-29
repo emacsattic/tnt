@@ -72,6 +72,7 @@
   "The permit/deny list that the server is maintaining for us.
 Depending on toc-permit-mode, it is a permit or deny list.")
 
+
 ;;;----------------------------------------------------------------------------
 ;;; Public functions
 ;;;----------------------------------------------------------------------------
@@ -452,6 +453,11 @@ won't do anything."
       (setq i (1+ i)))
     rstr))
 
+(defun toc-get-ascii-value (char)
+  (if (fboundp 'char-to-int)
+      (char-to-int char)
+    (identity char)))
+
 (defun toc-generate-signon-code (user password)
   ;; Wow, this is silly:
   ;;   sn = ascii value of the first letter of the screen name - 96
@@ -462,8 +468,8 @@ won't do anything."
   ;;   c = pw * a
   ;;
   ;;   return c - a + b + 71665152
-  (let* ((first-user-char (char-to-int (string-to-char user)))
-         (first-pw-char (char-to-int (string-to-char password)))
+  (let* ((first-user-char (toc-get-ascii-value (string-to-char user)))
+         (first-pw-char   (toc-get-ascii-value (string-to-char password)))
          (sn (- first-user-char 96))
          (pw (- first-pw-char 96))
          (a (+ (* sn 7696) 738816))
