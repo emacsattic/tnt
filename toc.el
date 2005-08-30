@@ -11,7 +11,7 @@
 ;;;; form, provided that i) this copyright notice and license appear on all
 ;;;; copies of the software; and ii) Licensee does not utilize the software
 ;;;; in a manner which is disparaging to AOL.
-;;;; 
+;;;;
 ;;;; This software is provided "AS IS," without a warranty of any kind. ALL
 ;;;; EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND WARRANTIES, INCLUDING
 ;;;; ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
@@ -23,7 +23,7 @@
 ;;;; DAMAGES, HOWEVER CAUSED AND REGARDLESS OF THE THEORY OF LIABILITY, ARISING
 ;;;; OUT OF THE USE OF OR INABILITY TO USE SOFTWARE, EVEN IF AOL HAS BEEN
 ;;;; ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-;;;; 
+;;;;
 ;;;; This software is not designed or intended for use in on-line control of
 ;;;; aircraft, air traffic, aircraft navigation or aircraft communications;
 ;;;; or in the design, construction, operation or maintenance of any nuclear
@@ -90,13 +90,13 @@ Depending on toc-permit-mode, it is a permit or deny list.")
 
 
 ;; toc2_signon <address> <port> <screenname> <roasted pw> <language> <version*> <??**> <code***>
-;; 
+;;
 ;; * The version string MUST start with "TIC:" otherwise, no dice.  For
 ;;   example, "TIC:AIMM" is ok, but "AIMM2" would be rejected.
-;; 
+;;
 ;; ** I have no idea what this is.  By default it's 160, but you can
 ;;    change it to other numbers and it still connects.
-;; 
+;;
 ;; *** This is a simple code created with the first letter of the screen
 ;;     name and password. (see comments in toc-generate-signon-code)
 (defun toc-signon (host port username password language version)
@@ -109,8 +109,8 @@ Depending on toc-permit-mode, it is a permit or deny list.")
                        (toc-encode (concat "TIC:" version))
                        160
                        "US \"\" \"\" 3 0 21030 -kentucky -utf8"  ;; (?!?) lifted from miranda code
-                       (toc-generate-signon-code username password))))
-  
+                       (toc-generate-signon-code (toc-normalize username) password))))
+
 
 (defun toc-init-done ()
   (tocstr-send "toc_init_done"))
@@ -129,17 +129,17 @@ Depending on toc-permit-mode, it is a permit or deny list.")
         (let* ((group      (car blist))
                (group-name (car group))
                (buddies    (cdr group)))
-          
+
           (setq command (concat command "g:" group-name "\n"))
-          
+
           (while buddies
             (setq command (concat command "b:" (car buddies) "\n"))
             (setq buddies (cdr buddies)))
-          
+
           (setq blist (cdr blist))))
       (setq command (concat command "}"))
       (tocstr-send command))))
-             
+
 
 (defun toc-remove-buddies (group buddies)
   "Remove one or more buddies from a group.
@@ -273,7 +273,7 @@ won't do anything."
   (goto-char (point-max))
   (insert str)
   (insert "\n-------------------------\n"))
-  
+
   (let* ((index 0)
          (cmd (toc-lop-field str 'index)))
     (cond
@@ -290,7 +290,7 @@ won't do anything."
       ;;(let ((config (toc-lop-field str 'index)))
       (let ((config str))
         (toc-run-hooks toc-config-hooks config)))
-     
+
      ((string= cmd "NICK")
       (let ((nick (toc-lop-field str 'index)))
         (toc-run-hooks toc-nick-hooks nick)))
@@ -298,7 +298,7 @@ won't do anything."
      ((string= cmd "IM_IN2")
       (let ((user    (toc-lop-field str 'index))
             (auto    (string= "T" (toc-lop-field str 'index)))
-            (unknown (toc-lop-field str 'index)) 
+            (unknown (toc-lop-field str 'index))
             (message (substring str index)))
         (toc-run-hooks toc-im-in-hooks user auto message)))
 
@@ -308,15 +308,15 @@ won't do anything."
      ((string= cmd "IM_IN_ENC2")
       (let ((user     (toc-lop-field str 'index))
             (auto     (string= "T" (toc-lop-field str 'index)))
-            (unknown1 (toc-lop-field str 'index)) 
-            (unknown2 (toc-lop-field str 'index)) 
-            (unknown3 (toc-lop-field str 'index)) 
-            (unknown4 (toc-lop-field str 'index)) 
-            (unknown5 (toc-lop-field str 'index)) 
+            (unknown1 (toc-lop-field str 'index))
+            (unknown2 (toc-lop-field str 'index))
+            (unknown3 (toc-lop-field str 'index))
+            (unknown4 (toc-lop-field str 'index))
+            (unknown5 (toc-lop-field str 'index))
             (unknown6 (toc-lop-field str 'index)) ;; language?
             (message  (substring str index)))
         (toc-run-hooks toc-im-in-hooks user auto message)))
-     
+
      ((string= cmd "UPDATE_BUDDY2")
       (let ((nick    (toc-lop-field str 'index))
             (online  (string= "T" (toc-lop-field str 'index)))
@@ -361,7 +361,7 @@ won't do anything."
             (unknown2 (toc-lop-field str 'index))
             (message  (substring str index)))
         (toc-run-hooks toc-chat-in-hooks roomid user whisper message)))
-     
+
      ((string= cmd "CHAT_UPDATE_BUDDY")
       (let ((roomid (toc-lop-field str 'index))
             (inside (string= "T" (toc-lop-field str 'index)))
@@ -410,7 +410,7 @@ won't do anything."
       (let ((user      (toc-lop-field str 'index))
             (remainder str))
         (toc-run-hooks toc-bart2-hooks user remainder)))
-     
+
      (t
       (message (concat "Recieved unknown command: " cmd)))
      )))
@@ -462,7 +462,7 @@ won't do anything."
   ;; Wow, this is silly:
   ;;   sn = ascii value of the first letter of the screen name - 96
   ;;   pw = ascii value of the first character of the password - 96
-  ;; 
+  ;;
   ;;   a = sn * 7696 + 738816
   ;;   b = sn * 746512
   ;;   c = pw * a
@@ -475,9 +475,9 @@ won't do anything."
          (a (+ (* sn 7696) 738816))
          (b (* sn 746512))
          (c (* pw a)))
-    
+
          (+ c (- a) b 71665152)))
-                          
+
 
 (defun toc-encode (str)
   ;; Encloses STR in quotes and backslashes special characters in it.
