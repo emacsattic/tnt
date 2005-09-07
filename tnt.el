@@ -284,6 +284,11 @@ currently typing a message to the other.  This allows you to receive
 those messages.  This capability is only available if timers are
 available.
 
+Inbound notification methods:
+
+Message area - transient messages show up in the Message Area
+Mode-line - statically shows up in the mode-line of IM buffers (only)
+
 See also `tnt-send-typing-notifications'."
   :type '(radio :tag "Inbound methods"
                  (const :tag "No inbound notifications" nil)
