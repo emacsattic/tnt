@@ -122,6 +122,11 @@ Depending on toc-permit-mode, it is a permit or deny list.")
                        (toc-encode message)
                        (if auto " auto" ""))))
 
+(defun toc-send-typing-status (user &optional status)
+  (tocstr-send (format "toc2_client_event %s %s"
+                       (toc-normalize user)
+                       (if status status "2"))))
+
 (defun toc-add-buddies (blist)
   (if blist
     (let ((command "toc2_new_buddies {"))
@@ -267,12 +272,11 @@ won't do anything."
 
 
 (defun toc-handle-receive (str)
-
-(save-excursion
-  (set-buffer (get-buffer-create "*gse-debug*"))
-  (goto-char (point-max))
-  (insert str)
-  (insert "\n-------------------------\n"))
+  (save-excursion
+    (set-buffer (get-buffer-create "*gse-debug*"))
+    (goto-char (point-max))
+    (insert str)
+    (insert "\n-------------------------\n"))
 
   (let* ((index 0)
          (cmd (toc-lop-field str 'index)))

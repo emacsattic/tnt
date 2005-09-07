@@ -63,6 +63,10 @@
   (save-match-data (string-match "XEmacs" (emacs-version)))
   "Non-nil if we are running in XEmacs.")
 
+(when (and tnt-running-xemacs tnt-timers-available)
+  (unless (fboundp 'cancel-timer)
+    (fset 'cancel-timer 'delete-itimer)))
+
 ;; ---------------------------------------------------------------------------
 (unless (fboundp 'propertize)
   ;; built-in to GNU Emacs 21, soon to be included into XEmacs
@@ -255,6 +259,46 @@ See also `tnt-beep-on-buddy-signon' and `tnt-beep-on-buddy-signoff'."
 
 See also `tnt-beep-on-chat-message'."
   :type 'boolean
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-send-typing-notifications tnt-timers-available
+  "If non-nil, tells buddy that you are currently typing a message.
+
+Some AIM clients can send and receive notifications that one buddy is
+currently typing a message to the other.  This allows you to send
+those messages.  This capability is only available if timers are
+available.
+
+See also `tnt-receive-typing-notifications' and
+`tnt-typing-notications-idle-time'."
+  :type 'boolean
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-receive-typing-notifications '(message)
+  "If non-nil, lets buddy tell you that they are currently typing a message.
+
+Some AIM clients can send and receive notifications that one buddy is
+currently typing a message to the other.  This allows you to receive
+those messages.  This capability is only available if timers are
+available.
+
+See also `tnt-send-typing-notifications'."
+  :type '(radio :tag "Inbound methods"
+                 (const :tag "No inbound notifications" nil)
+				 (set :tag "Receive inbound notifications via:"
+				  (const :tag "Message area" message)
+				  (const :tag "Mode-line" mode-line)
+				  ))
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-typing-notications-idle-time 3
+  "Idle time when a 'no longer typing' message is sent.
+
+Can be as short or long as you'd like, but AIM uses 3 seconds."
+  :type 'integer
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
@@ -1478,6 +1522,7 @@ unless PREFIX arg is given."
       (add-hook 'toc-chat-update-buddy-hooks 'tnt-handle-chat-update-buddy)
       (add-hook 'toc-chat-invite-hooks 'tnt-handle-chat-invite)
       (add-hook 'toc-goto-url-hooks 'tnt-handle-goto-url)
+      (add-hook 'toc-client-event-hooks 'tnt-handle-client-events)
       (toc-open tnt-toc-host tnt-toc-port tnt-username))))
 
 ;;; ***************************************************************************
@@ -1598,13 +1643,23 @@ Special commands:
                               tnt-separator)))
             (setq tnt-message-marker (make-marker))
             (set-marker tnt-message-marker (point))
+
+            (when (and tnt-send-typing-notifications
+                       tnt-timers-available)
+              (make-local-hook 'after-change-functions)
+              (add-hook 'after-change-functions
+                        'tnt-typing-notification-hook nil t)
+              (setq tnt-typing-notification-state nil)
+              (make-local-hook 'kill-buffer-hook)
+              (add-hook 'kill-buffer-hook 'tnt-typing-notification-kill-hook nil t))
+
             buffer)))))
 
 ;;; ***************************************************************************
 (defun tnt-send-text-as-instant-message (&optional no-reformat)
   "Sends text at end of buffer as an IM."
   (interactive)
-  (let* ((message (tnt-get-input-message no-reformat)))
+  (let ((message (tnt-get-input-message no-reformat)))
     (if (string= message "")
         (message "Please enter a message to send")
       (tnt-append-message message tnt-current-user nil no-reformat))
@@ -1614,7 +1669,12 @@ Special commands:
     (if (string= message "") ()
       (progn
         (toc-send-im tnt-im-user message)
-        (tnt-beep tnt-beep-on-outgoing-message)))))
+        (tnt-beep tnt-beep-on-outgoing-message)
+        (when tnt-typing-notification-timer
+          (cancel-timer tnt-typing-notification-timer)
+          (setq tnt-typing-notification-timer nil))
+        (setq tnt-typing-notification-state nil)
+        ))))
 
 ;;; ***************************************************************************
 (defun tnt-send-text-as-instant-message-no-format ()
@@ -1929,7 +1989,8 @@ Special commands:
   (save-excursion
     (let ((old-point (marker-position tnt-message-marker))
           (today-datestamp (format-time-string tnt-datestamp-format))
-          (latest-archive-datestamp (assoc (buffer-name) tnt-archive-datestamp-alist)))
+          (latest-archive-datestamp (assoc (buffer-name) tnt-archive-datestamp-alist))
+          (tnt-inhibit-typing-notifications t))
       (goto-char tnt-message-marker)
 
       ;; datestamp -- print if the date-stamp has changed OR if we
@@ -2028,6 +2089,7 @@ Special commands:
                     )))
               ))))
       ))
+
   ;; Torches the entire undo history -- but we really don't want the
   ;; user to be able to undo TNT inserts.  The right fix is probably
   ;; to remove only certain undo information (or hold the undo info
@@ -3215,7 +3277,7 @@ this would return
 
         (when (not (tnt-group-in-blist group-name new-blist))
           (toc-remove-group group-name))
-        
+
         (setq del-blist (cdr del-blist))))
 
     ;; Add new buddies/groups.  This can all be done in one command.
@@ -3230,9 +3292,9 @@ this would return
     ;; list.  Could change this call to (toc-add-buddies add-blist),
     ;; but need code to deal with the third point listed above.
     (toc-add-buddies new-blist)
-    
+
     (setq tnt-buddy-blist new-blist))
-  
+
   (set-buffer-modified-p nil)
   (tnt-backup-buddy-list)
 
@@ -3702,7 +3764,11 @@ nil otherwise."
       (tnt-push-event (format "Message from %s available" fullname)
                       (tnt-im-buffer-name user) nil))
 
-    (if tnt-away (tnt-send-away-msg user))))
+    (if tnt-away (tnt-send-away-msg user))
+
+    (when tnt-receive-typing-notifications
+      (tnt-handle-client-events user "0"))
+    ))
 
 ;;; ***************************************************************************
 (defun tnt-toggle-email ()
@@ -3898,6 +3964,33 @@ nil otherwise."
   (browse-url url))
 
 ;;; ***************************************************************************
+(defun tnt-handle-client-events (buddy event)
+  ""
+  (when tnt-receive-typing-notifications
+    (let ((buffer-name (tnt-im-buffer-name buddy))
+          event-str short-str)
+      (cond ((string= event "1")
+             (setq event-str (concat "[TNT] " buddy " has entered text")
+                   short-str " *paused*"))
+            ((string= event "2")
+             (setq event-str (concat "[TNT] " buddy " is typing...")
+                   short-str " *typing*"))
+            ((string= event "0")
+             (setq event-str nil
+                   short-str nil))
+            (t
+             (setq event-str (concat "[TNT] Unknown event: <" event "> from " buddy)
+                   short-str (concat " *UNKNOWN EVENT:: <" event "> from " buddy "*")))
+            )
+      (when (memq 'message tnt-receive-typing-notifications)
+        (message event-str))
+      (when (and (memq 'mode-line tnt-receive-typing-notifications)
+                 (get-buffer buffer-name))
+        (with-current-buffer (tnt-im-buffer buddy)
+          (setq mode-line-process short-str)))
+      )))
+
+;;; ***************************************************************************
 ;;; ***** Minibuffer utilities
 ;;; ***************************************************************************
 (defun tnt-read-from-minibuffer-no-echo (prompt)
@@ -4065,6 +4158,87 @@ of the list, delimited by commas."
         (setcdr p (cdr (cdr p))))
       (setq p (cdr p))))
   list)
+
+;;; ***************************************************************************
+;;; *****  Typing Notifications (new in TOC2)
+;;; ***************************************************************************
+(defvar tnt-typing-notification-timer nil)
+(make-variable-buffer-local 'tnt-typing-notification-timer)
+
+(defvar tnt-typing-notification-state nil
+  "nil = last event is [0,1], non-nil = last event is [2]")
+(make-variable-buffer-local 'tnt-typing-notification-state)
+
+(defvar tnt-inhibit-typing-notifications nil)
+(make-variable-buffer-local 'tnt-inhibit-typing-notifications)
+
+;;; ***************************************************************************
+(defun tnt-send-typing-notification (buddy event)
+  "Sends the given typing EVENT to buddy BUDDY.
+
+EVENT should be one of:
+
+\"0\" : Typing has been erased
+\"1\" : Typing has paused
+\"2\" : Typing has started"
+  (save-excursion
+    (toc-send-typing-status buddy event)))
+
+;;; ***************************************************************************
+(defun tnt-typing-notification-hook (&rest ignore)
+  "Called from `after-change-functions'.
+
+Decides which event to send (0, 2 or none) and sets timer to
+possibly send pause event (1)."
+  (unless tnt-inhibit-typing-notifications
+    (let ((message (buffer-substring-no-properties tnt-message-marker (point-max))))
+      ;; cancel existing timer, if any
+      (when tnt-typing-notification-timer
+        (cancel-timer tnt-typing-notification-timer)
+        (setq tnt-typing-notification-timer nil))
+
+      (if (= (length message) 0)
+          ;; message has been erased
+          (progn
+            (tnt-send-typing-notification tnt-im-user 0)
+            (setq tnt-typing-notification-state nil))
+
+        ;; already sent typing state?
+        (when (not tnt-typing-notification-state)
+          (tnt-send-typing-notification tnt-im-user 2)
+          (setq tnt-typing-notification-state t))
+
+        ;; set timer to run
+
+        ;; Note: XEmacs itimers has a bug that runs the callback
+        ;; immediately, in addition to after 'n' seconds.  Nothing to
+        ;; be done about it for the moment
+        (setq tnt-typing-notification-timer
+              (run-at-time tnt-typing-notications-idle-time nil
+                           'tnt-typing-notification-callback
+                           (current-buffer))))
+      )))
+
+;;; ***************************************************************************
+(defun tnt-typing-notification-callback (im-buffer)
+  "Timer callback to send 'pause' event (1).
+
+IM-BUFFER is the buffer that the timer is meant for."
+  (with-current-buffer im-buffer
+    (setq tnt-typing-notification-timer nil
+          tnt-typing-notification-state nil)
+    (tnt-send-typing-notification tnt-im-user 1)
+    ))
+
+;;; ***************************************************************************
+(defun tnt-typing-notification-kill-hook ()
+  "Called from `kill-buffer-hook'.
+
+Sends a clear event (0) and cancels any pending timer."
+  (tnt-send-typing-notification tnt-im-user 0)
+  (when tnt-typing-notification-timer
+    (cancel-timer tnt-typing-notification-timer)
+    (setq tnt-typing-notification-timer nil)))
 
 ;;; ***************************************************************************
 ;;; ***** String utilities
