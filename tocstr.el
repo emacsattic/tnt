@@ -11,7 +11,7 @@
 ;;;; form, provided that i) this copyright notice and license appear on all
 ;;;; copies of the software; and ii) Licensee does not utilize the software
 ;;;; in a manner which is disparaging to AOL.
-;;;; 
+;;;;
 ;;;; This software is provided "AS IS," without a warranty of any kind. ALL
 ;;;; EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND WARRANTIES, INCLUDING
 ;;;; ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
@@ -23,7 +23,7 @@
 ;;;; DAMAGES, HOWEVER CAUSED AND REGARDLESS OF THE THEORY OF LIABILITY, ARISING
 ;;;; OUT OF THE USE OF OR INABILITY TO USE SOFTWARE, EVEN IF AOL HAS BEEN
 ;;;; ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-;;;; 
+;;;;
 ;;;; This software is not designed or intended for use in on-line control of
 ;;;; aircraft, air traffic, aircraft navigation or aircraft communications;
 ;;;; or in the design, construction, operation or maintenance of any nuclear
@@ -74,12 +74,13 @@
 
 
 (defun tocstr-send (string)
-  (set-buffer (get-buffer-create "*gse-debug*"))
-  (goto-char (point-max))
-  (insert "SEND:\n")
-  (insert string)
-  (insert "\n-------------------------\n")
-  
+  (save-excursion
+    (set-buffer (get-buffer-create "*gse-debug*"))
+    (goto-char (point-max))
+    (insert "SEND:\n")
+    (insert string)
+    (insert "\n-------------------------\n"))
+
   (tocstr-send-flap 2 (format "%s%c" string 0)))
 
 
@@ -127,7 +128,7 @@
 
 (defun tocstr-send-flap2 (type payload)
   ;; This implementation is for 19.29 and earlier.  These versions had
-  ;; a bug where %s trunctated the string at the first null. 
+  ;; a bug where %s trunctated the string at the first null.
   (let ((len (length payload)))
     (setq tocstr-seq-num (logand (1+ tocstr-seq-num) 65535))
     (process-send-string tocstr-process
@@ -165,7 +166,7 @@
 	tocstr-flap-timer   nil))
       (setq tocstr-flap-state 'tocstr-flap-await-frame))
 
-(if tnt-timers-available 
+(if tnt-timers-available
     (if tnt-string-as-unibyte-available
         (defun tocstr-filter (proc str)
           (when tocstr-flap-timer
@@ -174,8 +175,8 @@
           (if tocstr-flap-parsing
               (setq tocstr-flap-packet
                     (concat tocstr-flap-packet (string-as-unibyte str)))
-            
-            (setq tocstr-flap-parsing t str 
+
+            (setq tocstr-flap-parsing t str
                   (concat tocstr-flap-packet (string-as-unibyte str))
                   tocstr-flap-packet nil)
             (unwind-protect
@@ -199,8 +200,8 @@
           (if tocstr-flap-parsing
               (setq tocstr-flap-packet
                     (concat tocstr-flap-packet str))
-            
-            (setq tocstr-flap-parsing t str 
+
+            (setq tocstr-flap-parsing t str
                   (concat tocstr-flap-packet str)
                   tocstr-flap-packet nil)
             (unwind-protect
@@ -224,7 +225,7 @@
         (while (< i len)
           (funcall tocstr-flap-state (aref str i))
           (setq i (1+ i))))))
-  
+
 (defun tocstr-sentinel (proc str)
   (funcall tocstr-closed-function))
 
@@ -259,7 +260,7 @@
   (setq tocstr-flap-state 'tocstr-flap-collect-data))
 
 
-(if tnt-timers-available 
+(if tnt-timers-available
     (defun tocstr-flap-collect-data (byte)
       (aset tocstr-flap-data tocstr-flap-index byte)
       (if (< tocstr-flap-index (1- tocstr-flap-size))
