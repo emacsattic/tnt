@@ -489,6 +489,15 @@ This value may be nil to prevent any such action."
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
+(defcustom tnt-use-flyspell-mode nil
+  "Use flyspell mode when in IM or Chat buffer.
+
+Works on outgoing messages only; inbound messages and old messages are
+ignored."
+  :type 'boolean
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
 ;; ----- systemic setup
 ;; ---------------------------------------------------------------------------
 (defcustom tnt-directory "~/.tnt"
@@ -1602,6 +1611,10 @@ Special commands:
   (setq local-abbrev-table text-mode-abbrev-table)
   (set-syntax-table text-mode-syntax-table)
   (auto-fill-mode 1)
+  (when tnt-use-flyspell-mode
+	(make-local-hook 'flyspell-incorrect-hook)
+	(add-hook 'flyspell-incorrect-hook 'tnt-flyspell-mode-incorrect-hook nil t)
+	(flyspell-mode))
   (run-hooks 'tnt-im-mode-hook))
 
 ;;; ***************************************************************************
@@ -1648,6 +1661,8 @@ Special commands:
                               tnt-separator)))
             (setq tnt-message-marker (make-marker))
             (set-marker tnt-message-marker (point))
+
+            (tnt-mark-read-only-maybe)
 
             (when (and tnt-send-typing-notifications
                        tnt-timers-available)
@@ -1769,6 +1784,10 @@ Special commands:
   (setq local-abbrev-table text-mode-abbrev-table)
   (set-syntax-table text-mode-syntax-table)
   (auto-fill-mode 1)
+  (when tnt-use-flyspell-mode
+	(make-local-hook 'flyspell-incorrect-hook)
+	(add-hook 'flyspell-incorrect-hook 'tnt-flyspell-mode-incorrect-hook nil t)
+	(flyspell-mode))
   (run-hooks 'tnt-chat-mode-hook))
 
 ;;; ***************************************************************************
@@ -1845,6 +1864,9 @@ Special commands:
 
             (setq tnt-message-marker (make-marker))
             (set-marker tnt-message-marker (point))
+
+            (tnt-mark-read-only-maybe)
+
             buffer)))))
 
 ;;; ***************************************************************************
@@ -2040,25 +2062,8 @@ Special commands:
       (unless no-reformat
         (fill-region old-point (point)))
 
-      ;; Make inserted text read-only.  I'm not really sure why we
-      ;; need the inhibit-read-only code; IM buffers should never be
-      ;; read-only (right?).
-      (if tnt-im-buffers-read-only
-          (let ((old-inhibit inhibit-read-only))
-            (setq inhibit-read-only t)
-            ;; gse: These need to be different in FSF/XEmacs.
-            ;; XEmacs 21.4 on MS-Windows breaks if you try to copy
-            ;; text that has a read-only property -- the copy routine
-            ;; tries to strip out ^M's and the text is read-only.
-            ;; Duh.  Using put-nonduplicable-text-property seems to
-            ;; fix it.  Of course that doesn't exist on FSF.
-            (if tnt-running-xemacs
-                (put-nonduplicable-text-property (point-min) (point)
-                                                 'read-only t)
-              (add-text-properties 1 (point)
-                                   '(read-only t front-sticky t rear-sticky t))
-              (add-text-properties (- (point) 1) (point) '(rear-nonsticky t)))
-            (setq inhibit-read-only old-inhibit)))
+      ;; mark all text as read-only, if asked to
+      (tnt-mark-read-only-maybe)
 
       ;; save to archive file
       (when tnt-archive-conversations
@@ -2101,6 +2106,28 @@ Special commands:
   ;; before the insert happens, the restore it), then adjust the point
   ;; positions in the undo-list.
   (setq buffer-undo-list nil))
+
+;;; ***************************************************************************
+(defun tnt-mark-read-only-maybe ()
+  "If `tnt-im-buffers-read-only' is non-nil, make read-only."
+  ;; Make inserted text read-only.  I'm not really sure why we
+  ;; need the inhibit-read-only code; IM buffers should never be
+  ;; read-only (right?).
+  (when tnt-im-buffers-read-only
+    (let ((inhibit-read-only t))
+      ;; gse: These need to be different in FSF/XEmacs.
+      ;; XEmacs 21.4 on MS-Windows breaks if you try to copy
+      ;; text that has a read-only property -- the copy routine
+      ;; tries to strip out ^M's and the text is read-only.
+      ;; Duh.  Using put-nonduplicable-text-property seems to
+      ;; fix it.  Of course that doesn't exist on FSF.
+      (if tnt-running-xemacs
+          (put-nonduplicable-text-property (point-min) (point)
+                                           'read-only t)
+        (add-text-properties (point-min) (point)
+                             '(read-only t front-sticky t rear-sticky t))
+        (add-text-properties (- (point) 1) (point) '(rear-nonsticky t)))
+      )))
 
 ;;; ***************************************************************************
 (defun tnt-replace-me-statement (message)
@@ -2220,6 +2247,31 @@ Special commands:
                (save-excursion
                  (kill-buffer buf)))))
       (error "Action canceled by user"))))
+
+;;; ***************************************************************************
+;;; ***** Flyspell-mode support
+;;; ***************************************************************************
+(defun tnt-flyspell-mode-incorrect-hook (start end &optional not-used)
+  "Do not spell-check read-only text.
+
+Called from `flyspell-incorrect-hook' (which see)."
+  (let ((rc nil))
+	(when (text-property-any start end 'read-only t)
+	  (setq rc t))
+	rc))
+
+;; NOTE: the following kludge is needed because `flyspell-highlight-duplicate-region'
+;; does not have a hook in it to allow the us to ignore things, as
+;; `flyspell-highlight-incorrect-region' does with the use of
+;; `flyspell-incorrect-hook' above.  Once that's fixed/changed, we can
+;; get rid of this ugly hack.
+
+(defadvice flyspell-highlight-duplicate-region (around tnt-flyspell-highlight-duplicate-region act)
+  "Disables duplicate word highlighting in some TNT IM and Chat buffers."
+  (when (or (not (or (string= major-mode "tnt-im-mode")
+					 (string= major-mode "tnt-chat-mode")))
+			(not (tnt-flyspell-mode-incorrect-hook beg end)))
+	ad-do-it))
 
 ;;; ***************************************************************************
 ;;; ***** Buddy list mode
@@ -3478,8 +3530,7 @@ this would return
 ;;; ***************************************************************************
 
 (defun tnt-fullname-for-nick (nick)
-  "Returns the fullname for the given nickname if one exists;
-nil otherwise."
+  "Returns the fullname (or nil) for the given nickname."
   (car-safe
    (cdr-safe (or (assoc-ignore-case nick tnt-buddy-fullname-alist)
                  (assoc-ignore-case (toc-normalize nick) tnt-buddy-fullname-alist)))
@@ -3973,19 +4024,22 @@ nil otherwise."
   ""
   (when tnt-receive-typing-notifications
     (let ((buffer-name (tnt-im-buffer-name buddy))
+          (nick (tnt-get-fullname-or-nick buddy))
           event-str short-str)
       (cond ((string= event "1")
-             (setq event-str (concat "[TNT] " buddy " has entered text")
+             (setq event-str (concat "[TNT] " nick " has entered text")
                    short-str " *paused*"))
             ((string= event "2")
-             (setq event-str (concat "[TNT] " buddy " is typing...")
+             (setq event-str (concat "[TNT] " nick " is typing...")
                    short-str " *typing*"))
             ((string= event "0")
              (setq event-str nil
                    short-str nil))
             (t
-             (setq event-str (concat "[TNT] Unknown event: <" event "> from " buddy)
-                   short-str (concat " *UNKNOWN EVENT:: <" event "> from " buddy "*")))
+             (setq event-str (concat "[TNT] Unknown event: <" event "> from "
+                                     (tnt-get-fullname-and-nick buddy))
+                   short-str (concat " *UNKNOWN EVENT:: <" event "> from "
+                                     (tnt-get-fullname-and-nick buddy) "*")))
             )
       (when (memq 'message tnt-receive-typing-notifications)
         (message event-str))
