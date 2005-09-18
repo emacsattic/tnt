@@ -1,3 +1,17 @@
+2005-09-18  Joe Casadonte  <jcasadonte@northbound-train.com>
+	* tnt.el: Added support for flyspell-mode
+	Turned Emacs/XEmacs read-only code into a function to be reuseable.
+	Minor function documentation change to `tnt-fullname-for-nick'.
+	Using fullnames in Typing Notifications.
+
+2005-09-07  Joe Casadonte  <jcasadonte@northbound-train.com>
+	* tnt.el: added support for Typing Notifications
+	* toc.el: added support for Typing Notifications
+	* tocstr.el: Fixed gse-debug bug (needed save-excursion).
+
+2005-08-30  Joe Casadonte  <jcasadonte@northbound-train.com>
+	* toc.el: Passing in NORMALIZED username into toc-generate-signon-code.
+
 2005-08-29  Scott Evans  <gse@NEVE>
 
 	* tnt.el: Change ports back to 5190.
