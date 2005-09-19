@@ -1,8 +1,12 @@
+2005-09-19  Joe Casadonte  <jcasadonte@northbound-train.com>
+	* tnt.el: Made flyspell-mode support much more light-weight
+
 2005-09-18  Joe Casadonte  <jcasadonte@northbound-train.com>
 	* tnt.el: Added support for flyspell-mode
 	Turned Emacs/XEmacs read-only code into a function to be reuseable.
 	Minor function documentation change to `tnt-fullname-for-nick'.
 	Using fullnames in Typing Notifications.
+	Make IM/Chat buffer headers read-only from the get-go.
 
 2005-09-07  Joe Casadonte  <jcasadonte@northbound-train.com>
 	* tnt.el: added support for Typing Notifications
