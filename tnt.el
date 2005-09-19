@@ -1611,10 +1611,7 @@ Special commands:
   (setq local-abbrev-table text-mode-abbrev-table)
   (set-syntax-table text-mode-syntax-table)
   (auto-fill-mode 1)
-  (when tnt-use-flyspell-mode
-	(make-local-hook 'flyspell-incorrect-hook)
-	(add-hook 'flyspell-incorrect-hook 'tnt-flyspell-mode-incorrect-hook nil t)
-	(flyspell-mode))
+  (when tnt-use-flyspell-mode (flyspell-mode))
   (run-hooks 'tnt-im-mode-hook))
 
 ;;; ***************************************************************************
@@ -1784,10 +1781,7 @@ Special commands:
   (setq local-abbrev-table text-mode-abbrev-table)
   (set-syntax-table text-mode-syntax-table)
   (auto-fill-mode 1)
-  (when tnt-use-flyspell-mode
-	(make-local-hook 'flyspell-incorrect-hook)
-	(add-hook 'flyspell-incorrect-hook 'tnt-flyspell-mode-incorrect-hook nil t)
-	(flyspell-mode))
+  (when tnt-use-flyspell-mode (flyspell-mode))
   (run-hooks 'tnt-chat-mode-hook))
 
 ;;; ***************************************************************************
@@ -2251,27 +2245,13 @@ Special commands:
 ;;; ***************************************************************************
 ;;; ***** Flyspell-mode support
 ;;; ***************************************************************************
-(defun tnt-flyspell-mode-incorrect-hook (start end &optional not-used)
-  "Do not spell-check read-only text.
+;; basically just ignore anything that's read-only....
+(defun tnt-im-mode-flyspell-verify ()
+  "This function is used for `flyspell-generic-check-word-p' in TNT."
+  (not (get-text-property (point) 'read-only)))
 
-Called from `flyspell-incorrect-hook' (which see)."
-  (let ((rc nil))
-	(when (text-property-any start end 'read-only t)
-	  (setq rc t))
-	rc))
-
-;; NOTE: the following kludge is needed because `flyspell-highlight-duplicate-region'
-;; does not have a hook in it to allow the us to ignore things, as
-;; `flyspell-highlight-incorrect-region' does with the use of
-;; `flyspell-incorrect-hook' above.  Once that's fixed/changed, we can
-;; get rid of this ugly hack.
-
-(defadvice flyspell-highlight-duplicate-region (around tnt-flyspell-highlight-duplicate-region act)
-  "Disables duplicate word highlighting in some TNT IM and Chat buffers."
-  (when (or (not (or (string= major-mode "tnt-im-mode")
-					 (string= major-mode "tnt-chat-mode")))
-			(not (tnt-flyspell-mode-incorrect-hook beg end)))
-	ad-do-it))
+(put 'tnt-im-mode 'flyspell-mode-predicate 'tnt-im-mode-flyspell-verify)
+(put 'tnt-chat-mode 'flyspell-mode-predicate 'tnt-im-mode-flyspell-verify)
 
 ;;; ***************************************************************************
 ;;; ***** Buddy list mode
