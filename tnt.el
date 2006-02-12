@@ -44,6 +44,7 @@
 ;;;; $Id$
 
 (require 'toc)
+(require 'tnt-proxy)
 
 ;; only using cl functions in one place...  maybe we should just
 ;; implement those functions locally?
@@ -1208,6 +1209,8 @@ Settings:
   (global-set-key "\C-xtr" 'tnt-reject)
   (global-set-key "\C-xts" 'tnt-switch-user)
   (global-set-key "\C-xtv" 'tnt-archive-view-archive-dwim)
+  (global-set-key "\C-xtx" 'tnt-proxy-toggle-proxy-use)
+  (global-set-key "\C-xtX" 'tnt-proxy-switch-servers)
   )
 
 ;;; ***************************************************************************
@@ -2315,6 +2318,8 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "S"    'tnt-cycle-buddies-sort)
   (define-key tnt-buddy-list-mode-map "u"    'tnt-next-menu)
   (define-key tnt-buddy-list-mode-map "v"    'tnt-archive-view-archive-dwim)
+  (define-key tnt-buddy-list-mode-map "x"    'tnt-proxy-toggle-proxy-use)
+  (define-key tnt-buddy-list-mode-map "X"    'tnt-proxy-switch-servers)
   (define-key tnt-buddy-list-mode-map " "    'tnt-show-buddies)
   (define-key tnt-buddy-list-mode-map "\C-m" 'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map [down-mouse-2] 'tnt-im-buddy-mouse-down)
@@ -2819,8 +2824,8 @@ messages or pounces."
                        "next men[u]"
                        "\n"
                        "[S]ort order         "
-                       "                     "
-                       "                     "
+                       "toggle pro[x]y       "
+                       "switch pro[X]ies     "
                        "[?] help   "
                        "\n"
                        ))

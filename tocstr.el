@@ -62,10 +62,17 @@
   (setq tocstr-sname sname)
   (tocstr-init-sender)
   (tocstr-init-receiver)
-  (setq tocstr-process (open-network-stream "toc" nil host port))
+  (setq tocstr-process (tocstr-open-network-stream "toc" nil host port))
   (set-process-filter tocstr-process 'tocstr-filter)
   (set-process-sentinel tocstr-process 'tocstr-sentinel)
   (process-send-string tocstr-process "FLAPON\r\n\r\n"))
+
+
+(defun tocstr-open-network-stream (name buffer host service)
+  (if (not tnt-proxy-use-proxy)
+      ;; no proxy, proceed as normal
+      (open-network-stream name buffer host service)
+    (tnt-proxy-open-network-stream name buffer host service)))
 
 
 (defun tocstr-close ()
