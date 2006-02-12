@@ -416,7 +416,7 @@ won't do anything."
         (toc-run-hooks toc-bart2-hooks user remainder)))
 
      (t
-      (message (concat "Recieved unknown command: " cmd)))
+      (message (concat "Recieved unknown command: " cmd " <" str ">")))
      )))
 
 
