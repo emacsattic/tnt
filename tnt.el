@@ -199,8 +199,7 @@ not stored here, you will be prompted."
   (set-default symbol newval)
 
   (when tnt-current-user
-    (tnt-set-mode-string)
-    (force-mode-line-update)))
+    (tnt-set-mode-string t)))
 
 ;; ...........................................................................
 (defcustom tnt-mode-indicator 'nick
@@ -229,6 +228,15 @@ none - no indicator"
   :type '(choice :tag "Away indicator options"
                  (const :tag "None (no indicator)" nil)
                  (string :tag "String indicator" ":away"))
+  :set 'tnt-customize-mode-line-setting
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-show-idle-in-mode nil
+  "If non-nil, append string to mode indicator when you're away."
+  :type '(choice :tag "Idle indicator options"
+                 (const :tag "None (no indicator)" nil)
+                 (string :tag "String indicator" ":idle"))
   :set 'tnt-customize-mode-line-setting
   :group 'tnt)
 
@@ -1472,7 +1480,7 @@ unless PREFIX arg is given."
         (setq tnt-currently-idle t)
         (toc-set-idle idle-secs)
         (tnt-build-buddy-buffer)
-        ;;(message "now idle")
+        (tnt-set-mode-string t)
         )))
 
 ;;; ***************************************************************************
@@ -1482,7 +1490,7 @@ unless PREFIX arg is given."
       (progn
         (setq tnt-currently-idle nil)
         (if tnt-current-user (toc-set-idle 0))
-        ;;(message "now unidle")
+        (tnt-set-mode-string t)
         )))
 
 ;;; ***************************************************************************
@@ -3241,12 +3249,11 @@ Special commands:
       (yes-or-no-p "Buddy list modified; kill anyway? ")))
 
 ;;; ***************************************************************************
-
 (defun tnt-nick-in-blist-group (blist nick group)
   "Returns nick if GROUP exists in BLIST, and contains NICK."
   (car (member nick (cdr (tnt-group-in-blist group blist)))))
 
-
+;;; ***************************************************************************
 (defun tnt-group-in-blist (group blist)
   "Returns group if GROUP exists in BLIST."
   (let ((result nil))
@@ -3259,6 +3266,7 @@ Special commands:
 
     result))
 
+;;; ***************************************************************************
 (defun tnt-grouped-new-buddies (old-blist new-blist)
   "Returns a blist of groups, or buddies (in their respective groups)
 that are in NEW-BLIST, but not OLD-BLIST.
@@ -3290,7 +3298,7 @@ this would return
 
     (reverse result)))
 
-
+;;; ***************************************************************************
 (defun tnt-save-buddy-list (&optional kill-buffer-after-save)
   "Saves a buddy-edit buffer on the host."
   (interactive)
@@ -3339,7 +3347,6 @@ this would return
       (tnt-build-buddy-buffer)
     (kill-buffer (current-buffer))
     (tnt-show-buddies)))
-
 
 ;;; ***************************************************************************
 ;;; ***** Buddy-list backup/restore
@@ -3630,12 +3637,12 @@ this would return
   (force-mode-line-update))
 
 ;;; ***************************************************************************
-(defun tnt-set-mode-string ()
+(defun tnt-set-mode-string (&optional update-mode-line)
   ""
   (interactive)
   (setq tnt-mode-string
         (if (and tnt-current-user tnt-mode-indicator)
-            (format "  [%s%s%s%s]"
+            (format "  [%s%s%s%s%s]"
                     (if (and tnt-show-events-in-mode
                              (> (length tnt-event-ring) 0)) "*" "")
 
@@ -3646,8 +3653,11 @@ this would return
                     (if (and tnt-away tnt-show-away-in-mode)
                         tnt-show-away-in-mode "")
                     (if (and tnt-pipe-to-email-now tnt-show-email-in-mode)
-                        tnt-show-email-in-mode ""))
-          "")))
+                        tnt-show-email-in-mode "")
+                    (if (and tnt-currently-idle tnt-show-idle-in-mode)
+                        tnt-show-idle-in-mode ""))
+          ""))
+  (when update-mode-line (force-mode-line-update)))
 
 ;;; ***************************************************************************
 ;;; ***** Handlers for TOC events
