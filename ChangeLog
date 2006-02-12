@@ -1,3 +1,15 @@
+2006-02-12  Joe Casadonte  <jcasadonte@northbound-train.com>
+	* toc.el: added more debugging info for unknown commands
+
+2006-02-12  Joe Casadonte  <jcasadonte@northbound-train.com>
+	* tnt.el: added support for HTTP proxy
+	* tocstr.el: added support for HTTP proxy
+	* tnt-proxy.el: (new file) support for HTTP proxy
+	* ArtisticLicense.txt: (new file) License file for tnt-proxy.el
+
+2006-02-12  Joe Casadonte  <jcasadonte@northbound-train.com>
+	* tnt.el: added optional mode-line indicator for idleness
+
 2005-09-19  Joe Casadonte  <jcasadonte@northbound-train.com>
 	* tnt.el: Made flyspell-mode support much more light-weight
 
