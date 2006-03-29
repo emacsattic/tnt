@@ -1,3 +1,15 @@
+
+###### IMPORTANT ##################################################################333
+## 
+## [2006.03.28] This document is somewhat out of date, as AIM now uses
+## the TOC2 protocol.  Some notes on this protocol can be found here:
+##   http://snaphat.com/toc2.txt
+##   http://cvs.sourceforge.net/viewcvs.py/*checkout*/terraim/terraim/src/toc/TOC2.txt
+##   http://research.cavewallarts.com/TOC2/
+##
+###### IMPORTANT ##################################################################333
+  
+
 # Copyright (c) 1998 America Online, Inc. All Rights Reserved.
 #
 # AOL grants you ("Licensee") a non-exclusive, royalty free, license to use,

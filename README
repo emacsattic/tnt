@@ -38,15 +38,15 @@ TNT was originally developed using GNU Emacs 19.34.  More recent
 improvements have been developed on various emacses.  It has been
 tested at some point (not necessarily recently) with versions 19.29,
 19.30, 20.2, 20.3, and 20.7, and with XEmacs 20.4 and 21.4, and it
-seems to work.  If you run into difficulties, please let us know what
-emacs you're running!
-
-If you are using a version of GNU Emacs earlier than 19.29, you will
-not be able to load the compiled (.elc) files because those versions
-used a different byte-code format.  You may, however, be able to run
-successfully if you delete (or recompile) the .elc files.
+seems to work.
 
 Version 18 of GNU Emacs is not supported.
+
+[2006.03.28 gse] Recently, GNU Emacs support has gotten flakier for
+reasons we don't understand.  Any debugging help is welcome.
+
+If you run into difficulties, please let us know what emacs you're
+running!  And of course, patches are gratefully accepted.
 
 
 What does TNT stand for?
@@ -387,9 +387,9 @@ following:
     'visible   visible beep
     'current   whatever emacs is currently set to (audible or visible)
     "/full/path/to/some/sound.wav"
-               play a sound file; under XEmacs, built-in sound support
-               is used, but under GNU Emacs, you must also define the
-               tnt-sound-exec variable.
+               play a sound file; under XEmacs and GNU Emacs 22,
+               built-in sound support is used.  With older versions
+               GNU Emacs, you must define the tnt-sound-exec variable.
 
 These are the variables, with their defaults:
 
@@ -421,6 +421,9 @@ files under GNU Emacs, you'll need to set these variables:
 
 What else can I customize about TNT?
 ------------------------------------
+
+NOTE: The examples below use 'setq' but really you can customize most
+everything about TNT using "M-x customize-group tnt".
     
 The following variables determine whether a message appears in the
 minibuffer to notify of particular happenings.  Note that these are

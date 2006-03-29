@@ -1,3 +1,11 @@
+2006-03-28  Scott Evans  <gse@SALON2>
+	* toc.el: change version number to 2.6
+	* toc.el: comment out debug for release
+	* tocstr.el: comment out debug for release
+	* README: minor updates
+	* PROTOCOL: add pointers to TOC2 pages
+	* Makefile: deleted
+
 2006-02-12  Joe Casadonte  <jcasadonte@northbound-train.com>
 	* toc.el: added more debugging info for unknown commands
 

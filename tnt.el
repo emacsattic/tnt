@@ -51,7 +51,7 @@
 (require 'cl)
 
 
-(defconst tnt-version "TNT 2.5")
+(defconst tnt-version "TNT 2.6")
 
 ;;; **************************************************************************
 ;;; ***** Configuration variables / Compatability

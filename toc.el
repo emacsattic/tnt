@@ -272,11 +272,11 @@ won't do anything."
 
 
 (defun toc-handle-receive (str)
-  (save-excursion
-    (set-buffer (get-buffer-create "*gse-debug*"))
-    (goto-char (point-max))
-    (insert str)
-    (insert "\n-------------------------\n"))
+  ;;(save-excursion
+  ;;  (set-buffer (get-buffer-create "*gse-debug*"))
+  ;;  (goto-char (point-max))
+  ;;  (insert str)
+  ;;  (insert "\n-------------------------\n"))
 
   (let* ((index 0)
          (cmd (toc-lop-field str 'index)))
