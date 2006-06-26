@@ -1,3 +1,6 @@
+2006-06-25  Joe Casadonte  <jcasadonte@northbound-train.com>
+	* tnt.el: Added stuff in to handle the new annoying NICK madness.
+
 2006-03-28  Scott Evans  <gse@SALON2>
 	* toc.el: change version number to 2.6
 	* toc.el: comment out debug for release
