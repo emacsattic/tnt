@@ -1474,12 +1474,28 @@ unless PREFIX arg is given."
 (defvar tnt-idle-timer nil)
 (defvar tnt-send-idle-after 600) ;; could be defcustom??
 (defvar tnt-currently-idle nil)
+(defvar tnt-ignore-nick-flag nil)
+(defvar tnt-ignore-nick-timer nil)
+
+;;; ***************************************************************************
+(defun tnt-ignore-nick ()
+  "TOC has changed their protocol again, and now sends lots of NICKs."
+  (setq tnt-ignore-nick-flag t)
+  (setq tnt-ignore-nick-timer (run-at-time 5 nil 'tnt-clear-ignore-nick-flag)))
+
+;;; ***************************************************************************
+(defun tnt-clear-ignore-nick-flag ()
+  "TOC has changed their protocol again, and now sends lots of NICKs."
+  (when tnt-ignore-nick-timer
+    (cancel-timer tnt-ignore-nick-timer))
+  (setq tnt-ignore-nick-flag nil))
 
 ;;; ***************************************************************************
 (defun tnt-send-idle (&optional idle-secs)
   (if (and tnt-current-user (not tnt-currently-idle))
       (let ((idle-secs (if idle-secs idle-secs tnt-send-idle-after)))
         (add-hook 'pre-command-hook 'tnt-send-unidle)
+        (tnt-ignore-nick)
         (setq tnt-currently-idle t)
         (toc-set-idle idle-secs)
         (tnt-build-buddy-buffer)
@@ -1489,12 +1505,12 @@ unless PREFIX arg is given."
 ;;; ***************************************************************************
 (defun tnt-send-unidle ()
   (remove-hook 'pre-command-hook 'tnt-send-unidle)
-  (if tnt-currently-idle
-      (progn
+  (when tnt-currently-idle
         (setq tnt-currently-idle nil)
+    (tnt-ignore-nick)
         (if tnt-current-user (toc-set-idle 0))
         (tnt-set-mode-string t)
-        )))
+    ))
 
 ;;; ***************************************************************************
 ;;; ***** Signon/Signoff
@@ -3785,7 +3801,9 @@ this would return
                            'tnt-unset-just-reconnected)))
         )
     (setq tnt-show-inactive-buddies-now tnt-show-inactive-buddies)
-    (tnt-show-buddies)))
+    (if tnt-ignore-nick-flag
+        (tnt-clear-ignore-nick-flag)
+      (tnt-show-buddies))))
 
 ;;; ***************************************************************************
 (defun tnt-handle-im-in (user auto message)
