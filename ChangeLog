@@ -1,4 +1,8 @@
 2006-10-08  Joe Casadonte  <jcasadonte@northbound-train.com>
+	* tnt.el: Added support for buffer tabs
+	* tnt-tabs.wl: (new file) support for buffer tabs
+
+2006-10-08  Joe Casadonte  <jcasadonte@northbound-train.com>
 	* tnt.el: Added buffer-list and activity ring/notifications
 
 2006-10-08  Joe Casadonte  <jcasadonte@northbound-train.com>
