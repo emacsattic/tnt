@@ -99,6 +99,7 @@ properties to add to the result.
 (defvar tnt-deny-list nil)
 
 (defvar tnt-event-ring nil)     ; (buffer-name . (message . callback))
+(defvar tnt-activity-ring nil)
 (defvar tnt-show-inactive-buddies-now nil)
 
 (defvar tnt-archive-datestamp-alist nil)
@@ -219,6 +220,17 @@ none - no indicator"
 ;; ---------------------------------------------------------------------------
 (defcustom tnt-show-events-in-mode nil
   "If non-nil, pre-pend '*' to mode indicator when events are pending."
+  :type 'boolean
+  :set 'tnt-customize-mode-line-setting
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-show-activity-in-mode nil
+  "If non-nil, pre-pend '-' to mode indicator when activity is pending.
+
+NOTE: `tnt-show-events-in-mode' has precedence; if there are events
+pending and the aforementioned variable is non-nil, it will be shown
+instead of this. "
   :type 'boolean
   :set 'tnt-customize-mode-line-setting
   :group 'tnt)
@@ -1771,6 +1783,7 @@ Special commands:
             (tnt-im-mode)
             (setq tnt-archive-filename (tnt-im-archive-filename user))
             (setq tnt-im-user user)
+            (tnt-add-buffer-to-buffer-list buffer)
             (if tnt-include-datestamp-in-buffer-header
                 (progn
                   (setq tnt-last-datestamp (format-time-string tnt-datestamp-format))
@@ -1801,6 +1814,7 @@ Special commands:
 (defun tnt-send-text-as-instant-message (&optional no-reformat)
   "Sends text at end of buffer as an IM."
   (interactive)
+  (setq tnt-activity-ring (delete (current-buffer) tnt-activity-ring))
   (let ((message (tnt-get-input-message no-reformat)))
     (if (string= message "")
         (message "Please enter a message to send")
@@ -1844,6 +1858,7 @@ Special commands:
     (or (and help-buffer
              (switch-to-buffer help-buffer))
         (let ((buffer (get-buffer-create buffer-name)))
+          (tnt-add-buffer-to-buffer-list buffer)
           (with-current-buffer buffer
             (insert "
 +-------------------+-------------+-------------------------------------------+
@@ -1998,6 +2013,7 @@ Special commands:
 ;;; ***************************************************************************
 (defun tnt-send-text-as-chat-message (&optional no-reformat)
   (interactive)
+  (setq tnt-activity-ring (delete (current-buffer) tnt-activity-ring))
   (let ((message (tnt-get-input-message no-reformat)))
     (tnt-remove-chat-event tnt-chat-room)
     (toc-chat-send tnt-chat-roomid message)))
@@ -2493,6 +2509,7 @@ Special commands:
         (let ((buffer (get-buffer-create buffer-name)))
           (with-current-buffer buffer
             (tnt-buddy-list-mode)
+            (tnt-add-buffer-to-buffer-list buffer)
             (setq buffer-read-only t))
           buffer))))
 
@@ -3408,6 +3425,7 @@ Special commands:
         (let ((buffer (get-buffer-create buffer-name)))
           (with-current-buffer buffer
             (tnt-buddy-edit-mode)
+            (tnt-add-buffer-to-buffer-list buffer)
             ;; make-local-hook doesn't work here; tries to call t
             (make-local-variable 'kill-buffer-query-functions)
             (add-hook 'kill-buffer-query-functions 'tnt-buddy-edit-kill-query)
@@ -3699,22 +3717,61 @@ this would return
 
 
 ;;; ***************************************************************************
-;;; ***** Pending-event ring
+;;; ***** Pending-event & activity rings
 ;;; ***************************************************************************
 (defun tnt-remove-im-event (nick)
-  "Removes an instant message event from the event-ring."
+  "Remove NICK's instant message event from the event-ring."
   (interactive)
   (let ((event (assoc (tnt-im-buffer-name nick) tnt-event-ring)))
     (if event (setq tnt-event-ring (delete event tnt-event-ring)))
+    (tnt-build-buddy-buffer)
     (tnt-show-top-event)))
 
 ;;; ***************************************************************************
 (defun tnt-remove-chat-event (room)
-  "Removes a chat event from the event-ring."
+  "Remove ROOM's chat event from the event-ring."
   (interactive)
   (let ((event (assoc (tnt-chat-buffer-name room) tnt-event-ring)))
     (if event (setq tnt-event-ring (delete event tnt-event-ring)))
+    (tnt-build-buddy-buffer)
     (tnt-show-top-event)))
+
+;;; ***************************************************************************
+(defun tnt-buddy-has-event (nick)
+  "Return t if NICK has a pending event, nil otherwise."
+  (assoc (tnt-im-buffer-name nick) tnt-event-ring))
+
+;;; ***************************************************************************
+(defun tnt-chat-room-has-event (room)
+  "Return t if ROOM has a pending event, nil otherwise."
+  (assoc (tnt-chat-buffer-name room) tnt-event-ring))
+
+;;; ***************************************************************************
+(defun tnt-buffer-has-event (buffer)
+  "Return t if BUFFER has a pending event, nil otherwise."
+  (with-current-buffer buffer
+	(cond (tnt-im-user (tnt-buddy-has-event tnt-im-user))
+		  (tnt-chat-room (tnt-chat-room-has-event tnt-chat-room))
+;; 		  ((and (eq buffer (tnt-buddy-buffer))
+;; 				(> (length tnt-event-ring) 0)) t)
+		  (t nil))))
+
+;;; ***************************************************************************
+(defun tnt-buffer-has-activity (buffer)
+  "Retrn t if BUFFER has activity, nil otherwise."
+  (member buffer tnt-activity-ring))
+
+;;; ***************************************************************************
+(defun tnt-show-event-or-activity ()
+  "Switch to the first buffer in the event or activity ring."
+  (interactive)
+  (if tnt-event-ring
+	  (tnt-accept)
+	(when tnt-activity-ring
+	  (switch-to-buffer (car tnt-activity-ring))
+	  (setq tnt-activity-ring (cdr tnt-activity-ring))
+	  (tnt-set-mode-string t)
+	  )))
 
 ;;; ***************************************************************************
 (defun tnt-accept ()
@@ -3749,8 +3806,7 @@ this would return
 ;;; ***************************************************************************
 (defun tnt-push-event (message buffer-name function)
   ;; Push new event onto the event ring.
-  (if (assoc buffer-name tnt-event-ring)
-      ()
+  (unless (assoc buffer-name tnt-event-ring)
     (setq tnt-event-ring (cons (cons buffer-name (cons message function))
                                tnt-event-ring))
     (tnt-show-top-event)
@@ -3764,7 +3820,10 @@ this would return
   (if tnt-event-ring
       (let* ((event (car tnt-event-ring))
              (buffer-name (car event))
-             (function (cdr (cdr event))))
+             (function (cdr (cdr event)))
+             (buffer (get-buffer buffer-name)))
+        (when buffer
+          (setq tnt-activity-ring (delete buffer tnt-activity-ring)))
         (setq tnt-event-ring (cdr tnt-event-ring))
         (if accept
             (progn (switch-to-buffer buffer-name)
@@ -3818,7 +3877,9 @@ this would return
         (if (and tnt-current-user tnt-mode-indicator)
             (format "  [%s%s%s%s%s%s]"
                     (if (and tnt-show-events-in-mode
-                             (> (length tnt-event-ring) 0)) "*" "")
+                             (> (length tnt-event-ring) 0)) "*"
+                      (if (and tnt-show-activity-in-mode
+                               (> (length tnt-activity-ring) 0)) "-" ""))
 
                     (if (eq tnt-mode-indicator 'nick)
                         tnt-current-user
@@ -3836,12 +3897,39 @@ this would return
   (when update-mode-line (force-mode-line-update)))
 
 ;;; ***************************************************************************
+;;; ***** Maintains buffer list
+;;; ***************************************************************************
+(defvar tnt-buffer-list nil
+  "List of buffers (used for tnt-tabs).")
+
+;;; ***************************************************************************
+(defun tnt-remove-from-buffer-list ()
+  "Remove the current buffer from the buffer-list."
+  (let ((buffer (current-buffer)))
+    (setq tnt-activity-ring (delete buffer tnt-activity-ring))
+    (setq tnt-buffer-list (delete buffer tnt-buffer-list))))
+
+;;; ***************************************************************************
+(defun tnt-add-buffer-to-buffer-list (buffer)
+  "Possibly add buffer to tnt-buffer-list."
+  (unless (member buffer tnt-buffer-list)
+    ;; add to the list if not already there
+    (setq tnt-buffer-list (append tnt-buffer-list (list buffer)))
+
+    ;; add in kill-hook
+    (with-current-buffer buffer
+	  ;; XEmacs dies if you remove call to `make-local-hook'
+      (make-local-hook 'kill-buffer-hook)
+      (add-hook 'kill-buffer-hook 'tnt-remove-from-buffer-list nil t))))
+
+;;; ***************************************************************************
 ;;; ***** Handlers for TOC events
 ;;; ***************************************************************************
 (defun tnt-debug (&rest args)
   "Generic debugging handler.  Used to learn more."
   (message "Got a packet. Look in *tnt-debug* for info.")
   (let ((log-buffer (get-buffer-create "*tnt-debug*")))
+    (tnt-add-buffer-to-buffer-list log-buffer)
     (prin1 args log-buffer)
     (princ "\n" log-buffer)))
 
@@ -3976,7 +4064,10 @@ this would return
     (if (get-buffer-window buffer 'visible)
         (progn
           (tnt-beep tnt-beep-on-visible-incoming-message)
-          (tnt-remove-im-event user))
+          (tnt-remove-im-event user)
+          (setq tnt-activity-ring (append tnt-activity-ring (list buffer)))
+		  (when tnt-show-activity-in-mode
+			(tnt-set-mode-string)))
 
       ;; Buffer is not visible.  If it didn't exist, this is a "first"
       ;; message from that user.  Check to see if first message sound
@@ -4149,7 +4240,8 @@ this would return
         (if (get-buffer-window buffer 'visible)
             (progn
               (tnt-beep tnt-beep-on-visible-chat-message)
-              (tnt-remove-chat-event room-name))
+              (tnt-remove-chat-event room-name)
+              (setq tnt-activity-ring (append tnt-activity-ring (list buffer))))
           (progn
             (tnt-beep tnt-beep-on-chat-message)
             (tnt-push-event (format "Chat message from %s available" user)

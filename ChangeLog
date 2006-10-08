@@ -1,4 +1,7 @@
 2006-10-08  Joe Casadonte  <jcasadonte@northbound-train.com>
+	* tnt.el: Added buffer-list and activity ring/notifications
+
+2006-10-08  Joe Casadonte  <jcasadonte@northbound-train.com>
 	* tnt.el: Strip off :::::w from nicks
 	* toc.el: Strip off leading trash in `toc-handle-receive'
 
