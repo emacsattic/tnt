@@ -43,13 +43,11 @@
 ;;;;
 ;;;; $Id$
 
+(require 'cl) ;; now using it in tnt-tabs, so put it first
+
 (require 'toc)
 (require 'tnt-proxy)
-
-;; only using cl functions in one place...  maybe we should just
-;; implement those functions locally?
-(require 'cl)
-
+(require 'tnt-tabs)
 
 (defconst tnt-version "TNT 2.6")
 
@@ -1300,6 +1298,8 @@ Settings:
   (global-set-key "\C-xtq" 'tnt-kill)
   (global-set-key "\C-xtr" 'tnt-reject)
   (global-set-key "\C-xts" 'tnt-switch-user)
+  (global-set-key "\C-xttn" 'tnt-tabs-next-tab)
+  (global-set-key "\C-xttp" 'tnt-tabs-prev-tab)
   (global-set-key "\C-xtv" 'tnt-archive-view-archive-dwim)
   (global-set-key "\C-xtx" 'tnt-proxy-toggle-proxy-use)
   (global-set-key "\C-xtX" 'tnt-proxy-switch-servers)
@@ -1881,6 +1881,8 @@ Special commands:
 | tnt-toggle-pounce |   C-x t P   | Adds or deletes a pounce message          |
 | tnt-pounce-list   |   C-x t L   | Shows the pounce list                     |
 | tnt-toggle-email  |   C-x t M   | Toggles forwarding incoming IMs to email  |
+| tnt-tabs-next-tab |   C-x t t n | Switches to the next TNT tab              |
+| tnt-tabs-prev-tab |   C-x t t p | Switches to the previous TNT tab          |
 | tnt-toggle-mute   |   C-x t m   | Toggles sounds on/off                     |
 +-------------------+-------------+-------------------------------------------+
 
@@ -2459,6 +2461,7 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "r"    'tnt-reject)
   (define-key tnt-buddy-list-mode-map "s"    'tnt-switch-user)
   (define-key tnt-buddy-list-mode-map "S"    'tnt-cycle-buddies-sort)
+  (define-key tnt-buddy-list-mode-map "t"    'tnt-tabs-toggle-tabs-use)
   (define-key tnt-buddy-list-mode-map "u"    'tnt-next-menu)
   (define-key tnt-buddy-list-mode-map "v"    'tnt-archive-view-archive-dwim)
   (define-key tnt-buddy-list-mode-map "x"    'tnt-proxy-toggle-proxy-use)
@@ -3003,7 +3006,7 @@ messages or pounces."
                        "                     "
                        "next men[u]"
                        "\n"
-                       "                     "
+                       "[t]oggle Tabs        "
                        "                     "
                        "                     "
                        "[?] help"
@@ -3725,6 +3728,7 @@ this would return
   (let ((event (assoc (tnt-im-buffer-name nick) tnt-event-ring)))
     (if event (setq tnt-event-ring (delete event tnt-event-ring)))
     (tnt-build-buddy-buffer)
+    (tnt-tabs-update-all-tabs)
     (tnt-show-top-event)))
 
 ;;; ***************************************************************************
@@ -3734,6 +3738,7 @@ this would return
   (let ((event (assoc (tnt-chat-buffer-name room) tnt-event-ring)))
     (if event (setq tnt-event-ring (delete event tnt-event-ring)))
     (tnt-build-buddy-buffer)
+    (tnt-tabs-update-all-tabs)
     (tnt-show-top-event)))
 
 ;;; ***************************************************************************
@@ -3771,6 +3776,7 @@ this would return
 	  (switch-to-buffer (car tnt-activity-ring))
 	  (setq tnt-activity-ring (cdr tnt-activity-ring))
 	  (tnt-set-mode-string t)
+	  (tnt-tabs-update-all-tabs)
 	  )))
 
 ;;; ***************************************************************************
@@ -3812,6 +3818,7 @@ this would return
     (tnt-show-top-event)
     (setq tnt-current-menu 0)
     (tnt-build-buddy-buffer)
+    (tnt-tabs-update-all-tabs)
     ))
 
 ;;; ***************************************************************************
@@ -3831,7 +3838,8 @@ this would return
           (kill-buffer buffer-name))
         (if function (funcall function accept))
         (tnt-show-top-event)
-        (tnt-build-buddy-buffer))
+        (tnt-build-buddy-buffer)
+        (tnt-tabs-update-all-tabs))
     (message "No event to %s." (if accept "accept" "reject"))
     ))
 
@@ -3907,7 +3915,8 @@ this would return
   "Remove the current buffer from the buffer-list."
   (let ((buffer (current-buffer)))
     (setq tnt-activity-ring (delete buffer tnt-activity-ring))
-    (setq tnt-buffer-list (delete buffer tnt-buffer-list))))
+    (setq tnt-buffer-list (delete buffer tnt-buffer-list)))
+  (tnt-tabs-update-all-tabs))
 
 ;;; ***************************************************************************
 (defun tnt-add-buffer-to-buffer-list (buffer)
@@ -3920,7 +3929,9 @@ this would return
     (with-current-buffer buffer
 	  ;; XEmacs dies if you remove call to `make-local-hook'
       (make-local-hook 'kill-buffer-hook)
-      (add-hook 'kill-buffer-hook 'tnt-remove-from-buffer-list nil t))))
+      (add-hook 'kill-buffer-hook 'tnt-remove-from-buffer-list nil t)))
+
+  (tnt-tabs-update-all-tabs))
 
 ;;; ***************************************************************************
 ;;; ***** Handlers for TOC events
@@ -4077,7 +4088,10 @@ this would return
         (tnt-beep tnt-beep-on-incoming-message))
 
       (tnt-push-event (format "Message from %s available" fullname)
-                      (tnt-im-buffer-name user) nil))
+                      (tnt-im-buffer-name user) nil)
+      )
+
+    (tnt-tabs-update-all-tabs)
 
     (if tnt-away (tnt-send-away-msg user))
 
