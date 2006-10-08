@@ -1,3 +1,9 @@
+2006-10-08  Joe Casadonte  <jcasadonte@northbound-train.com>
+	* tnt.el: Added a never-unidle ability (good for hiding)
+	Added optional login ID string in buddy list (for debugging).
+	Added pre- and post-open hooks.
+	Added key to refresh buddy buffer.
+
 2006-06-25  Joe Casadonte  <jcasadonte@northbound-train.com>
 	* tnt.el: Added stuff in to handle the new annoying NICK madness.
 

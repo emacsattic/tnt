@@ -233,6 +233,15 @@ none - no indicator"
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
+(defcustom tnt-show-never-unidle-in-mode nil
+  "If non-nil, append string to mode indicator when never unidle is set."
+  :type '(choice :tag "Never unidle indicator options"
+                 (const :tag "None (no indicator)" nil)
+                 (string :tag "String indicator" ":never"))
+  :set 'tnt-customize-mode-line-setting
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
 (defcustom tnt-show-idle-in-mode nil
   "If non-nil, append string to mode indicator when you're away."
   :type '(choice :tag "Idle indicator options"
@@ -321,6 +330,17 @@ Can be as short or long as you'd like, but AIM uses 3 seconds."
 (defcustom tnt-buddy-list-buffer-name "*buddies*"
   "Name to use for Buddy list buffer."
   :type 'string
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-add-identity-to-buddy-buffer nil
+  "Adds line at top of Buddy buffer indicating who is logged in and
+which proxy is being used.."
+  :type '(radio :tag "Add identity options"
+                 (const :tag "Do not add identity to Buddy buffer" nil)
+                 (const :tag "Add identity to the top of the Buddy buffer" top)
+                 (const :tag "Add identity to the bottom of the Buddy buffer" bottom)
+                 )
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
@@ -661,34 +681,76 @@ grow indefinitely"
   :group 'tnt)
 
 ;; ---------------------------------------------------------------------------
+;; ----- hook group
+;; ---------------------------------------------------------------------------
+(defgroup tnt-hooks nil
+  "TNT hooks"
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-pre-open-hook nil
+  "Hook run immediately before TOC connection is attemmpted.
+
+Good for setting up proxies on the fly.  For example:
+
+\(defun my-tnt-pre-open-hook ()
+  \"With multiple netowrk connectors (LAN, wireless and VPN) the last
+one in wins, which for me is appropriate.\"
+  (save-match-data
+	(with-temp-buffer
+	  (shell-command \"ipconfig /all\" t)
+	  (goto-char (point-min))
+	  (while (re-search-forward \"IP Address\.+: \\([\.0-9]+\\)\" (point-max) t)
+		(let ((ip-address (match-string 1)))
+		  (cond
+		   ((string-match \"^192\.168\.\" ip-address)
+			(setq tnt-proxy-use-proxy nil))
+		   ((string-match \"^12\.123\.\" ip-address)
+			(setq tnt-proxy-use-proxy t)
+			(setq tnt-proxy-current-server \"Local Proxy\"))
+		   ((string-match \"^123\.\" ip-address)
+			(setq tnt-proxy-use-proxy t)
+			(setq tnt-proxy-current-server \"Corporate\"))
+		   (t (message \"[TNT] Unknown IP address filter - no proxy\")))
+		  )))))"
+  :type 'hook
+  :group 'tnt-hooks)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-post-open-hook nil
+  "Hook run after TOC connection is made."
+  :type 'hook
+  :group 'tnt-hooks)
+
+;; ---------------------------------------------------------------------------
 (defcustom tnt-im-mode-hook nil
   "Hook run when TNT IM mode is invoked."
   :type 'hook
-  :group 'tnt)
+  :group 'tnt-hooks)
 
 ;; ---------------------------------------------------------------------------
 (defcustom tnt-chat-mode-hook nil
   "Hook run when TNT Chat mode is invoked."
   :type 'hook
-  :group 'tnt)
+  :group 'tnt-hooks)
 
 ;; ---------------------------------------------------------------------------
 (defcustom tnt-buddy-list-mode-hook nil
   "Hook run when TNT Buddy List mode is invoked."
   :type 'hook
-  :group 'tnt)
+  :group 'tnt-hooks)
 
 ;; ---------------------------------------------------------------------------
 (defcustom tnt-buddy-edit-mode-hook nil
   "Hook run when TNT Buddy Edit mode is invoked."
   :type 'hook
-  :group 'tnt)
+  :group 'tnt-hooks)
 
 ;; ---------------------------------------------------------------------------
 (defcustom tnt-load-hook nil
   "Hook run when TNT is loaded."
   :type 'hook
-  :group 'tnt)
+  :group 'tnt-hooks)
 
 ;; ---------------------------------------------------------------------------
 ;; ----- faces group
@@ -1476,12 +1538,13 @@ unless PREFIX arg is given."
 (defvar tnt-currently-idle nil)
 (defvar tnt-ignore-nick-flag nil)
 (defvar tnt-ignore-nick-timer nil)
+(defvar tnt-never-unidle nil)
 
 ;;; ***************************************************************************
 (defun tnt-ignore-nick ()
   "TOC has changed their protocol again, and now sends lots of NICKs."
   (setq tnt-ignore-nick-flag t)
-  (setq tnt-ignore-nick-timer (run-at-time 5 nil 'tnt-clear-ignore-nick-flag)))
+  (setq tnt-ignore-nick-timer (run-at-time 10 nil 'tnt-clear-ignore-nick-flag)))
 
 ;;; ***************************************************************************
 (defun tnt-clear-ignore-nick-flag ()
@@ -1505,12 +1568,26 @@ unless PREFIX arg is given."
 ;;; ***************************************************************************
 (defun tnt-send-unidle ()
   (remove-hook 'pre-command-hook 'tnt-send-unidle)
-  (when tnt-currently-idle
+  (when (and tnt-currently-idle (not tnt-never-unidle))
         (setq tnt-currently-idle nil)
     (tnt-ignore-nick)
-        (if tnt-current-user (toc-set-idle 0))
-        (tnt-set-mode-string t)
-    ))
+    (when tnt-current-user
+        (toc-set-idle 0))
+    (tnt-set-mode-string t)))
+
+;;; ***************************************************************************
+(defun tnt-unset-never-unidle () (interactive) (tnt-set-never-unidle t))
+(defun tnt-set-never-unidle (&optional unset)
+  "Useful to 'hide' from people you don't want to talk to.
+
+It's nice that TOC leaves idleness up to the client."
+  (interactive)
+  (setq tnt-never-unidle (not unset))
+  (if unset
+      (when tnt-currently-idle
+        (add-hook 'pre-command-hook 'tnt-send-unidle))
+    (remove-hook 'pre-command-hook 'tnt-send-unidle))
+  (tnt-set-mode-string t))
 
 ;;; ***************************************************************************
 ;;; ***** Signon/Signoff
@@ -1532,6 +1609,7 @@ unless PREFIX arg is given."
   (interactive "p\np") ;; gag!
   (if tnt-current-user
       (error "Already online as %s" tnt-current-user)
+    (run-hooks 'tnt-pre-open-hook)
     (setq tnt-username (or (and (stringp username) username)
                            tnt-default-username
                            (and tnt-username-alist
@@ -1564,7 +1642,9 @@ unless PREFIX arg is given."
       (add-hook 'toc-chat-invite-hooks 'tnt-handle-chat-invite)
       (add-hook 'toc-goto-url-hooks 'tnt-handle-goto-url)
       (add-hook 'toc-client-event-hooks 'tnt-handle-client-events)
-      (toc-open tnt-toc-host tnt-toc-port tnt-username))))
+      (toc-open tnt-toc-host tnt-toc-port tnt-username)
+      (run-hooks 'tnt-post-open-hook)
+      )))
 
 ;;; ***************************************************************************
 (defun tnt-kill ()
@@ -1690,9 +1770,9 @@ Special commands:
 
             (when (and tnt-send-typing-notifications
                        tnt-timers-available)
+			  ;; XEmacs dies if you remove call to `make-local-hook'
               (make-local-hook 'after-change-functions)
-              (add-hook 'after-change-functions
-                        'tnt-typing-notification-hook nil t)
+              (add-hook 'after-change-functions 'tnt-typing-notification-hook nil t)
               (setq tnt-typing-notification-state nil)
               (make-local-hook 'kill-buffer-hook)
               (add-hook 'kill-buffer-hook 'tnt-typing-notification-kill-hook nil t))
@@ -1870,10 +1950,12 @@ Special commands:
           (with-current-buffer buffer
             (tnt-chat-mode)
             (setq tnt-archive-filename (tnt-chat-archive-filename room))
+			;; XEmacs dies if you remove call to `make-local-hook'
             (make-local-hook 'kill-buffer-hook)
             (add-hook 'kill-buffer-hook 'tnt-chat-buffer-killed nil t)
             (setq tnt-chat-room room)
             (setq tnt-chat-participants nil)
+            (tnt-add-buffer-to-buffer-list buffer)
 
             (if tnt-include-datestamp-in-buffer-header
                 (progn
@@ -2314,9 +2396,12 @@ Special commands:
   (define-key tnt-buddy-list-mode-map "ga"   'tnt-toggle-group-away-buddies)
   (define-key tnt-buddy-list-mode-map "gi"   'tnt-toggle-group-idle-buddies)
   (define-key tnt-buddy-list-mode-map "go"   'tnt-toggle-group-offline-buddies)
+  (define-key tnt-buddy-list-mode-map "G"    'tnt-build-buddy-buffer)
   (define-key tnt-buddy-list-mode-map "i"    'tnt-im-buddy)
   (define-key tnt-buddy-list-mode-map "I"    'tnt-fetch-info)
   (define-key tnt-buddy-list-mode-map "j"    'tnt-join-chat)
+  (define-key tnt-buddy-list-mode-map "k"    'tnt-set-never-unidle)
+  (define-key tnt-buddy-list-mode-map "K"    'tnt-unset-never-unidle)
   (define-key tnt-buddy-list-mode-map "l"    'tnt-leave-chat)
   (define-key tnt-buddy-list-mode-map "L"    'tnt-pounce-list)
   (define-key tnt-buddy-list-mode-map "m"    'tnt-toggle-mute)
@@ -2399,20 +2484,30 @@ Special commands:
 ;;; ***************************************************************************
 (defun tnt-next-menu ()
   (interactive)
-  (setq tnt-current-menu (if (>= tnt-current-menu 4) 0 (1+ tnt-current-menu)))
+  (setq tnt-current-menu (if (>= tnt-current-menu 5) 0 (1+ tnt-current-menu)))
   (tnt-build-buddy-buffer))
 
 ;;; ***************************************************************************
 (defun tnt-build-buddy-buffer ()
+  "Builds the Buddy buffer."
+  (interactive)
   (with-current-buffer (tnt-buddy-buffer)
     (let* ((buffer-read-only nil)
            (col (current-column))
            (current-line (tnt-current-line-in-buffer)))
       ;; Insert contents of buddy buffer.
       (erase-buffer)
+
+      (when (equal tnt-add-identity-to-buddy-buffer 'top)
+        (tnt-insert-buddy-buffer-identity nil "\n\n"))
+
       (tnt-insert-blist tnt-buddy-blist t t)
       (tnt-non-buddy-messages)
       (tnt-chat-alist-to-buffer tnt-chat-alist)
+
+      (when (equal tnt-add-identity-to-buddy-buffer 'bottom)
+        (tnt-insert-buddy-buffer-identity "\n" nil))
+
       (tnt-buddy-list-menu)
 
       (set-buffer-modified-p nil)
@@ -2427,7 +2522,20 @@ Special commands:
       )))
 
 ;;; ***************************************************************************
+(defun tnt-insert-buddy-buffer-identity (before after)
+  "Inserts identity & proxy info into buddy buffer.
 
+Assumes buddy buffer is current buffer.  BEFORE is text inserted
+before the identity info, and AFTER is inserted after."
+  ;; only do this if we're logged in
+  (when tnt-current-user
+    (when before (insert before))
+    (insert (concat "Logged in as <" tnt-current-user ">"))
+    (when tnt-proxy-use-proxy
+      (insert (concat " through <" tnt-proxy-current-server "> proxy")))
+    (when after (insert after))))
+
+;;; ***************************************************************************
 (defun tnt-insert-blist (blist decorate reorder)
   "Insert the contents of BLIST into the current buffer.
 If DECORATE is non-nil, adds display information (fullname,
@@ -2846,6 +2954,19 @@ messages or pounces."
                        "\n"
                        ))
 
+              ((= tnt-current-menu 5)
+               (insert "[G] Refresh buffer   "
+                       "                     "
+                       "                     "
+                       "next men[u]"
+                       "\n"
+                       "                     "
+                       "                     "
+                       "                     "
+                       "[?] help"
+                       "\n"
+                       ))
+
               (t (insert "\n"))))
     (insert "\n"
             "tnt currently offline"
@@ -2854,7 +2975,11 @@ messages or pounces."
             (let ((username (or tnt-default-username
                                 (and tnt-username-alist
                                      (caar tnt-username-alist)))))
-              (if username (concat " as user: " username) ""))
+              (when username
+                (concat " as user: " username
+                (when tnt-proxy-current-server
+                  (concat ", using proxy: " tnt-proxy-current-server)) "" ))
+              )
             "\n"
             (if tnt-username-alist "[s]witch user" "")
             "\n")
@@ -3663,7 +3788,7 @@ this would return
   (interactive)
   (setq tnt-mode-string
         (if (and tnt-current-user tnt-mode-indicator)
-            (format "  [%s%s%s%s%s]"
+            (format "  [%s%s%s%s%s%s]"
                     (if (and tnt-show-events-in-mode
                              (> (length tnt-event-ring) 0)) "*" "")
 
@@ -3673,6 +3798,8 @@ this would return
 
                     (if (and tnt-away tnt-show-away-in-mode)
                         tnt-show-away-in-mode "")
+                    (if (and tnt-never-unidle tnt-show-never-unidle-in-mode)
+                        tnt-show-never-unidle-in-mode "")
                     (if (and tnt-pipe-to-email-now tnt-show-email-in-mode)
                         tnt-show-email-in-mode "")
                     (if (and tnt-currently-idle tnt-show-idle-in-mode)
