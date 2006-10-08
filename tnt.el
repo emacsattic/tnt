@@ -670,7 +670,25 @@ Defaults to Monthly."
 
 Only applies when `tnt-archive-directory-hierarchy' is set to \"Single
 file\".  A value of 0 means that there is no maximum and the file will
-grow indefinitely"
+grow indefinitely.
+
+See also: `tnt-archive-single-file-delete-chunk-size'."
+  :type 'integer
+  :group 'tnt)
+
+;; ---------------------------------------------------------------------------
+(defcustom tnt-archive-single-file-delete-chunk-size 0
+  "The amount of the archive (in bytes) to delete when we go over the max.
+
+Only applies when `tnt-archive-directory-hierarchy' is set to \"Single
+file\".  A value of 0 means to delete the least amount necessary to go
+back under the maximum.
+
+If you set this, chances are you won't be truncating a large archive
+file every time it's written to, but you will lose older bits of your
+archive sooner than you would otherwise.
+
+See also: `tnt-archive-max-single-file-size'"
   :type 'integer
   :group 'tnt)
 
@@ -2187,11 +2205,19 @@ Special commands:
 
                   ;; determine size
                   (when (> (point-max) tnt-archive-max-single-file-size)
+                    (if (> tnt-archive-single-file-delete-chunk-size 0)
+                        (progn
+                          ;; move up a chunk then to the beginning of
+                          ;; the next line
+                          (goto-char tnt-archive-single-file-delete-chunk-size)
+                          (forward-line)
+                          (beginning-of-line))
+
                     ;; go to N bytes from end
                     (goto-char (- (point-max) tnt-archive-max-single-file-size))
 
                     ;; goto beg of line
-                    (backward-paragraph)
+                      (backward-paragraph))
 
                     ;; delete from there back
                     (delete-region (point-min) (point))
