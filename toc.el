@@ -272,11 +272,22 @@ won't do anything."
 
 
 (defun toc-handle-receive (str)
-  ;;(save-excursion
-  ;;  (set-buffer (get-buffer-create "*gse-debug*"))
-  ;;  (goto-char (point-max))
-  ;;  (insert str)
-  ;;  (insert "\n-------------------------\n"))
+  (let ((orig str))
+    (save-match-data
+      (when (not (string-match "^[A-Za-z]" str))
+        (string-match "^.\\(.*\\)$" str)
+        (setq str (match-string 1 str))
+;;        (ding t)(ding t)(ding t)
+        ))
+
+;;    (save-excursion
+;;      (set-buffer (get-buffer-create "*gse-debug*"))
+;;      (goto-char (point-max))
+;;      (when (not (string= orig str))
+;;        (insert orig)
+;;        (insert "\n.........................\n"))
+;;      (insert str)
+;;     (insert "\n-------------------------\n"))
 
   (let* ((index 0)
          (cmd (toc-lop-field str 'index)))
@@ -305,7 +316,6 @@ won't do anything."
             (unknown (toc-lop-field str 'index))
             (message (substring str index)))
         (toc-run-hooks toc-im-in-hooks user auto message)))
-
 
      ;; 2005.08.22 gse: No idea what the difference is between IM_IN2
      ;; and IM_IN_ENC2 -- there are a bunch of extra fields.
@@ -417,7 +427,7 @@ won't do anything."
 
      (t
       (message (concat "Recieved unknown command: " cmd " <" str ">")))
-     )))
+       ))))
 
 
 (defun toc-run-hooks (hooks &rest args)

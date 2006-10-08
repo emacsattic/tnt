@@ -3655,6 +3655,8 @@ this would return
         (let* ((end (match-end 0))
                (code (match-string 1 config))
                (arg  (match-string 2 config)))
+          (when (string-match "\\(.*\\)::::w$" arg)
+            (setq arg (match-string 1 arg)))
           (cond
            ((string-equal code "g")
             (setq blist (cons (list arg) blist)))
@@ -4202,7 +4204,7 @@ this would return
              (setq event-str nil
                    short-str nil))
             (t
-             (setq event-str (concat "[TNT] Unknown event: <" event "> from "
+             (setq event-str (concat "[TNT] Unknown client event: <" event "> from "
                                      (tnt-get-fullname-and-nick buddy))
                    short-str (concat " *UNKNOWN EVENT:: <" event "> from "
                                      (tnt-get-fullname-and-nick buddy) "*")))
