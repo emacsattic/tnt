@@ -506,9 +506,18 @@ won't do anything."
         (setq list (cons (substring str pos) list)))
     (apply 'concat "\"" (nreverse (cons "\"" list)))))
 
+(defun toc-encoding-is-necessary (str)
+  (let ((encoded (toc-encode str)))
+    (not (string= str (substring encoded 1 (1- (length encoded)))))))
+
+(defun toc-soft-encode (str)
+  (if (not (toc-encoding-is-necessary str))
+      str
+    (toc-encode str)))
+
 (defun toc-normalize (str)
-  "Removes spaces and smashes STR to lowercase."
+  "Removes spaces and smashes STR to lowercase & encodes it if necessary."
   (mapconcat '(lambda (char)
                 (if (not (equal char ? ))
                     (char-to-string (downcase char))))
-             str ""))
+             (toc-soft-encode str) ""))
